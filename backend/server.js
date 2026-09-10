@@ -241,7 +241,7 @@ app.get('/api/services', (req, res) => {
 });
 
 // POST /api/services (Owner adds a new service)
-app.post('/api/services', authenticateToken, requireRole('owner'), (req, res) => {
+app.post('/api/services', authenticateToken, requireRole('admin'), (req, res) => {
   const { name, price } = req.body;
   if (!name || price === undefined) {
     return res.status(400).json({ error: 'Service name and price are required.' });
@@ -254,7 +254,7 @@ app.post('/api/services', authenticateToken, requireRole('owner'), (req, res) =>
 });
 
 // DELETE /api/services/:id (Owner deletes a service)
-app.delete('/api/services/:id', authenticateToken, requireRole('owner'), (req, res) => {
+app.delete('/api/services/:id', authenticateToken, requireRole('admin'), (req, res) => {
   const { id } = req.params;
   db.run("DELETE FROM services WHERE id = ?", [id], function(err) {
     if (err) return res.status(500).json({ error: 'Failed to delete service.' });
@@ -319,7 +319,7 @@ app.post('/api/bookings', authenticateToken, (req, res) => {
 });
 
 // PUT /api/bookings/:id (Owner updates status)
-app.put('/api/bookings/:id', authenticateToken, requireRole('owner'), (req, res) => {
+app.put('/api/bookings/:id', authenticateToken, requireRole('admin'), (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -387,7 +387,7 @@ app.get('/api/settings', (req, res) => {
 });
 
 // PUT /api/settings (Owner only)
-app.put('/api/settings', authenticateToken, requireRole('owner'), (req, res) => {
+app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => {
   const settingsUpdate = req.body; // Expecting { carwash_name, is_open, logo_base64, theme_color }
 
   db.serialize(() => {
@@ -415,7 +415,7 @@ app.put('/api/settings', authenticateToken, requireRole('owner'), (req, res) => 
 // --- Ledger / Profit Analytics Endpoints ---
 
 // GET /api/ledger (Owner reads analytics and ledger)
-app.get('/api/ledger', authenticateToken, requireRole('owner'), (req, res) => {
+app.get('/api/ledger', authenticateToken, requireRole('admin'), (req, res) => {
   db.all("SELECT * FROM ledger ORDER BY date DESC, id DESC", (err, rows) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to retrieve ledger.' });
@@ -445,7 +445,7 @@ app.get('/api/ledger', authenticateToken, requireRole('owner'), (req, res) => {
 });
 
 // POST /api/ledger (Owner adds a sale or purchase manually)
-app.post('/api/ledger', authenticateToken, requireRole('owner'), (req, res) => {
+app.post('/api/ledger', authenticateToken, requireRole('admin'), (req, res) => {
   const { type, description, amount, date } = req.body;
 
   if (!type || !description || amount === undefined || !date) {
@@ -480,7 +480,7 @@ app.post('/api/ledger', authenticateToken, requireRole('owner'), (req, res) => {
 // --- Users Endpoints ---
 
 // GET /api/admin/users (Owner gets all users and their wash counts)
-app.get('/api/admin/users', authenticateToken, requireRole('owner'), (req, res) => {
+app.get('/api/admin/users', authenticateToken, requireRole('admin'), (req, res) => {
   const query = `
     SELECT 
       u.id, u.name, u.email, u.role, u.picture,

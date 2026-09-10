@@ -21,7 +21,7 @@ db.serialize(() => {
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       picture TEXT,
-      role TEXT CHECK(role IN ('customer', 'owner')) NOT NULL
+      role TEXT CHECK(role IN ('admin','employee','customer')) NOT NULL
     )
   `);
 
@@ -98,9 +98,9 @@ db.serialize(() => {
       // Replicating admin user with admin@carwash.com for compliance with existing test file expectations, 
       // but also adding admin@garage.com for workshop context consistency.
       db.run("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)", 
-        ['Garage Owner', 'admin@carwash.com', ownerHash, 'owner']);
+        ['Garage Owner', 'admin@carwash.com', ownerHash, 'admin']);
       db.run("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)", 
-        ['Garage Workshop Owner', 'admin@garage.com', ownerHash, 'owner']);
+        ['Garage Workshop Owner', 'admin@garage.com', ownerHash, 'admin']);
       console.log("Seeded default admin users.");
     }
   });
