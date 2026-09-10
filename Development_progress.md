@@ -12,7 +12,13 @@
 
 ---
 
-## Phase 2 — New Tables & Jobs Consolidation ⏳ PENDING
+## Phase 2 — New Tables & Jobs Consolidation ✅ COMPLETED
+**Goal:** Add `vehicles`, `inventory`, `holidays` tables; evolve `bookings` into `jobs` with `vehicle_id` and `total_cost`.
+
+**Files Modified:**
+- `backend/database.js` - Added new tables (`vehicles`, `inventory`, `holidays`, `jobs`), removed `bookings` table, added seed data for all new tables
+
+**Verified:** Database initializes without SQL errors; all tables exist with correct schema and foreign keys; seed data populated with valid references (vehicles linked to users, jobs linked to vehicles)
 ## Phase 3 — Role Hierarchy Middleware ⏳ PENDING
 ## Phase 4 — Seed Data Refresh ⏳ PENDING
 ## Phase 5 — Public Info Endpoint ⏳ PENDING

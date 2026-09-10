@@ -33,29 +33,54 @@ db.serialize(() => {
     )
   `);
 
-  // 3. Create Bookings Table
+  // 3. Create Vehicles Table
   db.run(`
-    CREATE TABLE IF NOT EXISTS bookings (
+    CREATE TABLE IF NOT EXISTS vehicles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      customer_name TEXT NOT NULL,
-      customer_email TEXT,
-      license_plate TEXT,
-      vehicle_type TEXT NOT NULL,
-      service TEXT NOT NULL,
-      pricing REAL NOT NULL,
-      booking_time TEXT NOT NULL,
-      status TEXT CHECK(status IN ('pending', 'booked', 'service finished', 'cancelled')) DEFAULT 'pending'
+      owner_id INTEGER NOT NULL,
+      make TEXT NOT NULL,
+      model TEXT NOT NULL,
+      plate_number TEXT NOT NULL UNIQUE,
+      year INTEGER,
+      FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (!err) {
-      // Ensure the customer_email column is added if the table already existed
-      db.run("ALTER TABLE bookings ADD COLUMN customer_email TEXT", (alterErr) => {
-        // Safe to ignore if column already exists
-      });
-    }
-  });
+  `);
 
-  // 3b. Create Services Table
+  // 4. Create Inventory Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_name TEXT NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 0,
+      cost_price REAL NOT NULL,
+      selling_price REAL NOT NULL
+    )
+  `);
+
+  // 5. Create Holidays Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS holidays (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      reason TEXT NOT NULL
+    )
+  `);
+
+  // 6. Create Jobs Table (replaces bookings)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS jobs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehicle_id INTEGER NOT NULL,
+      status TEXT CHECK(status IN ('pending', 'in-progress', 'completed', 'cancelled')) DEFAULT 'pending',
+      notes TEXT,
+      total_cost REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 6b. Create Services Table
   db.run(`
     CREATE TABLE IF NOT EXISTS services (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -131,19 +156,72 @@ db.serialize(() => {
     }
   });
 
-  // Seed default bookings if empty
-  db.get("SELECT COUNT(*) as count FROM bookings", (err, row) => {
-    if (err) console.error("Error checking bookings count:", err);
+  // Seed default vehicles if empty
+  db.get("SELECT COUNT(*) as count FROM vehicles", (err, row) => {
+    if (err) console.error("Error checking vehicles count:", err);
     if (row && row.count === 0) {
-      const today = new Date();
-      const bookingTime1 = new Date(today.getTime() + 2 * 3600000).toISOString(); // 2 hours from now
-      const bookingTime2 = new Date(today.getTime() + 24 * 3600000).toISOString(); // tomorrow
+      // Seed vehicles for the first customer user (id 3, after 2 admins)
+      db.run("INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
+        [3, 'Toyota', 'Camry', 'ABC-123', 2020]);
+      db.run("INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
+        [3, 'Honda', 'Civic', 'XYZ-789', 2019]);
+      db.run("INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
+        [4, 'Ford', 'F-150', 'TRK-456', 2021]);
+      console.log("Seeded default vehicles.");
+    }
+  });
 
-      db.run("INSERT INTO bookings (customer_name, customer_email, license_plate, vehicle_type, service, pricing, booking_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        ['Jane Smith', 'jane@example.com', 'WASH-777', 'SUV', 'Engine Diagnostics & Tune-up', 150.00, bookingTime1, 'booked']);
-      db.run("INSERT INTO bookings (customer_name, customer_email, license_plate, vehicle_type, service, pricing, booking_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        ['Robert Johnson', 'robert@example.com', 'ECO-101', 'Sedan', 'Full Synthetic Oil Change', 85.00, bookingTime2, 'pending']);
-      console.log("Seeded default bookings.");
+  // Seed default inventory if empty
+  db.get("SELECT COUNT(*) as count FROM inventory", (err, row) => {
+    if (err) console.error("Error checking inventory count:", err);
+    if (row && row.count === 0) {
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Synthetic Oil 5W-30 (1L)', 50, 8.50, 15.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Oil Filter', 30, 5.00, 12.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Brake Pads (Front)', 20, 25.00, 55.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Brake Rotors (Front)', 10, 40.00, 85.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Air Filter', 25, 6.00, 18.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Spark Plugs (set of 4)', 15, 12.00, 30.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Coolant (1L)', 20, 7.00, 14.00]);
+      db.run("INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+        ['Transmission Fluid (1L)', 10, 10.00, 22.00]);
+      console.log("Seeded default inventory.");
+    }
+  });
+
+  // Seed default holidays if empty
+  db.get("SELECT COUNT(*) as count FROM holidays", (err, row) => {
+    if (err) console.error("Error checking holidays count:", err);
+    if (row && row.count === 0) {
+      const futureDate1 = new Date();
+      futureDate1.setDate(futureDate1.getDate() + 7);
+      const futureDate2 = new Date();
+      futureDate2.setDate(futureDate2.getDate() + 30);
+      db.run("INSERT INTO holidays (date, reason) VALUES (?, ?)",
+        [futureDate1.toISOString().split('T')[0], 'Staff Training Day']);
+      db.run("INSERT INTO holidays (date, reason) VALUES (?, ?)",
+        [futureDate2.toISOString().split('T')[0], 'Annual Maintenance']);
+      console.log("Seeded default holidays.");
+    }
+  });
+
+  // Seed default jobs if empty
+  db.get("SELECT COUNT(*) as count FROM jobs", (err, row) => {
+    if (err) console.error("Error checking jobs count:", err);
+    if (row && row.count === 0) {
+      db.run("INSERT INTO jobs (vehicle_id, status, notes, total_cost) VALUES (?, ?, ?, ?)",
+        [1, 'pending', 'Customer requested oil change', 0]);
+      db.run("INSERT INTO jobs (vehicle_id, status, notes, total_cost) VALUES (?, ?, ?, ?)",
+        [2, 'in-progress', 'Brake inspection in progress', 120.00]);
+      db.run("INSERT INTO jobs (vehicle_id, status, notes, total_cost) VALUES (?, ?, ?, ?)",
+        [3, 'completed', 'Full service completed', 245.00]);
+      console.log("Seeded default jobs.");
     }
   });
 });
