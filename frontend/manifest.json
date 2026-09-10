@@ -1,0 +1,53 @@
+{
+  "short_name": "GaragePWA",
+  "name": "Garage Workshop PWA",
+  "description": "Premium Mobile-First Car Workshop Booking and Management App",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAFA",
+  "theme_color": "#6200EE",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book a Service",
+      "short_name": "Book Service",
+      "description": "Schedule a new car repair appointment",
+      "url": "/?shortcut=book",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Status",
+      "short_name": "Status",
+      "description": "View current booking status",
+      "url": "/?shortcut=status",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Manage workshop orders and earnings",
+      "url": "/?shortcut=admin",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png", "sizes": "192x192" }]
+    }
+  ]
+}

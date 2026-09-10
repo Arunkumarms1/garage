@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Garage Workshop PWA</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+
+  <!-- Web App Manifest & Meta Tags for iOS -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GaragePWA">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1995/1995470.png">
+  <meta name="theme-color" content="#6200EE">
+
+  <style>
+    body {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .ripple-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .pulse-indicator {
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+    @keyframes wrench-wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-15deg); }
+      75% { transform: rotate(15deg); }
+    }
+    .animate-wrench {
+      animation: wrench-wiggle 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen select-none">
+
+  <!-- ==========================================
+       APP BAR / HEADER
+       ========================================== -->
+  <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <!-- Logo Container -->
+      <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center p-1 overflow-hidden shadow-inner">
+        <span class="material-icons-round text-indigo-600 text-2xl">engineering</span>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg tracking-tight leading-tight">Garage Workshop</h1>
+        <div class="flex items-center space-x-1.5 mt-0.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 pulse-indicator"></span>
+          <span class="text-xs font-semibold text-indigo-100 uppercase tracking-wider">Coming Soon</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Theme Toggle -->
+    <button onclick="toggleDarkMode()" class="text-white hover:bg-indigo-600 p-2 rounded-full focus:outline-none transition-colors">
+      <span id="dark-mode-icon" class="material-icons-round">dark_mode</span>
+    </button>
+  </header>
+
+  <!-- ==========================================
+       TOAST NOTIFICATION SYSTEM
+       ========================================== -->
+  <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-3 rounded-full shadow-2xl z-50 flex items-center space-x-2 opacity-0 pointer-events-none transition-all duration-350 ease-out">
+    <span id="toast-icon" class="material-icons-round text-green-400">check_circle</span>
+    <span id="toast-message">Action Successful!</span>
+  </div>
+
+  <!-- ==========================================
+       MAIN HERO SECTION
+       ========================================== -->
+  <main class="flex-1 flex flex-col items-center justify-center px-4 py-8">
+    <div class="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 text-center space-y-6">
+      
+      <!-- Animated Icon Header -->
+      <div class="relative w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+        <span class="material-icons-round text-indigo-600 dark:text-indigo-400 text-5xl animate-wrench">construction</span>
+        <span class="absolute top-2 right-2 flex h-4.5 w-4.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-4.5 w-4.5 bg-indigo-500"></span>
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Under Construction</h2>
+        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+          Our elite team of mechanics and developers are fine-tuning the ultimate mobile-first Garage Workshop experience. Coming very soon!
+        </p>
+      </div>
+
+      <!-- Construction Progress Bar -->
+      <div class="space-y-1.5 text-left">
+        <div class="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <span>Tuning Engines & Systems</span>
+          <span class="text-indigo-600 dark:text-indigo-400">85%</span>
+        </div>
+        <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+          <div class="bg-indigo-600 h-full rounded-full transition-all duration-1000" style="width: 85%"></div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           TABBED AUTHENTICATION / DB CONNECTION TESTER
+           ========================================== -->
+      <div class="border-t border-slate-100 dark:border-slate-700 pt-5 space-y-4 text-left">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Test Auth & Database</h3>
+          <span id="db-status-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+            Database Connected
+          </span>
+        </div>
+
+        <!-- Google Sign-In -->
+        <div id="google-signin-container" class="flex flex-col items-center justify-center space-y-4 mb-4">
+          <div id="g_id_onload"
+               data-client_id="603122845820-cmodpjdq3uhvpl179o92v7eeo9tll9lp.apps.googleusercontent.com"
+               data-context="signin"
+               data-ux_mode="popup"
+               data-callback="handleGoogleCallback"
+               data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin"
+               data-type="standard"
+               data-shape="rectangular"
+               data-theme="outline"
+               data-text="signin_with"
+               data-size="large"
+               data-logo_alignment="left">
+          </div>
+          <div class="w-full flex items-center justify-center space-x-2">
+            <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-widest">or</span>
+            <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+          </div>
+        </div>
+
+        <!-- Auth Tabs Header -->
+        <div class="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl">
+          <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">
+            Sign In
+          </button>
+          <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">
+            Register
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Email Address</label>
+            <input type="email" id="login-email" required placeholder="admin@garage.com" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Password</label>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">
+            SUBMIT SIGN IN
+          </button>
+        </form>
+
+        <!-- Register Form (hidden initially) -->
+        <form id="form-register" onsubmit="handleRegister(event)" class="hidden space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Full Name</label>
+            <input type="text" id="register-name" required placeholder="John Mechanic" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Email Address</label>
+            <input type="email" id="register-email" required placeholder="john@example.com" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Password</label>
+            <input type="password" id="register-password" required placeholder="••••••••" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">
+            REGISTER NEW ACCOUNT
+          </button>
+        </form>
+
+        <!-- Auth Result / User Status (hidden initially) -->
+        <div id="auth-status-container" class="hidden bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center space-x-2.5">
+            <div id="status-avatar" class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">U</div>
+            <div>
+              <p id="status-user-name" class="text-xs font-bold text-slate-900 dark:text-white">Active User</p>
+              <p id="status-user-email" class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">user@example.com</p>
+            </div>
+          </div>
+          <p id="status-token-desc" class="text-[9px] font-mono text-indigo-600 dark:text-indigo-400 break-all leading-tight">Token loaded</p>
+          <button onclick="handleSignOut()" class="w-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold py-1.5 rounded-xl text-[10px] transition-all">
+            LOG OUT / CLEAR TEST
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="text-center py-4 text-xs font-semibold text-slate-400 dark:text-slate-600 border-t border-slate-100 dark:border-slate-800/80">
+    &copy; 2026 Garage Workshop PWA. All rights reserved.
+  </footer>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+
+    // Initialize state
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dark Mode logic
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('dark-mode-icon').innerText = 'light_mode';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('dark-mode-icon').innerText = 'dark_mode';
+      }
+
+      // Check current JWT session token
+      const token = localStorage.getItem('garage_token');
+      const userStr = localStorage.getItem('garage_user');
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          showAuthUser(user, token);
+        } catch (e) {
+          localStorage.removeItem('garage_token');
+          localStorage.removeItem('garage_user');
+        }
+      }
+    });
+
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.theme = isDark ? 'dark' : 'light';
+      document.getElementById('dark-mode-icon').innerText = isDark ? 'light_mode' : 'dark_mode';
+    }
+
+    // Toast Alert Helper
+    function showToast(message, iconName = 'check_circle', isSuccess = true) {
+      const toast = document.getElementById('toast');
+      const toastIcon = document.getElementById('toast-icon');
+      const toastMessage = document.getElementById('toast-message');
+
+      toastIcon.innerText = iconName;
+      toastIcon.className = `material-icons-round ${isSuccess ? 'text-green-400' : 'text-rose-400'}`;
+      toastMessage.innerText = message;
+
+      toast.style.opacity = '1';
+      toast.style.transform = 'translate(-50%, 0px)';
+      toast.style.pointerEvents = 'auto';
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -20px)';
+        toast.style.pointerEvents = 'none';
+      }, 3000);
+    }
+
+    // Google Sign-In Callback Handler
+    async function handleGoogleCallback(response) {
+      if (!response || !response.credential) {
+        showToast('Google Sign-In failed or was cancelled.', 'error', false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: response.credential })
+        });
+        const result = await res.json();
+
+        if (!res.ok) {
+          throw new Error(result.error || 'Google Authentication failed');
+        }
+
+        // Save session
+        localStorage.setItem('garage_token', result.token);
+        localStorage.setItem('garage_user', JSON.stringify(result.user));
+
+        showAuthUser(result.user, result.token);
+        showToast(result.message || 'Authenticated successfully with Google!', 'verified_user', true);
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    // Tab switcher
+    function switchTab(tab) {
+      const isLogin = tab === 'login';
+      
+      // Update buttons
+      document.getElementById('tab-login').className = isLogin
+        ? "flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm"
+        : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all";
+        
+      document.getElementById('tab-register').className = !isLogin
+        ? "flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm"
+        : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all";
+
+      // Show/Hide forms
+      if (isLogin) {
+        document.getElementById('form-login').classList.remove('hidden');
+        document.getElementById('form-register').classList.add('hidden');
+      } else {
+        document.getElementById('form-login').classList.add('hidden');
+        document.getElementById('form-register').classList.remove('hidden');
+      }
+    }
+
+    // API Service calls
+    async function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Login failed');
+        }
+
+        // Save session
+        localStorage.setItem('garage_token', data.token);
+        localStorage.setItem('garage_user', JSON.stringify(data.user));
+
+        showAuthUser(data.user, data.token);
+        showToast('Successfully logged in!', 'verified_user', true);
+      } catch (error) {
+        showToast(error.message, 'error', false);
+      }
+    }
+
+    async function handleRegister(event) {
+      event.preventDefault();
+      const name = document.getElementById('register-name').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed');
+        }
+
+        // Save session
+        localStorage.setItem('garage_token', data.token);
+        localStorage.setItem('garage_user', JSON.stringify(data.user));
+
+        showAuthUser(data.user, data.token);
+        showToast('Registration complete & signed in!', 'how_to_reg', true);
+      } catch (error) {
+        showToast(error.message, 'error', false);
+      }
+    }
+
+    function showAuthUser(user, token) {
+      document.getElementById('form-login').classList.add('hidden');
+      document.getElementById('form-register').classList.add('hidden');
+      document.getElementById('tab-login').parentElement.classList.add('hidden');
+      const gContainer = document.getElementById('google-signin-container');
+      if (gContainer) gContainer.classList.add('hidden');
+
+      const avatar = document.getElementById('status-avatar');
+      avatar.innerText = user.name.charAt(0).toUpperCase();
+      
+      document.getElementById('status-user-name').innerText = `${user.name} (${user.role})`;
+      document.getElementById('status-user-email').innerText = user.email;
+      document.getElementById('status-token-desc').innerText = `JWT: ${token.substring(0, 24)}...${token.substring(token.length - 12)}`;
+
+      document.getElementById('auth-status-container').classList.remove('hidden');
+    }
+
+    function handleSignOut() {
+      localStorage.removeItem('garage_token');
+      localStorage.removeItem('garage_user');
+
+      document.getElementById('auth-status-container').classList.add('hidden');
+      document.getElementById('tab-login').parentElement.classList.remove('hidden');
+      const gContainer = document.getElementById('google-signin-container');
+      if (gContainer) gContainer.classList.remove('hidden');
+      
+      // Reset input fields
+      document.getElementById('login-password').value = '';
+      document.getElementById('register-password').value = '';
+
+      switchTab('login');
+      showToast('Cleared auth session.', 'logout', true);
+    }
+  </script>
+</body>
+</html>

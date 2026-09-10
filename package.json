@@ -1,0 +1,25 @@
+{
+  "name": "garage-workshop-pwa",
+  "version": "1.0.0",
+  "description": "Mobile-First Car Workshop Booking and Management PWA",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "db:reset": "node scripts/reset-db.js",
+    "test": "node tests/auth-security.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
+    "google-auth-library": "^10.9.0",
+    "jsonwebtoken": "^9.0.3",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "author": "",
+  "license": "MIT"
+}
