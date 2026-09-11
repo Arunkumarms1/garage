@@ -532,9 +532,59 @@
 
           <!-- Tab Content -->
           <div id="tab-dashboard" class="app-tab-content space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
-              <h3 class="font-bold text-slate-900 dark:text-white">Active Jobs</h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400">Dashboard view coming in Phase 14</p>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 dark:text-white">Active Jobs</h3>
+                <button onclick="loadDashboardJobs()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                  <span class="material-icons-round text-base">refresh</span>
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              <!-- Kanban Board -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboard-kanban">
+                <!-- Pending Column -->
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 min-h-[400px] flex flex-col">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                      <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Pending</h4>
+                    </div>
+                    <span id="count-pending" class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                  </div>
+                  <div id="jobs-pending" class="flex-1 space-y-2 overflow-y-auto min-h-[300px]">
+                    <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">No pending jobs</p>
+                  </div>
+                </div>
+
+                <!-- In Progress Column -->
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 min-h-[400px] flex flex-col">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                      <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">In Progress</h4>
+                    </div>
+                    <span id="count-in-progress" class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                  </div>
+                  <div id="jobs-in-progress" class="flex-1 space-y-2 overflow-y-auto min-h-[300px]">
+                    <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">No in-progress jobs</p>
+                  </div>
+                </div>
+
+                <!-- Completed Column (recent) -->
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 min-h-[400px] flex flex-col">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                      <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Completed (Recent)</h4>
+                    </div>
+                    <span id="count-completed" class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                  </div>
+                  <div id="jobs-completed" class="flex-1 space-y-2 overflow-y-auto min-h-[300px]">
+                    <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">No recent completed jobs</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -707,6 +757,205 @@
         loadCustomers();
       } else if (tabName === 'inventory') {
         loadInventory();
+      } else if (tabName === 'dashboard') {
+        loadDashboardJobs();
+      }
+    }
+
+    // ===== DASHBOARD TAB FUNCTIONS =====
+
+    async function loadDashboardJobs() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const pendingEl = document.getElementById('jobs-pending');
+      const inProgressEl = document.getElementById('jobs-in-progress');
+      const completedEl = document.getElementById('jobs-completed');
+      const countPendingEl = document.getElementById('count-pending');
+      const countInProgressEl = document.getElementById('count-in-progress');
+      const countCompletedEl = document.getElementById('count-completed');
+
+      pendingEl.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">Loading...</p>';
+      inProgressEl.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">Loading...</p>';
+      completedEl.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">Loading...</p>';
+
+      try {
+        // Load active jobs (pending + in-progress)
+        const activeRes = await fetch('/api/jobs/active', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!activeRes.ok) {
+          const err = await activeRes.json();
+          throw new Error(err.error || 'Failed to load active jobs');
+        }
+
+        const activeJobs = await activeRes.json();
+
+        // Load recent completed jobs (last 10)
+        const completedRes = await fetch('/api/jobs?status=completed', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        let completedJobs = [];
+        if (completedRes.ok) {
+          completedJobs = await completedRes.json();
+          completedJobs = completedJobs.slice(0, 10);
+        }
+
+        // Group active jobs by status
+        const pendingJobs = activeJobs.filter(j => j.status === 'pending');
+        const inProgressJobs = activeJobs.filter(j => j.status === 'in-progress');
+
+        // Update counts
+        countPendingEl.textContent = pendingJobs.length;
+        countInProgressEl.textContent = inProgressJobs.length;
+        countCompletedEl.textContent = completedJobs.length;
+
+        // Render job cards
+        renderJobCards(pendingJobs, 'jobs-pending');
+        renderJobCards(inProgressJobs, 'jobs-in-progress');
+        renderJobCards(completedJobs, 'jobs-completed', true);
+
+      } catch (err) {
+        console.error('Failed to load dashboard jobs:', err);
+        pendingEl.innerHTML = `<p class="text-xs text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
+        inProgressEl.innerHTML = `<p class="text-xs text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
+        completedEl.innerHTML = `<p class="text-xs text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
+        showToast('Failed to load dashboard jobs', 'error', false);
+      }
+    }
+
+    function renderJobCards(jobs, containerId, isCompleted = false) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      if (!jobs || jobs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">${isCompleted ? 'No recent completed jobs' : 'No jobs in this status'}</p>`;
+        return;
+      }
+
+      container.innerHTML = jobs.map(job => `
+        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="showJobDetailModal(${job.id})">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <span class="material-icons-round text-slate-400 dark:text-slate-500 text-lg">directions_car</span>
+              <div>
+                <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
+              </div>
+            </div>
+            <span class="px-1.5 py-0.5 text-[10px] font-bold rounded-full ${getStatusBadgeClass(job.status)}">
+              ${formatStatus(job.status)}
+            </span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-2">${job.customer_name || 'Unknown Customer'}</p>
+          ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">${job.notes}</p>` : ''}
+          <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+            <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400">$${Number(job.total_cost || 0).toFixed(2)}</span>
+            <span class="material-icons-round text-slate-400 dark:text-slate-500 text-lg">chevron_right</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'pending': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
+        case 'in-progress': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+        case 'completed': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+        case 'cancelled': return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
+        default: return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+      }
+    }
+
+    function formatStatus(status) {
+      return status.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+    }
+
+    // Job Detail Modal State
+    let currentJobId = null;
+
+    async function showJobDetailModal(jobId) {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      currentJobId = jobId;
+
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to load job details');
+        }
+
+        const job = await res.json();
+
+        // Populate modal
+        document.getElementById('job-detail-title').textContent = `Job #${job.id}`;
+        document.getElementById('job-detail-vehicle').textContent = `${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''} - ${job.plate_number}`;
+        document.getElementById('job-detail-customer').textContent = `${job.customer_name} (${job.customer_email})`;
+        document.getElementById('job-detail-status').value = job.status;
+        document.getElementById('job-detail-notes').value = job.notes || '';
+        document.getElementById('job-detail-total').textContent = `$${Number(job.total_cost || 0).toFixed(2)}`;
+        document.getElementById('job-detail-created').textContent = new Date(job.created_at).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        // Show/hide status dropdown based on role (employee/admin can edit)
+        const userStr = localStorage.getItem('garage_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const statusSelect = document.getElementById('job-detail-status');
+        const saveBtn = document.getElementById('job-detail-save');
+        if (user && (user.role === 'employee' || user.role === 'admin')) {
+          statusSelect.disabled = false;
+          saveBtn.classList.remove('hidden');
+        } else {
+          statusSelect.disabled = true;
+          saveBtn.classList.add('hidden');
+        }
+
+        document.getElementById('job-detail-modal').classList.remove('hidden');
+      } catch (err) {
+        console.error('Failed to load job detail:', err);
+        showToast('Failed to load job details: ' + err.message, 'error', false);
+      }
+    }
+
+    function hideJobDetailModal() {
+      document.getElementById('job-detail-modal').classList.add('hidden');
+      currentJobId = null;
+    }
+
+    async function saveJobDetail() {
+      const token = localStorage.getItem('garage_token');
+      if (!token || !currentJobId) return;
+
+      const status = document.getElementById('job-detail-status').value;
+      const notes = document.getElementById('job-detail-notes').value.trim();
+
+      try {
+        const res = await fetch(`/api/jobs/${currentJobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status, notes })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to update job');
+        }
+
+        showToast('Job updated successfully!', 'check_circle', true);
+        hideJobDetailModal();
+        loadDashboardJobs();
+      } catch (err) {
+        console.error('Failed to save job:', err);
+        showToast('Failed to update job: ' + err.message, 'error', false);
       }
     }
 
@@ -1421,6 +1670,60 @@
       <div class="flex space-x-2 pt-2">
         <button onclick="hideInventoryModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all">Cancel</button>
         <button onclick="saveInventory()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Detail Modal -->
+  <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 id="job-detail-title" class="font-bold text-lg text-slate-900 dark:text-white">Job Details</h3>
+        <button onclick="hideJobDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
+          <span class="material-icons-round text-2xl">close</span>
+        </button>
+      </div>
+      
+      <div class="space-y-3 border-b border-slate-200 dark:border-slate-700 pb-4">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons-round text-indigo-600 dark:text-indigo-400">directions_car</span>
+          <p id="job-detail-vehicle" class="font-medium text-slate-900 dark:text-white text-sm"></p>
+        </div>
+        <div class="flex items-center space-x-2 ml-7">
+          <span class="material-icons-round text-slate-400 dark:text-slate-500 text-sm">person</span>
+          <p id="job-detail-customer" class="text-sm text-slate-600 dark:text-slate-400"></p>
+        </div>
+        <div class="flex items-center space-x-2 ml-7">
+          <span class="material-icons-round text-slate-400 dark:text-slate-500 text-sm">calendar_today</span>
+          <p id="job-detail-created" class="text-xs text-slate-500 dark:text-slate-400"></p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Status</label>
+          <select id="job-detail-status" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" disabled>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Notes</label>
+          <textarea id="job-detail-notes" rows="3" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="Job notes..."></textarea>
+        </div>
+        <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+          <div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Total</p>
+            <p id="job-detail-total" class="font-bold text-lg text-slate-900 dark:text-white">$0.00</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="hideJobDetailModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all">Close</button>
+        <button id="job-detail-save" onclick="saveJobDetail()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn hidden">Save Changes</button>
       </div>
     </div>
   </div>

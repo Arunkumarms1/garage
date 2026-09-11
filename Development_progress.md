@@ -154,7 +154,27 @@
 - Existing auth tests (Tests 1-4) still pass
 - Database reset and server restart work correctly
 
-## Phase 14 — Dashboard Frontend ⏳ PENDING
+## Phase 14 — Dashboard Frontend ✅ COMPLETED
+**Goal:** default post-login view showing active work.
+**Files Modified:**
+- `frontend/index.html` - Implemented Dashboard tab with:
+  - Kanban board with three columns: Pending, In Progress, Completed (Recent)
+  - Job cards showing vehicle info, customer name, status badge, notes preview, total cost
+  - Click-to-open job detail modal with status dropdown and notes editor
+  - Save button calls `PUT /api/jobs/:id` to update status/notes
+  - Role-based edit permissions (employee/admin can edit, customer view-only)
+  - Refresh button to reload data
+  - Loads active jobs from `/api/jobs/active` and recent completed from `/api/jobs?status=completed`
+
+**Verified:**
+- Server starts without errors
+- `GET /api/jobs/active` returns seeded active jobs (pending + in-progress)
+- `GET /api/jobs?status=completed` returns recent completed jobs
+- `GET /api/jobs/:id` returns full job details with customer/vehicle info
+- `PUT /api/jobs/:id` successfully updates status and notes
+- Job status change from in-progress → completed removes job from active list
+- Role hierarchy enforced: employee/admin can edit, customer gets read-only view
+- Existing auth tests (Tests 1-4) still pass
 ## Phase 15 — Job Line Items Backend ⏳ PENDING
 ## Phase 16 — Job Line Items Frontend ⏳ PENDING
 ## Phase 17 — Job Completion Logic ⏳ PENDING
