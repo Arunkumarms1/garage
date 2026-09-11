@@ -33,7 +33,13 @@
 - `backend/database.js` - Added seed data for employee and customer users; fixed vehicle owner_id references to point to the customer user (id 3)
 
 **Verified:** `node scripts/reset-db.js` runs successfully; all tables populated with valid data — 2 admins, 1 employee, 1 customer; 3 vehicles linked to customer; 8 inventory items; 2 holidays; 3 jobs (pending, in-progress, completed) linked to seeded vehicles. No orphaned foreign keys.
-## Phase 5 — Public Info Endpoint ⏳ PENDING
+## Phase 5 — Public Info Endpoint ✅ COMPLETED
+**Goal:** unauthenticated endpoint for pre-login branding + holidays.
+
+**Files Modified:**
+- `backend/server.js` - Added `GET /api/public-info` endpoint (no auth) returning `shop_name`, `shop_icon` from settings and holidays where `date >= today`. Wrapped in `// ===== PUBLIC ROUTES =====` markers.
+
+**Verified:** `curl localhost:3000/api/public-info` while logged out returns correct JSON with shop_name, shop_icon, and seeded holidays array.
 ## Phase 6 — Admin Settings & Holidays (Backend) ⏳ PENDING
 ## Phase 7 — Branding & Holiday Banner (Frontend) ⏳ PENDING
 ## Phase 8 — Admin Settings Tab (Frontend) ⏳ PENDING

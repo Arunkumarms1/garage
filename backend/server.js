@@ -83,6 +83,40 @@ function requireRole(minRole) {
 // ROUTES & API ENDPOINTS
 // ==========================================
 
+// ===== PUBLIC ROUTES =====
+
+// GET /api/public-info (No auth - pre-login branding + holidays)
+app.get('/api/public-info', (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+
+  // Get settings (shop_name, shop_icon)
+  db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64')", (err, settingsRows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve settings.' });
+    }
+
+    const settings = {};
+    settingsRows.forEach(row => {
+      settings[row.key] = row.value;
+    });
+
+    // Get upcoming holidays (date >= today)
+    db.all("SELECT id, date, reason FROM holidays WHERE date >= ? ORDER BY date ASC", [today], (err, holidayRows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to retrieve holidays.' });
+      }
+
+      res.json({
+        shop_name: settings.carwash_name || 'Garage Workshop PWA',
+        shop_icon: settings.logo_base64 || '',
+        holidays: holidayRows
+      });
+    });
+  });
+});
+
+// ===== END PUBLIC ROUTES =====
+
 // --- Auth Endpoints ---
 
 // User Registration
