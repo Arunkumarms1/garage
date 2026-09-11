@@ -65,7 +65,24 @@
   - Role-based tab visibility (admin sees Settings & Analytics; employee/admin see Customers & Inventory)
 
 **Verified:** Settings tab renders for admin users with branding and holiday management UI; all functions wired to Phase 6 backend endpoints.
-## Phase 9 — Vehicles & Customers Backend ⏳ PENDING
+## Phase 9 — Vehicles & Customers Backend ✅ COMPLETED
+**Goal:** CRUD for vehicles, customer lookup and creation.
+
+**Files Modified:**
+- `backend/database.js` - Added `phone` column to `users` table
+- `backend/server.js` - Added CRM routes wrapped in `// ===== CRM ROUTES =====` markers:
+  - `POST /api/customers` (admin/employee) - creates CRM customer record with `role='customer'`
+  - `GET /api/customers` (admin/employee) - search customers by name
+  - `GET /api/customers/:id` (admin/employee) - customer details + their vehicles
+  - Full CRUD on `/api/vehicles` (admin/employee) with search by `plate_number`
+
+**Verified:** 
+- Admin and employee can access all CRM endpoints (role hierarchy works)
+- Customer role correctly denied access (403 Forbidden)
+- Phone field stored and retrieved correctly
+- Vehicle CRUD operations work: create, read, update, delete, search by plate
+- Customer creation with phone/email, search by name, get customer with vehicles all functional
+- Existing auth tests (Tests 1-4) still pass
 ## Phase 10 — Customers & Vehicles Frontend ⏳ PENDING
 ## Phase 11 — Inventory Backend ⏳ PENDING
 ## Phase 12 — Inventory Frontend ⏳ PENDING

@@ -21,6 +21,7 @@ db.serialize(() => {
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       picture TEXT,
+      phone TEXT,
       role TEXT CHECK(role IN ('admin','employee','customer')) NOT NULL
     )
   `);

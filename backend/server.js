@@ -590,6 +590,218 @@ app.put('/api/users/me/picture', authenticateToken, (req, res) => {
   });
 });
 
+// ===== CRM ROUTES =====
+
+// POST /api/customers (Admin/Employee - create CRM customer record)
+app.post('/api/customers', authenticateToken, requireRole('employee'), (req, res) => {
+  const { name, email, phone } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Name and email are required.' });
+  }
+
+  db.get("SELECT id FROM users WHERE email = ?", [email], (err, existingUser) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error during customer creation check.' });
+    }
+    if (existingUser) {
+      return res.status(400).json({ error: 'A user with this email already exists.' });
+    }
+
+    // Create customer with no usable password (CRM record only)
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    const password_hash = hashPassword(randomPassword);
+    const role = 'customer';
+
+    db.run(
+      "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+      [name, email, password_hash, phone || null, role],
+      function(insertErr) {
+        if (insertErr) {
+          return res.status(500).json({ error: 'Failed to create customer.' });
+        }
+        res.status(201).json({
+          message: 'Customer created successfully.',
+          customer: { id: this.lastID, name, email, phone, role }
+        });
+      }
+    );
+  });
+});
+
+// GET /api/customers (Admin/Employee - search customers by name)
+app.get('/api/customers', authenticateToken, requireRole('employee'), (req, res) => {
+  const { search } = req.query;
+  let query = "SELECT id, name, email, phone, role FROM users WHERE role = 'customer'";
+  let params = [];
+
+  if (search) {
+    query += " AND name LIKE ?";
+    params.push(`%${search}%`);
+  }
+  query += " ORDER BY name ASC";
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve customers.' });
+    }
+    res.json(rows);
+  });
+});
+
+// GET /api/customers/:id (Admin/Employee - get customer details + vehicles)
+app.get('/api/customers/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+
+  db.get("SELECT id, name, email, phone, role FROM users WHERE id = ? AND role = 'customer'", [id], (err, customer) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve customer.' });
+    }
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found.' });
+    }
+
+    db.all("SELECT * FROM vehicles WHERE owner_id = ?", [id], (err, vehicles) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to retrieve vehicles.' });
+      }
+      res.json({ ...customer, vehicles });
+    });
+  });
+});
+
+// POST /api/vehicles (Admin/Employee - create vehicle)
+app.post('/api/vehicles', authenticateToken, requireRole('employee'), (req, res) => {
+  const { owner_id, make, model, plate_number, year } = req.body;
+  if (!owner_id || !make || !model || !plate_number) {
+    return res.status(400).json({ error: 'Owner ID, make, model, and plate number are required.' });
+  }
+
+  // Verify owner exists and is a customer
+  db.get("SELECT id FROM users WHERE id = ? AND role = 'customer'", [owner_id], (err, owner) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying owner.' });
+    }
+    if (!owner) {
+      return res.status(400).json({ error: 'Invalid customer ID.' });
+    }
+
+    db.run(
+      "INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
+      [owner_id, make, model, plate_number.toUpperCase(), year || null],
+      function(insertErr) {
+        if (insertErr) {
+          if (insertErr.message.includes('UNIQUE constraint failed: vehicles.plate_number')) {
+            return res.status(400).json({ error: 'A vehicle with this plate number already exists.' });
+          }
+          return res.status(500).json({ error: 'Failed to create vehicle.' });
+        }
+        res.status(201).json({
+          message: 'Vehicle created successfully.',
+          vehicle: { id: this.lastID, owner_id, make, model, plate_number: plate_number.toUpperCase(), year }
+        });
+      }
+    );
+  });
+});
+
+// GET /api/vehicles (Admin/Employee - list vehicles, searchable by plate_number)
+app.get('/api/vehicles', authenticateToken, requireRole('employee'), (req, res) => {
+  const { plate_number } = req.query;
+  let query = "SELECT v.*, u.name as owner_name FROM vehicles v JOIN users u ON v.owner_id = u.id";
+  let params = [];
+
+  if (plate_number) {
+    query += " WHERE v.plate_number LIKE ?";
+    params.push(`%${plate_number.toUpperCase()}%`);
+  }
+  query += " ORDER BY v.make, v.model";
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve vehicles.' });
+    }
+    res.json(rows);
+  });
+});
+
+// GET /api/vehicles/:id (Admin/Employee - get single vehicle)
+app.get('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  db.get(
+    "SELECT v.*, u.name as owner_name FROM vehicles v JOIN users u ON v.owner_id = u.id WHERE v.id = ?",
+    [id],
+    (err, vehicle) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to retrieve vehicle.' });
+      }
+      if (!vehicle) {
+        return res.status(404).json({ error: 'Vehicle not found.' });
+      }
+      res.json(vehicle);
+    }
+  );
+});
+
+// PUT /api/vehicles/:id (Admin/Employee - update vehicle)
+app.put('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  const { owner_id, make, model, plate_number, year } = req.body;
+
+  if (!make || !model || !plate_number) {
+    return res.status(400).json({ error: 'Make, model, and plate number are required.' });
+  }
+
+  // Verify owner exists if provided
+  if (owner_id) {
+    db.get("SELECT id FROM users WHERE id = ? AND role = 'customer'", [owner_id], (err, owner) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error verifying owner.' });
+      }
+      if (!owner) {
+        return res.status(400).json({ error: 'Invalid customer ID.' });
+      }
+      updateVehicle();
+    });
+  } else {
+    updateVehicle();
+  }
+
+  function updateVehicle() {
+    db.run(
+      "UPDATE vehicles SET owner_id = ?, make = ?, model = ?, plate_number = ?, year = ? WHERE id = ?",
+      [owner_id, make, model, plate_number.toUpperCase(), year || null, id],
+      function(updateErr) {
+        if (updateErr) {
+          if (updateErr.message.includes('UNIQUE constraint failed: vehicles.plate_number')) {
+            return res.status(400).json({ error: 'A vehicle with this plate number already exists.' });
+          }
+          return res.status(500).json({ error: 'Failed to update vehicle.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Vehicle not found.' });
+        }
+        res.json({ message: 'Vehicle updated successfully.', vehicle: { id, owner_id, make, model, plate_number: plate_number.toUpperCase(), year } });
+      }
+    );
+  }
+});
+
+// DELETE /api/vehicles/:id (Admin/Employee - delete vehicle)
+app.delete('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  db.run("DELETE FROM vehicles WHERE id = ?", [id], function(err) {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to delete vehicle.' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Vehicle not found.' });
+    }
+    res.json({ message: 'Vehicle deleted successfully.' });
+  });
+});
+
+// ===== END CRM ROUTES =====
+
 // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
