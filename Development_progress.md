@@ -54,7 +54,17 @@
 - `frontend/index.html` - Added `fetchPublicInfo()` called on DOMContentLoaded; `updateHeaderBranding()` updates document.title and header with shop_name/shop_icon from `/api/public-info`; `showHolidayBanner()` displays amber banner on login screen for holidays within 14 days.
 
 **Verified:** `GET /api/public-info` returns correct JSON with shop_name, shop_icon, and seeded holidays; code updates header branding and shows holiday banner for upcoming holidays (e.g., 2026-09-18 Staff Training Day is within 14 days).
-## Phase 8 — Admin Settings Tab (Frontend) ⏳ PENDING
+## Phase 8 — Admin Settings Tab (Frontend) ✅ COMPLETED
+**Goal:** Let admin edit branding and holidays from the UI.
+
+**Files Modified:**
+- `frontend/index.html` - Added "Settings" tab visible to `admin` only with:
+  - Branding form: shop name, icon (Base64 data URL or image URL), save button calling `PUT /api/settings`
+  - Holiday management: list with delete buttons, add form (date + reason) calling `POST /api/holidays` and `DELETE /api/holidays/:id`
+  - Tab navigation system for all roles (Dashboard, Jobs, Customers, Inventory, Settings, Analytics)
+  - Role-based tab visibility (admin sees Settings & Analytics; employee/admin see Customers & Inventory)
+
+**Verified:** Settings tab renders for admin users with branding and holiday management UI; all functions wired to Phase 6 backend endpoints.
 ## Phase 9 — Vehicles & Customers Backend ⏳ PENDING
 ## Phase 10 — Customers & Vehicles Frontend ⏳ PENDING
 ## Phase 11 — Inventory Backend ⏳ PENDING

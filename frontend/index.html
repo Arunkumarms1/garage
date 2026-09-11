@@ -262,6 +262,9 @@
       }
     });
 
+    // API Base URL
+    const API_BASE = '';
+
     // Fetch public info (branding + holidays) - runs on every page load
     async function fetchPublicInfo() {
       try {
@@ -488,14 +491,319 @@
       const gContainer = document.getElementById('google-signin-container');
       if (gContainer) gContainer.classList.add('hidden');
 
-      const avatar = document.getElementById('status-avatar');
-      avatar.innerText = user.name.charAt(0).toUpperCase();
-      
-      document.getElementById('status-user-name').innerText = `${user.name} (${user.role})`;
-      document.getElementById('status-user-email').innerText = user.email;
-      document.getElementById('status-token-desc').innerText = `JWT: ${token.substring(0, 24)}...${token.substring(token.length - 12)}`;
+      const mainContent = document.querySelector('main .max-w-md');
+      if (mainContent) {
+        mainContent.innerHTML = renderAppShell(user);
+      }
 
-      document.getElementById('auth-status-container').classList.remove('hidden');
+      setupTabNavigation(user);
+      if (user.role === 'admin') {
+        loadSettingsTab();
+      }
+    }
+
+    function renderAppShell(user) {
+      const isAdmin = user.role === 'admin';
+      const isEmployeeOrAdmin = user.role === 'employee' || user.role === 'admin';
+
+      return `
+        <div class="space-y-4">
+          <!-- User Info Bar -->
+          <div class="flex items-center justify-between bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-2xl p-3.5">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${user.name.charAt(0).toUpperCase()}</div>
+              <div>
+                <p class="text-xs font-bold text-slate-900 dark:text-white">${user.name}</p>
+                <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${user.email} • <span class="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded text-[9px] uppercase">${user.role}</span></p>
+              </div>
+            </div>
+            <button onclick="handleSignOut()" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold">Logout</button>
+          </div>
+
+          <!-- Tab Navigation -->
+          <div class="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl space-x-1" id="app-tabs">
+            <button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Dashboard</button>
+            <button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Jobs</button>
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Customers</button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Inventory</button>` : ''}
+            ${isAdmin ? `<button onclick="switchAppTab('settings')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Settings</button>` : ''}
+            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Analytics</button>` : ''}
+          </div>
+
+          <!-- Tab Content -->
+          <div id="tab-dashboard" class="app-tab-content space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
+              <h3 class="font-bold text-slate-900 dark:text-white">Active Jobs</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Dashboard view coming in Phase 14</p>
+            </div>
+          </div>
+
+          <div id="tab-jobs" class="app-tab-content hidden space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
+              <h3 class="font-bold text-slate-900 dark:text-white">Job Management</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Jobs view coming in Phase 13/14</p>
+            </div>
+          </div>
+
+          <div id="tab-customers" class="app-tab-content hidden space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
+              <h3 class="font-bold text-slate-900 dark:text-white">Customers & Vehicles</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">CRM view coming in Phase 9/10</p>
+            </div>
+          </div>
+
+          <div id="tab-inventory" class="app-tab-content hidden space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
+              <h3 class="font-bold text-slate-900 dark:text-white">Inventory Management</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Inventory view coming in Phase 11/12</p>
+            </div>
+          </div>
+
+          <div id="tab-settings" class="app-tab-content hidden space-y-4" data-admin-only>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-6">
+              <h3 class="font-bold text-slate-900 dark:text-white">Shop Settings</h3>
+              
+              <!-- Branding Section -->
+              <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 pb-4">
+                <h4 class="font-semibold text-slate-700 dark:text-slate-300">Branding</h4>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Shop Name</label>
+                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Shop Icon (Base64 Data URL or Image URL)</label>
+                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Paste a base64 data URL or an HTTPS image URL. Leave empty to use default icon.</p>
+                  </div>
+                  <button onclick="saveBrandingSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Branding</button>
+                </div>
+              </div>
+
+              <!-- Holidays Section -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-semibold text-slate-700 dark:text-slate-300">Holiday Schedule</h4>
+                </div>
+                
+                <!-- Add Holiday Form -->
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 space-y-2">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Date</label>
+                      <input type="date" id="settings-holiday-date" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Reason</label>
+                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                  </div>
+                  <button onclick="addHoliday()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all">Add Holiday</button>
+                </div>
+
+                <!-- Holiday List -->
+                <div id="settings-holiday-list" class="space-y-2">
+                  <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Loading holidays...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-analytics" class="app-tab-content hidden space-y-4" data-admin-only>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
+              <h3 class="font-bold text-slate-900 dark:text-white">Analytics & Reports</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Analytics view coming in Phase 19/20</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setupTabNavigation(user) {
+      const isEmployeeOrAdmin = user.role === 'employee' || user.role === 'admin';
+      const isAdmin = user.role === 'admin';
+      
+      // Default to dashboard
+      switchAppTab('dashboard');
+    }
+
+    function switchAppTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.app-tab-content').forEach(el => el.classList.add('hidden'));
+      
+      // Show selected tab
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      if (targetTab) {
+        targetTab.classList.remove('hidden');
+      }
+
+      // Update tab buttons
+      document.querySelectorAll('#app-tabs button').forEach(btn => {
+        const isActive = btn.onclick && btn.onclick.toString().includes(tabName);
+        btn.className = isActive
+          ? "flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm"
+          : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all";
+      });
+
+      // Load tab-specific data
+      if (tabName === 'settings') {
+        loadSettingsTab();
+      }
+    }
+
+    // ===== SETTINGS TAB FUNCTIONS =====
+    
+    async function loadSettingsTab() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      try {
+        // Fetch current settings
+        const settingsRes = await fetch('/api/settings', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          document.getElementById('settings-shop-name').value = settings.carwash_name || '';
+          document.getElementById('settings-shop-icon').value = settings.logo_base64 || '';
+        }
+
+        // Fetch holidays
+        await loadHolidaysList(token);
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+        showToast('Failed to load settings', 'error', false);
+      }
+    }
+
+    async function loadHolidaysList(token) {
+      const listEl = document.getElementById('settings-holiday-list');
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Loading holidays...</p>';
+
+      try {
+        const res = await fetch('/api/public-info');
+        if (!res.ok) throw new Error('Failed to fetch holidays');
+        const data = await res.json();
+        
+        if (!data.holidays || data.holidays.length === 0) {
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No holidays scheduled</p>';
+          return;
+        }
+
+        listEl.innerHTML = data.holidays.map(h => `
+          <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
+            <div class="flex items-center space-x-3">
+              <span class="material-icons-round text-amber-600 dark:text-amber-400">event</span>
+              <div>
+                <p class="text-sm font-medium text-slate-900 dark:text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">${h.reason}</p>
+              </div>
+            </div>
+            <button onclick="deleteHoliday(${h.id})" class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1" aria-label="Delete holiday">
+              <span class="material-icons-round text-lg">delete</span>
+            </button>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load holidays:', err);
+        listEl.innerHTML = '<p class="text-sm text-rose-500 dark:text-rose-400 text-center py-4">Failed to load holidays</p>';
+      }
+    }
+
+    async function saveBrandingSettings() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const shopName = document.getElementById('settings-shop-name').value.trim();
+      const shopIcon = document.getElementById('settings-shop-icon').value.trim();
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            carwash_name: shopName,
+            logo_base64: shopIcon
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to save settings');
+        }
+
+        showToast('Branding saved successfully!', 'check_circle', true);
+        
+        // Refresh header branding
+        fetchPublicInfo();
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    async function addHoliday() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const date = document.getElementById('settings-holiday-date').value;
+      const reason = document.getElementById('settings-holiday-reason').value.trim();
+
+      if (!date || !reason) {
+        showToast('Please fill in both date and reason', 'error', false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/holidays', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ date, reason })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to add holiday');
+        }
+
+        showToast('Holiday added!', 'event', true);
+        document.getElementById('settings-holiday-date').value = '';
+        document.getElementById('settings-holiday-reason').value = '';
+        await loadHolidaysList(token);
+        fetchPublicInfo(); // Refresh holiday banner
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    async function deleteHoliday(id) {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      if (!confirm('Delete this holiday?')) return;
+
+      try {
+        const res = await fetch(`/api/holidays/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to delete holiday');
+        }
+
+        showToast('Holiday deleted', 'delete', true);
+        await loadHolidaysList(token);
+        fetchPublicInfo(); // Refresh holiday banner
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
     }
 
     function handleSignOut() {
