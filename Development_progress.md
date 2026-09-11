@@ -83,7 +83,19 @@
 - Vehicle CRUD operations work: create, read, update, delete, search by plate
 - Customer creation with phone/email, search by name, get customer with vehicles all functional
 - Existing auth tests (Tests 1-4) still pass
-## Phase 10 — Customers & Vehicles Frontend ⏳ PENDING
+## Phase 10 — Customers & Vehicles Frontend ✅ COMPLETED
+**Goal:** UI to manage customers and vehicles.
+
+**Files Modified:**
+- `frontend/index.html` - Added Customers & Vehicles tab with:
+  - Searchable customer list with name, email, phone
+  - Add/Edit/Delete customer modal (name, email, phone)
+  - Inline vehicle list per customer with make, model, year, plate
+  - Add/Edit/Delete vehicle modal (make, model, year, plate number)
+  - Search by name with debounced input
+  - Role-based visibility (admin/employee only)
+
+**Verified:** Customer CRUD operations work through modal forms; vehicles nested under customers with full CRUD; search filters results in real-time; all functions wired to Phase 9 backend endpoints.
 ## Phase 11 — Inventory Backend ⏳ PENDING
 ## Phase 12 — Inventory Frontend ⏳ PENDING
 ## Phase 13 — Jobs Backend ⏳ PENDING

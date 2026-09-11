@@ -546,9 +546,28 @@
           </div>
 
           <div id="tab-customers" class="app-tab-content hidden space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-3">
-              <h3 class="font-bold text-slate-900 dark:text-white">Customers & Vehicles</h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400">CRM view coming in Phase 9/10</p>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 dark:text-white">Customers & Vehicles</h3>
+                <button onclick="showCustomerModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5">
+                  <span class="material-icons-round text-base">person_add</span>
+                  <span>Add Customer</span>
+                </button>
+              </div>
+
+              <!-- Search Bar -->
+              <div class="flex gap-2">
+                <div class="flex-1 relative">
+                  <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+                <button onclick="loadCustomers()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
+              </div>
+
+              <!-- Customers List -->
+              <div id="customers-list" class="space-y-3 max-h-[60vh] overflow-y-auto">
+                <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading customers...</p>
+              </div>
             </div>
           </div>
 
@@ -648,6 +667,8 @@
       // Load tab-specific data
       if (tabName === 'settings') {
         loadSettingsTab();
+      } else if (tabName === 'customers') {
+        loadCustomers();
       }
     }
 
@@ -806,6 +827,274 @@
       }
     }
 
+    // ===== CUSTOMERS & VEHICLES TAB FUNCTIONS =====
+
+    // Modal state
+    let editingCustomerId = null;
+    let editingVehicleId = null;
+    let currentCustomerForVehicle = null;
+
+    async function loadCustomers(search = '') {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const listEl = document.getElementById('customers-list');
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading customers...</p>';
+
+      try {
+        const url = search ? `/api/customers?search=${encodeURIComponent(search)}` : '/api/customers';
+        const res = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to load customers');
+        }
+
+        const customers = await res.json();
+
+        if (!customers || customers.length === 0) {
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No customers found</p>';
+          return;
+        }
+
+        listEl.innerHTML = customers.map(c => `
+          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 space-y-3" data-customer-id="${c.id}">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm">
+                  ${c.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-900 dark:text-white">${c.name}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">${c.email || 'No email'} ${c.phone ? '• ' + c.phone : ''}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <button onclick="showVehicleModal(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20" aria-label="Add vehicle">
+                  <span class="material-icons-round text-lg">directions_car</span>
+                </button>
+                <button onclick="editCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${(c.email || '').replace(/'/g, "\\'")}', '${(c.phone || '').replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Edit customer">
+                  <span class="material-icons-round text-lg">edit</span>
+                </button>
+                <button onclick="deleteCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20" aria-label="Delete customer">
+                  <span class="material-icons-round text-lg">delete</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Vehicles for this customer -->
+            <div id="vehicles-${c.id}" class="ml-10 border-l-2 border-slate-200 dark:border-slate-700 pl-4 space-y-2">
+              ${c.vehicles && c.vehicles.length > 0 ? c.vehicles.map(v => `
+                <div class="flex items-center justify-between py-2 bg-white dark:bg-slate-800 rounded-lg px-3">
+                  <div class="flex items-center space-x-2.5">
+                    <span class="material-icons-round text-slate-400 dark:text-slate-500">directions_car</span>
+                    <div>
+                      <p class="text-sm font-medium text-slate-900 dark:text-white">${v.make} ${v.model} ${v.year ? '(' + v.year + ')' : ''}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${v.plate_number}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <button onclick="editVehicle(${v.id}, ${c.id}, '${v.make.replace(/'/g, "\\'")}', '${v.model.replace(/'/g, "\\'")}', '${(v.year || '').replace(/'/g, "\\'")}', '${v.plate_number.replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Edit vehicle">
+                      <span class="material-icons-round text-base">edit</span>
+                    </button>
+                    <button onclick="deleteVehicle(${v.id}, '${v.plate_number.replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20" aria-label="Delete vehicle">
+                      <span class="material-icons-round text-base">delete</span>
+                    </button>
+                  </div>
+                </div>
+              `).join('') : '<p class="text-xs text-slate-400 dark:text-slate-500 italic py-2">No vehicles yet</p>'}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load customers:', err);
+        listEl.innerHTML = `<p class="text-sm text-rose-500 dark:text-rose-400 text-center py-8">Failed to load customers: ${err.message}</p>`;
+      }
+    }
+
+    function showCustomerModal(customerId = null, name = '', email = '', phone = '') {
+      editingCustomerId = customerId;
+      document.getElementById('customer-modal-name').value = name;
+      document.getElementById('customer-modal-email').value = email;
+      document.getElementById('customer-modal-phone').value = phone;
+      document.getElementById('customer-modal-title').textContent = customerId ? 'Edit Customer' : 'Add Customer';
+      document.getElementById('customer-modal').classList.remove('hidden');
+      document.getElementById('customer-modal-name').focus();
+    }
+
+    function hideCustomerModal() {
+      document.getElementById('customer-modal').classList.add('hidden');
+      editingCustomerId = null;
+    }
+
+    async function saveCustomer() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const name = document.getElementById('customer-modal-name').value.trim();
+      const email = document.getElementById('customer-modal-email').value.trim();
+      const phone = document.getElementById('customer-modal-phone').value.trim();
+
+      if (!name) {
+        showToast('Customer name is required', 'error', false);
+        return;
+      }
+
+      try {
+        const url = editingCustomerId ? `/api/customers/${editingCustomerId}` : '/api/customers';
+        const method = editingCustomerId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, email, phone })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to save customer');
+        }
+
+        showToast(editingCustomerId ? 'Customer updated!' : 'Customer added!', 'check_circle', true);
+        hideCustomerModal();
+        loadCustomers(document.getElementById('customer-search').value);
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    function editCustomer(id, name, email, phone) {
+      showCustomerModal(id, name, email, phone);
+    }
+
+    async function deleteCustomer(id, name) {
+      if (!confirm(`Delete customer "${name}"? This will also remove their vehicles.`)) return;
+
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      try {
+        const res = await fetch(`/api/customers/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to delete customer');
+        }
+
+        showToast('Customer deleted', 'delete', true);
+        loadCustomers(document.getElementById('customer-search').value);
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    function showVehicleModal(customerId, customerName) {
+      currentCustomerForVehicle = customerId;
+      editingVehicleId = null;
+      document.getElementById('vehicle-modal-customer').textContent = customerName;
+      document.getElementById('vehicle-modal-make').value = '';
+      document.getElementById('vehicle-modal-model').value = '';
+      document.getElementById('vehicle-modal-year').value = '';
+      document.getElementById('vehicle-modal-plate').value = '';
+      document.getElementById('vehicle-modal-title').textContent = 'Add Vehicle';
+      document.getElementById('vehicle-modal').classList.remove('hidden');
+      document.getElementById('vehicle-modal-make').focus();
+    }
+
+    function hideVehicleModal() {
+      document.getElementById('vehicle-modal').classList.add('hidden');
+      editingVehicleId = null;
+      currentCustomerForVehicle = null;
+    }
+
+    async function saveVehicle() {
+      const token = localStorage.getItem('garage_token');
+      if (!token || !currentCustomerForVehicle) return;
+
+      const make = document.getElementById('vehicle-modal-make').value.trim();
+      const model = document.getElementById('vehicle-modal-model').value.trim();
+      const year = document.getElementById('vehicle-modal-year').value.trim();
+      const plate_number = document.getElementById('vehicle-modal-plate').value.trim().toUpperCase();
+
+      if (!make || !model || !plate_number) {
+        showToast('Make, model, and plate number are required', 'error', false);
+        return;
+      }
+
+      try {
+        const url = editingVehicleId ? `/api/vehicles/${editingVehicleId}` : '/api/vehicles';
+        const method = editingVehicleId ? 'PUT' : 'POST';
+
+        const body = { make, model, year: year || null, plate_number };
+        if (!editingVehicleId) body.owner_id = currentCustomerForVehicle;
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to save vehicle');
+        }
+
+        showToast(editingVehicleId ? 'Vehicle updated!' : 'Vehicle added!', 'check_circle', true);
+        hideVehicleModal();
+        loadCustomers(document.getElementById('customer-search').value);
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    function editVehicle(id, customerId, make, model, year, plate) {
+      currentCustomerForVehicle = customerId;
+      editingVehicleId = id;
+      document.getElementById('vehicle-modal-customer').textContent = document.querySelector(`[data-customer-id="${customerId}"] p.font-semibold`).textContent;
+      document.getElementById('vehicle-modal-make').value = make;
+      document.getElementById('vehicle-modal-model').value = model;
+      document.getElementById('vehicle-modal-year').value = year;
+      document.getElementById('vehicle-modal-plate').value = plate;
+      document.getElementById('vehicle-modal-title').textContent = 'Edit Vehicle';
+      document.getElementById('vehicle-modal').classList.remove('hidden');
+      document.getElementById('vehicle-modal-make').focus();
+    }
+
+    async function deleteVehicle(id, plate) {
+      if (!confirm(`Delete vehicle "${plate}"?`)) return;
+
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      try {
+        const res = await fetch(`/api/vehicles/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to delete vehicle');
+        }
+
+        showToast('Vehicle deleted', 'delete', true);
+        loadCustomers(document.getElementById('customer-search').value);
+      } catch (err) {
+        showToast(err.message, 'error', false);
+      }
+    }
+
     function handleSignOut() {
       localStorage.removeItem('garage_token');
       localStorage.removeItem('garage_user');
@@ -822,6 +1111,89 @@
       switchTab('login');
       showToast('Cleared auth session.', 'logout', true);
     }
+
+    // Search customers on input
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('customer-search');
+      if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            loadCustomers(searchInput.value);
+          }, 300);
+        });
+      }
+    });
   </script>
+
+  <!-- Customer Modal -->
+  <div id="customer-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 id="customer-modal-title" class="font-bold text-lg text-slate-900 dark:text-white">Add Customer</h3>
+        <button onclick="hideCustomerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
+          <span class="material-icons-round text-2xl">close</span>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Full Name <span class="text-rose-500">*</span></label>
+          <input type="text" id="customer-modal-name" placeholder="John Smith" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Email</label>
+          <input type="email" id="customer-modal-email" placeholder="john@example.com" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Phone</label>
+          <input type="tel" id="customer-modal-phone" placeholder="+1 (555) 123-4567" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button onclick="hideCustomerModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all">Cancel</button>
+        <button onclick="saveCustomer()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vehicle Modal -->
+  <div id="vehicle-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 id="vehicle-modal-title" class="font-bold text-lg text-slate-900 dark:text-white">Add Vehicle</h3>
+        <button onclick="hideVehicleModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
+          <span class="material-icons-round text-2xl">close</span>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Customer: <span id="vehicle-modal-customer" class="font-medium text-slate-700 dark:text-slate-300"></span></p>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Make <span class="text-rose-500">*</span></label>
+            <input type="text" id="vehicle-modal-make" placeholder="Toyota" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Model <span class="text-rose-500">*</span></label>
+            <input type="text" id="vehicle-modal-model" placeholder="Camry" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Year</label>
+            <input type="number" id="vehicle-modal-year" placeholder="2020" min="1900" max="2099" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Plate Number <span class="text-rose-500">*</span></label>
+            <input type="text" id="vehicle-modal-plate" placeholder="ABC-1234" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" style="text-transform: uppercase;">
+          </div>
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button onclick="hideVehicleModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all">Cancel</button>
+        <button onclick="saveVehicle()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
