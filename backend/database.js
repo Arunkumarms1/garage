@@ -119,6 +119,8 @@ db.serialize(() => {
     if (err) console.error("Error checking users count:", err);
     if (row && row.count === 0) {
       const ownerHash = hashPassword('SuperStrongAdminPassword!2026');
+      const employeeHash = hashPassword('EmployeePass!2026');
+      const customerHash = hashPassword('CustomerPass!2026');
 
       // Replicating admin user with admin@carwash.com for compliance with existing test file expectations, 
       // but also adding admin@garage.com for workshop context consistency.
@@ -126,7 +128,11 @@ db.serialize(() => {
         ['Garage Owner', 'admin@carwash.com', ownerHash, 'admin']);
       db.run("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)", 
         ['Garage Workshop Owner', 'admin@garage.com', ownerHash, 'admin']);
-      console.log("Seeded default admin users.");
+      db.run("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)", 
+        ['John Mechanic', 'employee@garage.com', employeeHash, 'employee']);
+      db.run("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)", 
+        ['Jane Customer', 'customer@garage.com', customerHash, 'customer']);
+      console.log("Seeded default users (admin, employee, customer).");
     }
   });
 
@@ -160,11 +166,11 @@ db.serialize(() => {
   db.get("SELECT COUNT(*) as count FROM vehicles", (err, row) => {
     if (err) console.error("Error checking vehicles count:", err);
     if (row && row.count === 0) {
-      // Seed vehicles for the first customer user (id 3, after 2 admins)
+      // Seed vehicles for the customer user (id 4, after 2 admins + 1 employee)
       db.run("INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
-        [3, 'Toyota', 'Camry', 'ABC-123', 2020]);
+        [4, 'Toyota', 'Camry', 'ABC-123', 2020]);
       db.run("INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
-        [3, 'Honda', 'Civic', 'XYZ-789', 2019]);
+        [4, 'Honda', 'Civic', 'XYZ-789', 2019]);
       db.run("INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
         [4, 'Ford', 'F-150', 'TRK-456', 2021]);
       console.log("Seeded default vehicles.");

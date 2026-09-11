@@ -26,7 +26,13 @@
 - `backend/server.js` - Replaced exact-match role check with rank comparison (admin=3, employee=2, customer=1). `requireRole(minRole)` now passes if caller's rank ≥ required rank.
 
 **Verified:** Server starts without errors; existing tests (auth-security.test.js Tests 1-4) pass; Test 5 fails due to Phase 2 schema change (bookings→jobs), unrelated to this phase.
-## Phase 4 — Seed Data Refresh ⏳ PENDING
+## Phase 4 — Seed Data Refresh ✅ COMPLETED
+**Goal:** `reset-db.js` seeds realistic dummy rows for every new table.
+
+**Files Modified:**
+- `backend/database.js` - Added seed data for employee and customer users; fixed vehicle owner_id references to point to the customer user (id 3)
+
+**Verified:** `node scripts/reset-db.js` runs successfully; all tables populated with valid data — 2 admins, 1 employee, 1 customer; 3 vehicles linked to customer; 8 inventory items; 2 holidays; 3 jobs (pending, in-progress, completed) linked to seeded vehicles. No orphaned foreign keys.
 ## Phase 5 — Public Info Endpoint ⏳ PENDING
 ## Phase 6 — Admin Settings & Holidays (Backend) ⏳ PENDING
 ## Phase 7 — Branding & Holiday Banner (Frontend) ⏳ PENDING
