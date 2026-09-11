@@ -245,6 +245,9 @@
         document.getElementById('dark-mode-icon').innerText = 'dark_mode';
       }
 
+      // Fetch public info for branding & holidays (before auth check)
+      fetchPublicInfo();
+
       // Check current JWT session token
       const token = localStorage.getItem('garage_token');
       const userStr = localStorage.getItem('garage_user');
@@ -258,6 +261,86 @@
         }
       }
     });
+
+    // Fetch public info (branding + holidays) - runs on every page load
+    async function fetchPublicInfo() {
+      try {
+        const res = await fetch('/api/public-info');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // Update document title
+        if (data.shop_name) {
+          document.title = data.shop_name;
+        }
+        
+        // Update header branding
+        updateHeaderBranding(data.shop_name, data.shop_icon);
+        
+        // Show holiday banner on login screen if applicable
+        if (data.holidays && data.holidays.length > 0) {
+          showHolidayBanner(data.holidays);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch public info:', err);
+      }
+    }
+
+    // Update header with shop name and icon
+    function updateHeaderBranding(shopName, shopIcon) {
+      const headerTitle = document.querySelector('header h1');
+      const logoContainer = document.querySelector('header .w-10.h-10');
+      
+      if (shopName && headerTitle) {
+        headerTitle.textContent = shopName;
+      }
+      
+      if (shopIcon && logoContainer) {
+        // If icon is a base64 data URL or HTTP URL, use it as background image
+        if (shopIcon.startsWith('data:') || shopIcon.startsWith('http')) {
+          logoContainer.innerHTML = `<img src="${shopIcon}" alt="${shopName || 'Shop logo'}" class="w-full h-full object-cover rounded-full">`;
+        } else {
+          // Assume it's a Material Icon name
+          logoContainer.innerHTML = `<span class="material-icons-round text-indigo-600 text-2xl">${shopIcon}</span>`;
+        }
+      }
+    }
+
+    // Show holiday banner on login screen for holidays within 14 days
+    function showHolidayBanner(holidays) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const twoWeeksFromNow = new Date(today);
+      twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+      
+      const upcomingHolidays = holidays.filter(h => {
+        const holidayDate = new Date(h.date);
+        return holidayDate >= today && holidayDate <= twoWeeksFromNow;
+      });
+      
+      if (upcomingHolidays.length === 0) return;
+      
+      // Only show on login screen (when auth forms are visible)
+      const loginScreen = document.querySelector('main .max-w-md');
+      if (!loginScreen || loginScreen.querySelector('#holiday-banner')) return;
+      
+      const bannerHtml = upcomingHolidays.map(h => `
+        <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4 flex items-start space-x-2.5">
+          <span class="material-icons-round text-amber-600 dark:text-amber-400 text-lg mt-0.5">event</span>
+          <div>
+            <p class="text-xs font-bold text-slate-900 dark:text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+            <p class="text-xs text-slate-600 dark:text-slate-300">${h.reason}</p>
+          </div>
+        </div>
+      `).join('');
+      
+      const bannerContainer = document.createElement('div');
+      bannerContainer.id = 'holiday-banner';
+      bannerContainer.innerHTML = bannerHtml;
+      
+      // Insert at the top of the main content card
+      loginScreen.insertBefore(bannerContainer, loginScreen.firstChild);
+    }
 
     // Dark Mode Toggle
     function toggleDarkMode() {

@@ -47,7 +47,13 @@
 - `backend/server.js` - Added `POST /api/holidays` and `DELETE /api/holidays/:id` endpoints (admin only). Existing `PUT /api/settings` already accepts `carwash_name` (shop_name) and `logo_base64` (shop_icon). Wrapped in `// ===== ADMIN SETTINGS & HOLIDAYS ROUTES =====` markers.
 
 **Verified:** As admin, added holiday via POST, confirmed it appears in `GET /api/public-info`; deleted holiday via DELETE, confirmed it's removed from `GET /api/public-info`.
-## Phase 7 — Branding & Holiday Banner (Frontend) ⏳ PENDING
+## Phase 7 — Branding & Holiday Banner (Frontend) ✅ COMPLETED
+**Goal:** Show shop identity and holiday notices before login.
+
+**Files Modified:**
+- `frontend/index.html` - Added `fetchPublicInfo()` called on DOMContentLoaded; `updateHeaderBranding()` updates document.title and header with shop_name/shop_icon from `/api/public-info`; `showHolidayBanner()` displays amber banner on login screen for holidays within 14 days.
+
+**Verified:** `GET /api/public-info` returns correct JSON with shop_name, shop_icon, and seeded holidays; code updates header branding and shows holiday banner for upcoming holidays (e.g., 2026-09-18 Staff Training Day is within 14 days).
 ## Phase 8 — Admin Settings Tab (Frontend) ⏳ PENDING
 ## Phase 9 — Vehicles & Customers Backend ⏳ PENDING
 ## Phase 10 — Customers & Vehicles Frontend ⏳ PENDING
