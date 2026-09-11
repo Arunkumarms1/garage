@@ -59,11 +59,21 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Middleware to restrict access to specific roles (e.g. 'owner')
-function requireRole(role) {
+// Role hierarchy: admin > employee > customer
+const ROLE_RANK = {
+  admin: 3,
+  employee: 2,
+  customer: 1
+};
+
+// Middleware to restrict access by minimum role rank
+function requireRole(minRole) {
   return (req, res, next) => {
-    if (!req.user || req.user.role !== role) {
-      return res.status(403).json({ error: `Forbidden: Requires ${role} role.` });
+    if (!req.user || !ROLE_RANK[req.user.role]) {
+      return res.status(403).json({ error: 'Forbidden: Invalid role.' });
+    }
+    if (ROLE_RANK[req.user.role] < ROLE_RANK[minRole]) {
+      return res.status(403).json({ error: `Forbidden: Requires ${minRole} role or higher.` });
     }
     next();
   };
