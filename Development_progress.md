@@ -115,7 +115,24 @@
 - Existing auth tests (Tests 1-4) still pass
 - Database reset and server restart work correctly
 
-## Phase 12 — Inventory Frontend ⏳ PENDING
+## Phase 12 — Inventory Frontend ✅ COMPLETED
+**Goal:** UI to view and manage stock.
+**Files Modified:**
+- `frontend/index.html` - Added Inventory tab with:
+  - Searchable inventory table with item name, quantity (highlighted amber when ≤5), cost price, selling price
+  - Add/Edit inventory modal (name, quantity, cost price, selling price)
+  - Delete confirmation
+  - Real-time search with debounced input
+  - Role-based visibility (admin/employee only)
+
+**Verified:**
+- All CRUD operations work through modal forms
+- Search filters results in real-time
+- Quantity highlighted when low stock (≤5)
+- All functions wired to Phase 11 backend endpoints
+- Role hierarchy enforced (admin/employee can access, customer gets 403)
+- Existing auth tests (Tests 1-4) still pass
+
 ## Phase 13 — Jobs Backend ⏳ PENDING
 ## Phase 14 — Dashboard Frontend ⏳ PENDING
 ## Phase 15 — Job Line Items Backend ⏳ PENDING
