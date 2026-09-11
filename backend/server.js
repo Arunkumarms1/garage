@@ -959,6 +959,217 @@ app.delete('/api/inventory/:id', authenticateToken, requireRole('employee'), (re
 
 // ===== END INVENTORY ROUTES =====
 
+// ===== JOBS ROUTES =====
+
+// GET /api/jobs/active (Employee/Admin - list active jobs: pending, in-progress)
+app.get('/api/jobs/active', authenticateToken, requireRole('employee'), (req, res) => {
+  db.all(
+    "SELECT j.*, v.make, v.model, v.plate_number, v.year, u.name as customer_name, u.email as customer_email FROM jobs j JOIN vehicles v ON j.vehicle_id = v.id JOIN users u ON v.owner_id = u.id WHERE j.status IN ('pending', 'in-progress') ORDER BY j.created_at DESC",
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to retrieve active jobs.' });
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// GET /api/jobs (Employee/Admin - all jobs with filters; Customer - own vehicles only)
+app.get('/api/jobs', authenticateToken, (req, res) => {
+  const { status, from, to } = req.query;
+  let query = `
+    SELECT j.*, v.make, v.model, v.plate_number, v.year, u.name as customer_name, u.email as customer_email
+    FROM jobs j
+    JOIN vehicles v ON j.vehicle_id = v.id
+    JOIN users u ON v.owner_id = u.id
+  `;
+  let params = [];
+  const conditions = [];
+
+  // Customer role: scope to their own vehicles
+  if (req.user.role === 'customer') {
+    conditions.push("u.id = ?");
+    params.push(req.user.id);
+  }
+
+  // Status filter
+  if (status) {
+    conditions.push("j.status = ?");
+    params.push(status);
+  }
+
+  // Date range filter (using created_at)
+  if (from) {
+    conditions.push("date(j.created_at) >= date(?)");
+    params.push(from);
+  }
+  if (to) {
+    conditions.push("date(j.created_at) <= date(?)");
+    params.push(to);
+  }
+
+  if (conditions.length > 0) {
+    query += " WHERE " + conditions.join(" AND ");
+  }
+
+  query += " ORDER BY j.created_at DESC";
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve jobs.' });
+    }
+    res.json(rows);
+  });
+});
+
+// GET /api/jobs/:id (Employee/Admin - get single job with details; Customer - own vehicle only)
+app.get('/api/jobs/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  let query = `
+    SELECT j.*, v.make, v.model, v.plate_number, v.year, u.name as customer_name, u.email as customer_email, u.id as customer_id
+    FROM jobs j
+    JOIN vehicles v ON j.vehicle_id = v.id
+    JOIN users u ON v.owner_id = u.id
+    WHERE j.id = ?
+  `;
+  let params = [id];
+
+  // Customer role: ensure they only access their own vehicle's jobs
+  if (req.user.role === 'customer') {
+    query += " AND u.id = ?";
+    params.push(req.user.id);
+  }
+
+  db.get(query, params, (err, job) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve job.' });
+    }
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+    res.json(job);
+  });
+});
+
+// POST /api/jobs (Employee/Admin - create job)
+app.post('/api/jobs', authenticateToken, requireRole('employee'), (req, res) => {
+  const { vehicle_id, notes } = req.body;
+
+  if (!vehicle_id) {
+    return res.status(400).json({ error: 'Vehicle ID is required.' });
+  }
+
+  // Verify vehicle exists
+  db.get("SELECT id FROM vehicles WHERE id = ?", [vehicle_id], (err, vehicle) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying vehicle.' });
+    }
+    if (!vehicle) {
+      return res.status(400).json({ error: 'Invalid vehicle ID.' });
+    }
+
+    db.run(
+      "INSERT INTO jobs (vehicle_id, status, notes, total_cost) VALUES (?, ?, ?, ?)",
+      [vehicle_id, 'pending', notes || '', 0],
+      function(insertErr) {
+        if (insertErr) {
+          return res.status(500).json({ error: 'Failed to create job.' });
+        }
+        res.status(201).json({
+          message: 'Job created successfully.',
+          job: { id: this.lastID, vehicle_id, status: 'pending', notes: notes || '', total_cost: 0 }
+        });
+      }
+    );
+  });
+});
+
+// PUT /api/jobs/:id (Employee/Admin - update job)
+app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  const { vehicle_id, status, notes, total_cost } = req.body;
+
+  // Validate status if provided
+  if (status && !['pending', 'in-progress', 'completed', 'cancelled'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid job status.' });
+  }
+
+  // If vehicle_id is being changed, verify it exists
+  if (vehicle_id) {
+    db.get("SELECT id FROM vehicles WHERE id = ?", [vehicle_id], (err, vehicle) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error verifying vehicle.' });
+      }
+      if (!vehicle) {
+        return res.status(400).json({ error: 'Invalid vehicle ID.' });
+      }
+      updateJob();
+    });
+  } else {
+    updateJob();
+  }
+
+  function updateJob() {
+    const updates = [];
+    const params = [];
+
+    if (vehicle_id !== undefined) {
+      updates.push("vehicle_id = ?");
+      params.push(vehicle_id);
+    }
+    if (status !== undefined) {
+      updates.push("status = ?");
+      params.push(status);
+    }
+    if (notes !== undefined) {
+      updates.push("notes = ?");
+      params.push(notes);
+    }
+    if (total_cost !== undefined) {
+      updates.push("total_cost = ?");
+      params.push(parseFloat(total_cost));
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update.' });
+    }
+
+    updates.push("updated_at = datetime('now')");
+    params.push(id);
+
+    db.run(
+      `UPDATE jobs SET ${updates.join(', ')} WHERE id = ?`,
+      params,
+      function(updateErr) {
+        if (updateErr) {
+          return res.status(500).json({ error: 'Failed to update job.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Job not found.' });
+        }
+        res.json({ message: 'Job updated successfully.', jobId: parseInt(id) });
+      }
+    );
+  }
+});
+
+// DELETE /api/jobs/:id (Admin only - delete job)
+app.delete('/api/jobs/:id', authenticateToken, requireRole('admin'), (req, res) => {
+  const { id } = req.params;
+  db.run("DELETE FROM jobs WHERE id = ?", [id], function(err) {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to delete job.' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+    res.json({ message: 'Job deleted successfully.' });
+  });
+});
+
+// ===== END JOBS ROUTES =====
+
 // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));

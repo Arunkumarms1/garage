@@ -133,7 +133,27 @@
 - Role hierarchy enforced (admin/employee can access, customer gets 403)
 - Existing auth tests (Tests 1-4) still pass
 
-## Phase 13 — Jobs Backend ⏳ PENDING
+## Phase 13 — Jobs Backend ✅ COMPLETED
+**Goal:** CRUD for jobs, plus the two read variants the dashboard and history need.
+
+**Files Modified:**
+- `backend/server.js` - Added Jobs routes wrapped in `// ===== JOBS ROUTES =====` markers:
+  - `GET /api/jobs/active` (employee/admin) - list active jobs (pending, in-progress)
+  - `GET /api/jobs` (employee/admin - all with filters; customer - own vehicles only) - supports status, from, to query params
+  - `GET /api/jobs/:id` (employee/admin - single job; customer - own vehicle only)
+  - `POST /api/jobs` (employee/admin) - create job with vehicle_id and notes
+  - `PUT /api/jobs/:id` (employee/admin) - update job (vehicle_id, status, notes, total_cost)
+  - `DELETE /api/jobs/:id` (admin only) - delete job
+
+**Verified:**
+- All CRUD operations work correctly
+- `GET /api/jobs/active` returns only pending and in-progress jobs
+- `GET /api/jobs` with filters (status, from, to) works correctly
+- Role hierarchy works: admin and employee have full access; customer scoped to own vehicles only
+- Customer cannot access `/api/jobs/active` (403) but can access `/api/jobs` and `/api/jobs/:id` for own vehicles
+- Existing auth tests (Tests 1-4) still pass
+- Database reset and server restart work correctly
+
 ## Phase 14 — Dashboard Frontend ⏳ PENDING
 ## Phase 15 — Job Line Items Backend ⏳ PENDING
 ## Phase 16 — Job Line Items Frontend ⏳ PENDING
