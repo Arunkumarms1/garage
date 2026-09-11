@@ -96,7 +96,25 @@
   - Role-based visibility (admin/employee only)
 
 **Verified:** Customer CRUD operations work through modal forms; vehicles nested under customers with full CRUD; search filters results in real-time; all functions wired to Phase 9 backend endpoints.
-## Phase 11 — Inventory Backend ⏳ PENDING
+## Phase 11 — Inventory Backend ✅ COMPLETED
+**Goal:** CRUD for parts stock, with automatic purchase logging.
+**Files Modified:**
+- `backend/server.js` - Added inventory CRUD endpoints wrapped in `// ===== INVENTORY ROUTES =====` markers:
+  - `GET /api/inventory` (admin/employee) - list all inventory items
+  - `GET /api/inventory/:id` (admin/employee) - get single inventory item
+  - `POST /api/inventory` (admin/employee) - create new inventory item, logs purchase to ledger if initial quantity > 0
+  - `PUT /api/inventory/:id` (admin/employee) - update inventory item, logs purchase to ledger on restock (quantity increase)
+  - `DELETE /api/inventory/:id` (admin/employee) - delete inventory item
+
+**Verified:**
+- All CRUD operations work correctly
+- Purchase logged to ledger on create with initial quantity > 0 (e.g., "Initial stock: Test Part (5 units @ $10.00)")
+- Purchase logged to ledger on restock (quantity increase) (e.g., "Restock: Test Part (+10 units @ $10.00)")
+- No purchase logged on quantity decrease or same quantity
+- Role hierarchy works: admin and employee can access, customer gets 403 Forbidden
+- Existing auth tests (Tests 1-4) still pass
+- Database reset and server restart work correctly
+
 ## Phase 12 — Inventory Frontend ⏳ PENDING
 ## Phase 13 — Jobs Backend ⏳ PENDING
 ## Phase 14 — Dashboard Frontend ⏳ PENDING

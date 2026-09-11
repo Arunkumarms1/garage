@@ -802,6 +802,163 @@ app.delete('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req
 
 // ===== END CRM ROUTES =====
 
+// ===== INVENTORY ROUTES =====
+
+// GET /api/inventory (Admin/Employee - list all inventory items)
+app.get('/api/inventory', authenticateToken, requireRole('employee'), (req, res) => {
+  db.all("SELECT * FROM inventory ORDER BY item_name ASC", (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve inventory.' });
+    }
+    res.json(rows);
+  });
+});
+
+// GET /api/inventory/:id (Admin/Employee - get single inventory item)
+app.get('/api/inventory/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  db.get("SELECT * FROM inventory WHERE id = ?", [id], (err, item) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve inventory item.' });
+    }
+    if (!item) {
+      return res.status(404).json({ error: 'Inventory item not found.' });
+    }
+    res.json(item);
+  });
+});
+
+// POST /api/inventory (Admin/Employee - create new inventory item)
+app.post('/api/inventory', authenticateToken, requireRole('employee'), (req, res) => {
+  const { item_name, quantity, cost_price, selling_price } = req.body;
+  if (!item_name || quantity === undefined || cost_price === undefined || selling_price === undefined) {
+    return res.status(400).json({ error: 'Item name, quantity, cost price, and selling price are required.' });
+  }
+
+  const qty = parseInt(quantity);
+  const cost = parseFloat(cost_price);
+  const sell = parseFloat(selling_price);
+
+  if (qty < 0 || cost < 0 || sell < 0) {
+    return res.status(400).json({ error: 'Quantity and prices must be non-negative.' });
+  }
+
+  db.run(
+    "INSERT INTO inventory (item_name, quantity, cost_price, selling_price) VALUES (?, ?, ?, ?)",
+    [item_name, qty, cost, sell],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to create inventory item.' });
+      }
+
+      // If initial quantity > 0, log a purchase in ledger
+      if (qty > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const amount = qty * cost;
+        const desc = `Initial stock: ${item_name} (${qty} units @ $${cost.toFixed(2)})`;
+        
+        db.run(
+          "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
+          ['purchase', desc, amount, today],
+          (ledgerErr) => {
+            if (ledgerErr) {
+              console.error("Error logging initial stock purchase:", ledgerErr);
+            }
+          }
+        );
+      }
+
+      res.status(201).json({
+        message: 'Inventory item created successfully.',
+        item: { id: this.lastID, item_name, quantity: qty, cost_price: cost, selling_price: sell }
+      });
+    }
+  );
+});
+
+// PUT /api/inventory/:id (Admin/Employee - update inventory item, log purchase on restock)
+app.put('/api/inventory/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  const { item_name, quantity, cost_price, selling_price } = req.body;
+
+  if (!item_name || quantity === undefined || cost_price === undefined || selling_price === undefined) {
+    return res.status(400).json({ error: 'Item name, quantity, cost price, and selling price are required.' });
+  }
+
+  const newQty = parseInt(quantity);
+  const cost = parseFloat(cost_price);
+  const sell = parseFloat(selling_price);
+
+  if (newQty < 0 || cost < 0 || sell < 0) {
+    return res.status(400).json({ error: 'Quantity and prices must be non-negative.' });
+  }
+
+  // Get current quantity to detect restock
+  db.get("SELECT quantity, item_name FROM inventory WHERE id = ?", [id], (err, currentItem) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve current inventory.' });
+    }
+    if (!currentItem) {
+      return res.status(404).json({ error: 'Inventory item not found.' });
+    }
+
+    const oldQty = currentItem.quantity;
+    const itemName = currentItem.item_name;
+    const qtyIncrease = newQty - oldQty;
+
+    db.run(
+      "UPDATE inventory SET item_name = ?, quantity = ?, cost_price = ?, selling_price = ? WHERE id = ?",
+      [item_name, newQty, cost, sell, id],
+      function(updateErr) {
+        if (updateErr) {
+          return res.status(500).json({ error: 'Failed to update inventory item.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Inventory item not found.' });
+        }
+
+        // If quantity increased (restock), log a purchase in ledger
+        if (qtyIncrease > 0) {
+          const today = new Date().toISOString().split('T')[0];
+          const amount = qtyIncrease * cost;
+          const desc = `Restock: ${itemName} (+${qtyIncrease} units @ $${cost.toFixed(2)})`;
+          
+          db.run(
+            "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
+            ['purchase', desc, amount, today],
+            (ledgerErr) => {
+              if (ledgerErr) {
+                console.error("Error logging restock purchase:", ledgerErr);
+              }
+            }
+          );
+        }
+
+        res.json({
+          message: 'Inventory item updated successfully.',
+          item: { id: parseInt(id), item_name, quantity: newQty, cost_price: cost, selling_price: sell }
+        });
+      }
+    );
+  });
+});
+
+// DELETE /api/inventory/:id (Admin/Employee - delete inventory item)
+app.delete('/api/inventory/:id', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  db.run("DELETE FROM inventory WHERE id = ?", [id], function(err) {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to delete inventory item.' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Inventory item not found.' });
+    }
+    res.json({ message: 'Inventory item deleted successfully.' });
+  });
+});
+
+// ===== END INVENTORY ROUTES =====
+
 // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
