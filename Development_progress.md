@@ -40,7 +40,13 @@
 - `backend/server.js` - Added `GET /api/public-info` endpoint (no auth) returning `shop_name`, `shop_icon` from settings and holidays where `date >= today`. Wrapped in `// ===== PUBLIC ROUTES =====` markers.
 
 **Verified:** `curl localhost:3000/api/public-info` while logged out returns correct JSON with shop_name, shop_icon, and seeded holidays array.
-## Phase 6 — Admin Settings & Holidays (Backend) ⏳ PENDING
+## Phase 6 — Admin Settings & Holidays (Backend) ✅ COMPLETED
+**Goal:** admin-only writes for branding and holidays.
+
+**Files Modified:**
+- `backend/server.js` - Added `POST /api/holidays` and `DELETE /api/holidays/:id` endpoints (admin only). Existing `PUT /api/settings` already accepts `carwash_name` (shop_name) and `logo_base64` (shop_icon). Wrapped in `// ===== ADMIN SETTINGS & HOLIDAYS ROUTES =====` markers.
+
+**Verified:** As admin, added holiday via POST, confirmed it appears in `GET /api/public-info`; deleted holiday via DELETE, confirmed it's removed from `GET /api/public-info`.
 ## Phase 7 — Branding & Holiday Banner (Frontend) ⏳ PENDING
 ## Phase 8 — Admin Settings Tab (Frontend) ⏳ PENDING
 ## Phase 9 — Vehicles & Customers Backend ⏳ PENDING

@@ -456,6 +456,33 @@ app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => 
 });
 
 
+// ===== ADMIN SETTINGS & HOLIDAYS ROUTES =====
+
+// POST /api/holidays (Admin only - add holiday)
+app.post('/api/holidays', authenticateToken, requireRole('admin'), (req, res) => {
+  const { date, reason } = req.body;
+  if (!date || !reason) {
+    return res.status(400).json({ error: 'Date and reason are required.' });
+  }
+  db.run("INSERT INTO holidays (date, reason) VALUES (?, ?)", [date, reason], function(err) {
+    if (err) return res.status(500).json({ error: 'Failed to add holiday.' });
+    res.status(201).json({ message: 'Holiday added.', holiday: { id: this.lastID, date, reason } });
+  });
+});
+
+// DELETE /api/holidays/:id (Admin only - delete holiday)
+app.delete('/api/holidays/:id', authenticateToken, requireRole('admin'), (req, res) => {
+  const { id } = req.params;
+  db.run("DELETE FROM holidays WHERE id = ?", [id], function(err) {
+    if (err) return res.status(500).json({ error: 'Failed to delete holiday.' });
+    if (this.changes === 0) return res.status(404).json({ error: 'Holiday not found.' });
+    res.json({ message: 'Holiday deleted.' });
+  });
+});
+
+// ===== END ADMIN SETTINGS & HOLIDAYS ROUTES =====
+
+
 // --- Ledger / Profit Analytics Endpoints ---
 
 // GET /api/ledger (Owner reads analytics and ledger)
