@@ -855,7 +855,7 @@ app.post('/api/inventory', authenticateToken, requireRole('employee'), (req, res
       if (qty > 0) {
         const today = new Date().toISOString().split('T')[0];
         const amount = qty * cost;
-        const desc = `Initial stock: ${item_name} (${qty} units @ $${cost.toFixed(2)})`;
+        const desc = `Initial stock: ${item_name} (${qty} units @ ₹${cost.toFixed(2)})`;
         
         db.run(
           "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
@@ -921,7 +921,7 @@ app.put('/api/inventory/:id', authenticateToken, requireRole('employee'), (req, 
         if (qtyIncrease > 0) {
           const today = new Date().toISOString().split('T')[0];
           const amount = qtyIncrease * cost;
-          const desc = `Restock: ${itemName} (+${qtyIncrease} units @ $${cost.toFixed(2)})`;
+          const desc = `Restock: ${itemName} (+${qtyIncrease} units @ ₹${cost.toFixed(2)})`;
           
           db.run(
             "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
