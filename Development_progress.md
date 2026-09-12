@@ -244,7 +244,31 @@
 - Jobs with only labor items (no inventory) complete successfully with sale logged
 - Existing auth tests (Tests 1-4) still pass
 
-## Phase 18 — Invoice PDF ⏳ PENDING
+## Phase 18 — Invoice PDF ✅ COMPLETED
+**Goal:** Downloadable invoice once a job is completed.
+
+**Files Modified:**
+- `package.json` - Added `pdfkit` dependency for server-side PDF generation
+- `backend/server.js` - Added `GET /api/jobs/:id/invoice` endpoint (Employee/Admin/Customer - download invoice PDF):
+  - Verifies job access (same authorization as GET /api/jobs/:id)
+  - Fetches job with customer/vehicle details, line items, shop settings
+  - Generates PDF with pdfkit: shop header (name + base64 logo), invoice metadata, customer & vehicle info, line items table with totals, grand total, footer
+  - Streams as attachment: `Content-Disposition: attachment; filename="invoice-<id>.pdf"`
+  - Only available for completed jobs (400 error otherwise)
+- `frontend/index.html` - Added "Generate Invoice" button in job detail modal footer:
+  - Visible only for completed jobs (all roles can download their own)
+  - `downloadInvoice(jobId)` function fetches PDF blob and triggers browser download
+  - Toast notifications for generation progress and completion
+
+**Verified:**
+- `npm install` installs pdfkit successfully
+- Server starts without errors
+- All existing auth tests pass (Tests 1-4)
+- Admin, employee, and customer tokens can download invoice for completed job (id: 3)
+- Customer token correctly scoped to own vehicles only
+- Non-completed jobs return 400 error "Invoice only available for completed jobs"
+- Generated PDF contains: shop name/logo, invoice #, date, status, customer info, vehicle info, line items table (3 items: 2 parts + 1 labor), grand total (₹800.00), thank you footer
+- PDF downloads as `invoice-<id>.pdf` with correct filename
 ## Phase 19 — Analytics Backend ⏳ PENDING
 ## Phase 20 — Analytics Dashboard Frontend ⏳ PENDING
 ## Phase 21 — Job History Frontend ⏳ PENDING

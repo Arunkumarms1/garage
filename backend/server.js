@@ -1488,6 +1488,194 @@ app.get('/api/jobs/:id/items', authenticateToken, (req, res) => {
   });
 });
 
+// GET /api/jobs/:id/invoice (Employee/Admin/Customer - download invoice PDF)
+app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  // Verify job exists and user has access (same logic as GET /api/jobs/:id)
+  let query = `
+    SELECT j.*, v.make, v.model, v.plate_number, v.year, u.name as customer_name, u.email as customer_email, u.phone as customer_phone, u.id as customer_id
+    FROM jobs j
+    JOIN vehicles v ON j.vehicle_id = v.id
+    JOIN users u ON v.owner_id = u.id
+    WHERE j.id = ?
+  `;
+  let params = [id];
+
+  if (req.user.role === 'customer') {
+    query += " AND u.id = ?";
+    params.push(req.user.id);
+  }
+
+  db.get(query, params, (err, job) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error retrieving job.' });
+    }
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found or access denied.' });
+    }
+    if (job.status !== 'completed') {
+      return res.status(400).json({ error: 'Invoice only available for completed jobs.' });
+    }
+
+    // Fetch job items
+    db.all("SELECT * FROM job_items WHERE job_id = ? ORDER BY id", [id], (err, items) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to retrieve job items.' });
+      }
+
+      // Fetch shop settings
+      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64')", (err, settingsRows) => {
+        if (err) {
+          return res.status(500).json({ error: 'Failed to retrieve settings.' });
+        }
+
+        const settings = {};
+        settingsRows.forEach(row => {
+          settings[row.key] = row.value;
+        });
+
+        // Generate PDF
+        const PDFDocument = require('pdfkit');
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="invoice-${id}.pdf"`);
+        doc.pipe(res);
+
+        // ===== HEADER =====
+        const shopName = settings.carwash_name || 'Garage Workshop PWA';
+        const shopIcon = settings.logo_base64 || '';
+
+        // Shop name
+        doc.fontSize(24).font('Helvetica-Bold').text(shopName, { align: 'center' });
+        doc.moveDown(0.5);
+
+        // Shop icon if base64
+        if (shopIcon && shopIcon.startsWith('data:image')) {
+          try {
+            const base64Data = shopIcon.split(',')[1];
+            const imgBuffer = Buffer.from(base64Data, 'base64');
+            doc.image(imgBuffer, { width: 80, align: 'center' });
+            doc.moveDown(0.5);
+          } catch (e) {
+            console.warn('Failed to embed logo in PDF:', e);
+          }
+        }
+
+        // Invoice title
+        doc.fontSize(18).font('Helvetica-Bold').text('INVOICE', { align: 'center' });
+        doc.moveDown(1);
+
+        // Invoice metadata table
+        const invoiceDate = job.updated_at ? new Date(job.updated_at).toLocaleDateString() : new Date().toLocaleDateString();
+        const invoiceData = [
+          ['Invoice #:', id.toString()],
+          ['Date:', invoiceDate],
+          ['Status:', job.status.charAt(0).toUpperCase() + job.status.slice(1).replace('-', ' ')],
+        ];
+
+        let y = doc.y;
+        invoiceData.forEach(([label, value]) => {
+          doc.fontSize(10).font('Helvetica-Bold').text(label, 50, y, { width: 100 });
+          doc.fontSize(10).font('Helvetica').text(value, 150, y, { width: 300 });
+          y += 20;
+        });
+        doc.y = y + 10;
+
+        // ===== CUSTOMER & VEHICLE INFO =====
+        doc.fontSize(12).font('Helvetica-Bold').text('Customer Information', { underline: true });
+        doc.moveDown(0.3);
+
+        const customerInfo = [
+          ['Name:', job.customer_name || ''],
+          ['Email:', job.customer_email || ''],
+          ['Phone:', job.customer_phone || 'N/A'],
+        ];
+
+        customerInfo.forEach(([label, value]) => {
+          doc.fontSize(10).font('Helvetica-Bold').text(label, { continued: true });
+          doc.font('Helvetica').text(' ' + value);
+        });
+        doc.moveDown(0.5);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('Vehicle Information', { underline: true });
+        doc.moveDown(0.3);
+
+        const vehicleInfo = [
+          ['Make:', job.make || ''],
+          ['Model:', job.model || ''],
+          ['Year:', job.year || 'N/A'],
+          ['Plate:', job.plate_number || ''],
+        ];
+
+        vehicleInfo.forEach(([label, value]) => {
+          doc.fontSize(10).font('Helvetica-Bold').text(label, { continued: true });
+          doc.font('Helvetica').text(' ' + value);
+        });
+        doc.moveDown(1);
+
+        // ===== LINE ITEMS TABLE =====
+        doc.fontSize(12).font('Helvetica-Bold').text('Line Items', { underline: true });
+        doc.moveDown(0.5);
+
+        // Table header
+        const tableTop = doc.y;
+        const col1 = 50;   // Description
+        const col2 = 300;  // Qty
+        const col3 = 360;  // Unit Price
+        const col4 = 450;  // Total
+
+        doc.fontSize(9).font('Helvetica-Bold');
+        doc.text('Description', col1, tableTop, { width: 240 });
+        doc.text('Qty', col2, tableTop, { width: 50, align: 'center' });
+        doc.text('Unit Price', col3, tableTop, { width: 80, align: 'right' });
+        doc.text('Total', col4, tableTop, { width: 80, align: 'right' });
+
+        // Header line
+        doc.moveTo(50, tableTop + 18).lineTo(530, tableTop + 18).stroke();
+
+        let rowY = tableTop + 22;
+        doc.fontSize(9).font('Helvetica');
+
+        (items || []).forEach(item => {
+          const lineTotal = item.quantity * item.unit_price;
+          
+          // Check if we need a new page
+          if (rowY > 700) {
+            doc.addPage();
+            rowY = 50;
+          }
+
+          doc.text(item.description || 'Item', col1, rowY, { width: 240 });
+          doc.text(item.quantity.toString(), col2, rowY, { width: 50, align: 'center' });
+          doc.text('₹' + Number(item.unit_price).toFixed(2), col3, rowY, { width: 80, align: 'right' });
+          doc.text('₹' + lineTotal.toFixed(2), col4, rowY, { width: 80, align: 'right' });
+          
+          rowY += 18;
+        });
+
+        // Total line
+        doc.moveTo(50, rowY).lineTo(530, rowY).stroke();
+        rowY += 10;
+
+        const grandTotal = job.total_cost || 0;
+        doc.fontSize(11).font('Helvetica-Bold');
+        doc.text('Grand Total:', col2, rowY, { width: 190, align: 'right' });
+        doc.text('₹' + Number(grandTotal).toFixed(2), col4, rowY, { width: 80, align: 'right' });
+
+        // ===== FOOTER =====
+        doc.moveDown(2);
+        doc.fontSize(10).font('Helvetica').text('Thank you for your business!', { align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(8).font('Helvetica-Oblique').text('Generated by Garage Workshop PWA', { align: 'center', color: '#999' });
+
+        doc.end();
+      });
+    });
+  });
+});
+
 // ===== END JOB ITEMS ROUTES =====
 
 // ===== END JOBS ROUTES =====
