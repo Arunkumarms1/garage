@@ -68,33 +68,57 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else {
-    // For static files, use Cache-First strategy falling back to Network
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+    const isIndexHtml = url.pathname === '/' || url.pathname === '/index.html';
 
-        return fetch(request)
+    if (isIndexHtml) {
+      // Network-First for index.html: always try network, cache as fallback
+      event.respondWith(
+        fetch(request)
           .then((networkResponse) => {
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseToCache);
+              });
             }
-
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-
             return networkResponse;
           })
           .catch(() => {
-            // Fallback for HTML request when offline
-            if (request.headers.get('accept').includes('text/html')) {
+            return caches.match(request).then((cachedResponse) => {
+              if (cachedResponse) return cachedResponse;
               return caches.match('/');
-            }
-          });
-      })
-    );
+            });
+          })
+      );
+    } else {
+      // For other static files, use Cache-First strategy falling back to Network
+      event.respondWith(
+        caches.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
+          return fetch(request)
+            .then((networkResponse) => {
+              if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                return networkResponse;
+              }
+
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseToCache);
+              });
+
+              return networkResponse;
+            })
+            .catch(() => {
+              // Fallback for HTML request when offline
+              if (request.headers.get('accept').includes('text/html')) {
+                return caches.match('/');
+              }
+            });
+        })
+      );
+    }
   }
 });
