@@ -223,7 +223,27 @@
 - Delete confirmation and toast notifications work
 - Role hierarchy enforced: employee/admin can add/remove items, customer sees read-only view
 - Existing auth tests (Tests 1-4) still pass
-## Phase 17 — Job Completion Logic ⏳ PENDING
+## Phase 17 — Job Completion Logic ✅ COMPLETED
+**Goal:** Finalize a job safely — deduct stock, log the sale, block double-completion.
+
+**Files Modified:**
+- `backend/server.js` - Modified `PUT /api/jobs/:id` endpoint with completion logic:
+  - Check stock availability BEFORE updating job status (atomic - no partial deductions)
+  - On status → `completed`: for every `job_item` with non-null `inventory_id`, deduct `quantity` from `inventory.quantity`
+  - If any item lacks enough stock, reject the whole completion (no partial deductions)
+  - Insert a `sale` row into `ledger` for `total_cost`
+  - Reject the request if the job is already `completed` — no double-deduction or double-logging
+  - Added helper functions: `doUpdateJob`, `validateStockAndComplete`, `completeJobTransaction`
+
+**Verified:**
+- Job completion deducts inventory correctly (e.g., Brake Pads 20→18, Brake Rotors 10→9)
+- Sale logged to ledger with correct total_cost (e.g., "Job Completed: Brake Pads (Front), Brake Rotors (Front)" amount 315)
+- Double-completion rejected with error "Job is already completed. Cannot complete again."
+- Insufficient stock rejected with error showing available vs required; job status remains unchanged; inventory unchanged
+- Employee role can complete jobs (role hierarchy works)
+- Jobs with only labor items (no inventory) complete successfully with sale logged
+- Existing auth tests (Tests 1-4) still pass
+
 ## Phase 18 — Invoice PDF ⏳ PENDING
 ## Phase 19 — Analytics Backend ⏳ PENDING
 ## Phase 20 — Analytics Dashboard Frontend ⏳ PENDING

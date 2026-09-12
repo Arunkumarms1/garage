@@ -1111,6 +1111,113 @@ app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) 
   }
 
   function updateJob() {
+    // First, get current job to check if already completed
+    db.get("SELECT id, status FROM jobs WHERE id = ?", [id], (err, currentJob) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error retrieving job.' });
+      }
+      if (!currentJob) {
+        return res.status(404).json({ error: 'Job not found.' });
+      }
+
+      // Reject if job is already completed (prevent double-completion)
+      if (currentJob.status === 'completed' && status === 'completed') {
+        return res.status(400).json({ error: 'Job is already completed. Cannot complete again.' });
+      }
+
+      // If status is changing to 'completed', validate stock availability FIRST
+      if (status === 'completed' && currentJob.status !== 'completed') {
+        validateStockAndComplete(id, currentJob, vehicle_id, status, notes, total_cost, res);
+      } else {
+        // Normal update (no completion)
+        doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, res);
+      }
+    });
+  }
+});
+
+function doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, res) {
+  const updates = [];
+  const params = [];
+
+  if (vehicle_id !== undefined) {
+    updates.push("vehicle_id = ?");
+    params.push(vehicle_id);
+  }
+  if (status !== undefined) {
+    updates.push("status = ?");
+    params.push(status);
+  }
+  if (notes !== undefined) {
+    updates.push("notes = ?");
+    params.push(notes);
+  }
+  if (total_cost !== undefined) {
+    updates.push("total_cost = ?");
+    params.push(parseFloat(total_cost));
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No fields to update.' });
+  }
+
+  updates.push("updated_at = datetime('now')");
+  params.push(id);
+
+  db.run(
+    `UPDATE jobs SET ${updates.join(', ')} WHERE id = ?`,
+    params,
+    function(updateErr) {
+      if (updateErr) {
+        return res.status(500).json({ error: 'Failed to update job.' });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Job not found.' });
+      }
+      res.json({ message: 'Job updated successfully.', jobId: parseInt(id) });
+    }
+  );
+}
+
+function validateStockAndComplete(jobId, currentJob, vehicle_id, status, notes, total_cost, res) {
+  // Get all job items with inventory references
+  db.all("SELECT * FROM job_items WHERE job_id = ? AND inventory_id IS NOT NULL", [jobId], (err, items) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve job items for completion.' });
+    }
+
+    // Check stock availability for all items first (no partial deductions)
+    const stockChecks = items.map(item => {
+      return new Promise((resolve, reject) => {
+        db.get("SELECT quantity, item_name FROM inventory WHERE id = ?", [item.inventory_id], (err, inv) => {
+          if (err) {
+            return reject({ error: 'Database error checking inventory.' });
+          }
+          if (!inv) {
+            return reject({ error: `Inventory item not found for job item: ${item.description}` });
+          }
+          if (inv.quantity < item.quantity) {
+            return reject({ error: `Insufficient stock for "${inv.item_name}". Available: ${inv.quantity}, Required: ${item.quantity}` });
+          }
+          resolve({ inventory_id: item.inventory_id, quantity: item.quantity, item_name: inv.item_name });
+        });
+      });
+    });
+
+    Promise.all(stockChecks)
+      .then(validatedItems => {
+        // All stock checks passed - now do the full completion in a transaction
+        completeJobTransaction(jobId, currentJob, vehicle_id, status, notes, total_cost, validatedItems, res);
+      })
+      .catch(error => {
+        res.status(400).json({ error: error.error || 'Failed to complete job.' });
+      });
+  });
+}
+
+function completeJobTransaction(jobId, currentJob, vehicle_id, status, notes, total_cost, validatedItems, res) {
+  db.serialize(() => {
+    // 1. Update job status and other fields
     const updates = [];
     const params = [];
 
@@ -1131,12 +1238,8 @@ app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) 
       params.push(parseFloat(total_cost));
     }
 
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update.' });
-    }
-
     updates.push("updated_at = datetime('now')");
-    params.push(id);
+    params.push(jobId);
 
     db.run(
       `UPDATE jobs SET ${updates.join(', ')} WHERE id = ?`,
@@ -1148,11 +1251,58 @@ app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) 
         if (this.changes === 0) {
           return res.status(404).json({ error: 'Job not found.' });
         }
-        res.json({ message: 'Job updated successfully.', jobId: parseInt(id) });
+
+        // 2. Deduct stock for each item
+        let hasError = false;
+        validatedItems.forEach(validatedItem => {
+          if (hasError) return;
+          
+          db.run(
+            "UPDATE inventory SET quantity = quantity - ? WHERE id = ?",
+            [validatedItem.quantity, validatedItem.inventory_id],
+            function(deductErr) {
+              if (deductErr || this.changes === 0) {
+                hasError = true;
+                return res.status(500).json({ error: `Failed to deduct stock for "${validatedItem.item_name}".` });
+              }
+            }
+          );
+        });
+
+        if (hasError) return;
+
+        // 3. Get the job's total_cost for the ledger entry
+        db.get("SELECT total_cost FROM jobs WHERE id = ?", [jobId], (err, job) => {
+          if (err || !job) {
+            return res.status(500).json({ error: 'Failed to retrieve job for ledger entry.' });
+          }
+
+          const totalCost = job.total_cost || 0;
+          const today = new Date().toISOString().split('T')[0];
+          const desc = `Job Completed: ${validatedItems.map(i => i.item_name).join(', ')}`;
+
+          // 4. Insert sale into ledger
+          db.run(
+            "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
+            ['sale', desc, totalCost, today],
+            function(ledgerErr) {
+              if (ledgerErr) {
+                console.error("Error logging sale transaction for completed job:", ledgerErr);
+                // Don't fail the completion if ledger insert fails - log and continue
+              }
+              res.json({ 
+                message: 'Job completed successfully. Stock deducted and sale recorded.',
+                jobId: parseInt(jobId),
+                status: 'completed',
+                total_cost: totalCost
+              });
+            }
+          );
+        });
       }
     );
-  }
-});
+  });
+}
 
 // DELETE /api/jobs/:id (Admin only - delete job)
 app.delete('/api/jobs/:id', authenticateToken, requireRole('admin'), (req, res) => {
