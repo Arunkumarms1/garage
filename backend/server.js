@@ -1304,6 +1304,40 @@ function recomputeTotalCost(jobId, res, newItemId, newInvId, newDesc, newQty, ne
   });
 }
 
+// GET /api/jobs/:id/items (Employee/Admin/Customer - get job items)
+app.get('/api/jobs/:id/items', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  // Verify job exists and user has access
+  let query = "SELECT id FROM jobs WHERE id = ?";
+  let params = [id];
+
+  if (req.user.role === 'customer') {
+    query = `
+      SELECT j.id FROM jobs j
+      JOIN vehicles v ON j.vehicle_id = v.id
+      WHERE j.id = ? AND v.owner_id = ?
+    `;
+    params = [id, req.user.id];
+  }
+
+  db.get(query, params, (err, job) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying job.' });
+    }
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found or access denied.' });
+    }
+
+    db.all("SELECT * FROM job_items WHERE job_id = ? ORDER BY id", [id], (err, items) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to retrieve job items.' });
+      }
+      res.json(items || []);
+    });
+  });
+});
+
 // ===== END JOB ITEMS ROUTES =====
 
 // ===== END JOBS ROUTES =====

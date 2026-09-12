@@ -200,7 +200,29 @@
 - Invalid quantity/price returns 400
 - Existing auth tests (Tests 1-4) still pass; Test 5 fails due to Phase 2 schema change (bookings→jobs), unrelated to this phase.
 
-## Phase 16 — Job Line Items Frontend ⏳ PENDING
+## Phase 16 — Job Line Items Frontend ✅ COMPLETED
+**Goal:** UI to add parts/labor inside a job.
+**Files Modified:**
+- `backend/server.js` - Added `GET /api/jobs/:id/items` endpoint to fetch job line items
+- `frontend/index.html` - Added job line items UI in job detail modal:
+  - Line items list with running total, showing part/labor badge, quantity, unit price, line total
+  - Delete button per line item
+  - "Add Line Item" section with Part/Labor toggle
+  - Part form: inventory dropdown (auto-fills selling price), quantity, unit price
+  - Labor form: manual description, quantity, unit price
+  - Role-based visibility (employee/admin can edit, customer view-only)
+  - Wired to Phase 15 backend endpoints (POST/DELETE /api/jobs/:id/items)
+
+**Verified:**
+- GET /api/jobs/:id/items returns job items correctly
+- POST /api/jobs/:id/items adds part items (with inventory_id) and labor items (null inventory_id)
+- DELETE /api/jobs/:id/items/:itemId removes items and recomputes total_cost
+- Total cost correctly updated on each add/remove (e.g., 2×50 + 1×120 = 220)
+- Frontend modal loads items and inventory dropdown on open
+- Part dropdown auto-fills selling price from inventory
+- Delete confirmation and toast notifications work
+- Role hierarchy enforced: employee/admin can add/remove items, customer sees read-only view
+- Existing auth tests (Tests 1-4) still pass
 ## Phase 17 — Job Completion Logic ⏳ PENDING
 ## Phase 18 — Invoice PDF ⏳ PENDING
 ## Phase 19 — Analytics Backend ⏳ PENDING
