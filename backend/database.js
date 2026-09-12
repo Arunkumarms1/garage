@@ -81,7 +81,21 @@ db.serialize(() => {
     )
   `);
 
-  // 6b. Create Services Table
+  // 6b. Create Job Items Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS job_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_id INTEGER NOT NULL,
+      inventory_id INTEGER,
+      description TEXT NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      unit_price REAL NOT NULL,
+      FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+      FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE SET NULL
+    )
+  `);
+
+  // 6c. Create Services Table
   db.run(`
     CREATE TABLE IF NOT EXISTS services (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

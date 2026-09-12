@@ -1168,9 +1168,147 @@ app.delete('/api/jobs/:id', authenticateToken, requireRole('admin'), (req, res) 
   });
 });
 
+// ===== JOB ITEMS ROUTES =====
+
+// POST /api/jobs/:id/items (Employee/Admin - add line item to job)
+app.post('/api/jobs/:id/items', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id } = req.params;
+  const { inventory_id, description, quantity, unit_price } = req.body;
+
+  if (!description || quantity === undefined || unit_price === undefined) {
+    return res.status(400).json({ error: 'Description, quantity, and unit price are required.' });
+  }
+
+  const qty = parseInt(quantity);
+  const price = parseFloat(unit_price);
+
+  if (qty <= 0 || price < 0) {
+    return res.status(400).json({ error: 'Quantity must be positive and unit price non-negative.' });
+  }
+
+  // Verify job exists and is not completed
+  db.get("SELECT id, status FROM jobs WHERE id = ?", [id], (err, job) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying job.' });
+    }
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+    if (job.status === 'completed') {
+      return res.status(400).json({ error: 'Cannot add items to a completed job.' });
+    }
+
+    // If inventory_id provided, verify it exists and use selling_price as default
+    if (inventory_id) {
+      db.get("SELECT id, selling_price, item_name FROM inventory WHERE id = ?", [inventory_id], (err, invItem) => {
+        if (err) {
+          return res.status(500).json({ error: 'Database error verifying inventory.' });
+        }
+        if (!invItem) {
+          return res.status(400).json({ error: 'Invalid inventory ID.' });
+        }
+
+        const finalPrice = price || invItem.selling_price;
+        const finalDescription = description || invItem.item_name;
+
+        insertJobItem(invItem.id, finalDescription, qty, finalPrice);
+      });
+    } else {
+      // Labor/manual item - no inventory reference
+      insertJobItem(null, description, qty, price);
+    }
+
+    function insertJobItem(invId, desc, q, p) {
+      db.run(
+        "INSERT INTO job_items (job_id, inventory_id, description, quantity, unit_price) VALUES (?, ?, ?, ?, ?)",
+        [id, invId, desc, q, p],
+        function(insertErr) {
+          if (insertErr) {
+            return res.status(500).json({ error: 'Failed to add job item.' });
+          }
+          recomputeTotalCost(id, res, this.lastID, invId, desc, q, p);
+        }
+      );
+    }
+  });
+});
+
+// DELETE /api/jobs/:id/items/:itemId (Employee/Admin - remove line item from job)
+app.delete('/api/jobs/:id/items/:itemId', authenticateToken, requireRole('employee'), (req, res) => {
+  const { id, itemId } = req.params;
+
+  // Verify job exists and is not completed
+  db.get("SELECT id, status FROM jobs WHERE id = ?", [id], (err, job) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying job.' });
+    }
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+    if (job.status === 'completed') {
+      return res.status(400).json({ error: 'Cannot remove items from a completed job.' });
+    }
+
+    // Verify item belongs to this job
+    db.get("SELECT id FROM job_items WHERE id = ? AND job_id = ?", [itemId, id], (err, item) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error verifying job item.' });
+      }
+      if (!item) {
+        return res.status(404).json({ error: 'Job item not found.' });
+      }
+
+      db.run("DELETE FROM job_items WHERE id = ?", [itemId], function(deleteErr) {
+        if (deleteErr) {
+          return res.status(500).json({ error: 'Failed to delete job item.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Job item not found.' });
+        }
+        recomputeTotalCost(id, res);
+      });
+    });
+  });
+});
+
+// Helper function to recompute job total_cost
+function recomputeTotalCost(jobId, res, newItemId, newInvId, newDesc, newQty, newPrice) {
+  db.all("SELECT * FROM job_items WHERE job_id = ?", [jobId], (err, items) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve job items for total calculation.' });
+    }
+
+    const total = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+
+    db.run(
+      "UPDATE jobs SET total_cost = ?, updated_at = datetime('now') WHERE id = ?",
+      [total, jobId],
+      function(updateErr) {
+        if (updateErr) {
+          return res.status(500).json({ error: 'Failed to update job total.' });
+        }
+
+        if (newItemId) {
+          // Return the newly created item with computed total
+          res.status(201).json({
+            message: 'Job item added successfully.',
+            item: { id: newItemId, job_id: jobId, inventory_id: newInvId, description: newDesc, quantity: newQty, unit_price: newPrice },
+            total_cost: total
+          });
+        } else {
+          // Return updated total after deletion
+          res.json({ message: 'Job item removed successfully.', total_cost: total });
+        }
+      }
+    );
+  });
+}
+
+// ===== END JOB ITEMS ROUTES =====
+
 // ===== END JOBS ROUTES =====
 
-// Fallback to route index.html for SPA client-side routing support
+  // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });

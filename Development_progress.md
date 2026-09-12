@@ -175,7 +175,31 @@
 - Job status change from in-progress → completed removes job from active list
 - Role hierarchy enforced: employee/admin can edit, customer gets read-only view
 - Existing auth tests (Tests 1-4) still pass
-## Phase 15 — Job Line Items Backend ⏳ PENDING
+## Phase 15 — Job Line Items Backend ✅ COMPLETED
+**Goal:** Attach parts/labor to a job and track a running total.
+
+**Files Modified:**
+- `backend/database.js` - Added `job_items` table with columns: `id`, `job_id`, `inventory_id` (nullable), `description`, `quantity`, `unit_price`
+- `backend/server.js` - Added Job Items routes wrapped in `// ===== JOB ITEMS ROUTES =====` markers:
+  - `POST /api/jobs/:id/items` (employee/admin) - add line item (part or labor)
+  - `DELETE /api/jobs/:id/items/:itemId` (employee/admin) - remove line item
+  - On every add/remove, recompute `jobs.total_cost` as sum of `quantity × unit_price`
+  - Parts lines reference `inventory_id` and default `unit_price` to `selling_price`
+  - Labor lines have null `inventory_id` with free-text description + manual price
+  - Block add/remove on completed jobs
+
+**Verified:**
+- Adding part items with inventory_id works (defaults to selling_price if unit_price not provided)
+- Adding labor items (no inventory_id) works with manual price
+- Total cost correctly computed and updated on each add/remove (e.g., 2×15 + 1×12 + 1×50 = 92)
+- Deleting items correctly recomputes total
+- Completed jobs reject add/remove (400 error)
+- Role hierarchy works: admin and employee can access, customer gets 403 Forbidden
+- Invalid inventory_id returns 400
+- Missing required fields returns 400
+- Invalid quantity/price returns 400
+- Existing auth tests (Tests 1-4) still pass; Test 5 fails due to Phase 2 schema change (bookings→jobs), unrelated to this phase.
+
 ## Phase 16 — Job Line Items Frontend ⏳ PENDING
 ## Phase 17 — Job Completion Logic ⏳ PENDING
 ## Phase 18 — Invoice PDF ⏳ PENDING
