@@ -986,30 +986,27 @@
       if (!token) return;
 
       // Reset form
-      document.getElementById('create-job-vehicle').value = '';
+      document.getElementById('create-job-customer').value = '';
+      document.getElementById('create-job-plate').value = '';
+      document.getElementById('create-job-make').value = '';
+      document.getElementById('create-job-model').value = '';
+      document.getElementById('create-job-year').value = '';
       document.getElementById('create-job-notes').value = '';
-      document.getElementById('create-job-vehicle').innerHTML = '<option value="">Loading vehicles...</option>';
+      document.getElementById('create-job-customer').innerHTML = '<option value="">Loading customers...</option>';
       document.getElementById('create-job-modal').classList.remove('hidden');
 
-      // Fetch vehicles for dropdown
-      fetch('/api/vehicles', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to load vehicles');
-          return res.json();
-        })
-        .then(vehicles => {
-          const select = document.getElementById('create-job-vehicle');
-          select.innerHTML = '<option value="">Select a vehicle...</option>' + 
-            vehicles.map(v => 
-              `<option value="${v.id}">${v.make} ${v.model} ${v.year ? '(' + v.year + ')' : ''} - ${v.plate_number} (${v.owner_name})</option>`
-            ).join('');
+      // Fetch customers for dropdown
+      fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => { if (!res.ok) throw new Error('Failed to load customers'); return res.json(); })
+        .then(customers => {
+          const select = document.getElementById('create-job-customer');
+          select.innerHTML = '<option value="">Select a customer...</option>' + 
+            customers.map(c => `<option value="${c.id}">${c.name} ${c.email ? '(' + c.email + ')' : ''} ${c.phone ? '• ' + c.phone : ''}</option>`).join('');
         })
         .catch(err => {
-          console.error('Failed to load vehicles:', err);
-          document.getElementById('create-job-vehicle').innerHTML = '<option value="">Failed to load vehicles</option>';
-          showToast('Failed to load vehicles: ' + err.message, 'error', false);
+          console.error('Failed to load customers:', err);
+          document.getElementById('create-job-customer').innerHTML = '<option value="">Failed to load customers</option>';
+          showToast('Failed to load customers: ' + err.message, 'error', false);
         });
     }
 
@@ -1021,22 +1018,35 @@
       const token = localStorage.getItem('garage_token');
       if (!token) return;
 
-      const vehicle_id = document.getElementById('create-job-vehicle').value;
+      const customer_id = document.getElementById('create-job-customer').value;
+      const plate_number = document.getElementById('create-job-plate').value.trim().toUpperCase();
+      const make = document.getElementById('create-job-make').value.trim();
+      const model = document.getElementById('create-job-model').value.trim();
+      const year = document.getElementById('create-job-year').value ? parseInt(document.getElementById('create-job-year').value) : null;
       const notes = document.getElementById('create-job-notes').value.trim();
 
-      if (!vehicle_id) {
-        showToast('Please select a vehicle', 'error', false);
-        return;
-      }
+      // Validation: customer and plate required
+      if (!customer_id) { showToast('Please select a customer', 'error', false); return; }
+      if (!plate_number) { showToast('Please enter plate number', 'error', false); return; }
+
+      const createBtn = document.querySelector('#create-job-modal button[onclick="createJob()"]');
+      const originalBtnText = createBtn ? createBtn.innerHTML : '';
 
       try {
+        // Show loading state
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<span class="material-icons-round text-base animate-spin">refresh</span><span>Creating...</span>';
+        }
+
+        // Step 1: Find existing vehicle by plate, or create new
+        const vehicle_id = await findOrCreateVehicle(token, customer_id, plate_number, make, model, year);
+        
+        // Step 2: Create job with vehicle_id
         const res = await fetch('/api/jobs', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ vehicle_id: parseInt(vehicle_id), notes })
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ vehicle_id, notes })
         });
 
         if (!res.ok) {
@@ -1047,11 +1057,65 @@
         const result = await res.json();
         showToast('Job created successfully!', 'check_circle', true);
         hideCreateJobModal();
-        loadDashboardJobs(); // Refresh dashboard to show new job
+        loadDashboardJobs();
       } catch (err) {
         console.error('Failed to create job:', err);
         showToast('Failed to create job: ' + err.message, 'error', false);
+      } finally {
+        // Restore button
+        if (createBtn) {
+          createBtn.disabled = false;
+          createBtn.innerHTML = originalBtnText;
+        }
       }
+    }
+
+    // Helper: Find existing vehicle by plate, or create new
+    async function findOrCreateVehicle(token, customer_id, plate_number, make, model, year) {
+      // First, try to find existing vehicle by plate
+      const searchRes = await fetch(`/api/vehicles?plate_number=${encodeURIComponent(plate_number)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (searchRes.ok) {
+        const vehicles = await searchRes.json();
+        if (vehicles && vehicles.length > 0) {
+          // Verify it belongs to the selected customer
+          const existing = vehicles.find(v => v.owner_id == customer_id);
+          if (existing) return existing.id;
+          // Plate exists but different customer - let backend handle 400 on create
+        }
+      }
+
+      // Create new vehicle
+      const body = { owner_id: parseInt(customer_id), plate_number };
+      if (make) body.make = make;
+      if (model) body.model = model;
+      if (year) body.year = year;
+
+      const createRes = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(body)
+      });
+
+      if (!createRes.ok) {
+        const err = await createRes.json();
+        // If duplicate plate error, try to find it again (race condition)
+        if (err.error && err.error.includes('plate_number')) {
+          const retryRes = await fetch(`/api/vehicles?plate_number=${encodeURIComponent(plate_number)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (retryRes.ok) {
+            const vehicles = await retryRes.json();
+            const existing = vehicles.find(v => v.owner_id == customer_id);
+            if (existing) return existing.id;
+          }
+        }
+        throw new Error(err.error || 'Failed to create vehicle');
+      }
+
+      const vehicle = await createRes.json();
+      return vehicle.id;
     }
 
     function renderJobCards(jobs, containerId, isCompleted = false) {
@@ -2612,11 +2676,31 @@
         </button>
       </div>
       <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Customer <span class="text-rose-500">*</span></label>
+            <select id="create-job-customer" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+              <option value="">Loading customers...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Plate Number <span class="text-rose-500">*</span></label>
+            <input type="text" id="create-job-plate" placeholder="ABC-1234" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" style="text-transform: uppercase;" required>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Make</label>
+            <input type="text" id="create-job-make" placeholder="Toyota" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Model</label>
+            <input type="text" id="create-job-model" placeholder="Camry" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Vehicle <span class="text-rose-500">*</span></label>
-          <select id="create-job-vehicle" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" required>
-            <option value="">Select a vehicle...</option>
-          </select>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Year</label>
+          <input type="number" id="create-job-year" placeholder="2020" min="1900" max="2099" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Notes</label>
