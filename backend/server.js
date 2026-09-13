@@ -1680,6 +1680,98 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
 
 // ===== END JOBS ROUTES =====
 
+// ===== ANALYTICS ROUTES =====
+
+// GET /api/analytics?from=&to= (Admin only - financial totals)
+app.get('/api/analytics', authenticateToken, requireRole('admin'), (req, res) => {
+  const { from, to } = req.query;
+  let query = `
+    SELECT 
+      SUM(CASE WHEN type = 'sale' THEN amount ELSE 0 END) as totalSales,
+      SUM(CASE WHEN type = 'purchase' THEN amount ELSE 0 END) as totalPurchases
+    FROM ledger
+  `;
+  let params = [];
+  const conditions = [];
+
+  if (from) {
+    conditions.push("date >= ?");
+    params.push(from);
+  }
+  if (to) {
+    conditions.push("date <= ?");
+    params.push(to);
+  }
+
+  if (conditions.length > 0) {
+    query += " WHERE " + conditions.join(" AND ");
+  }
+
+  db.get(query, params, (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve analytics.' });
+    }
+    const totalSales = row.totalSales || 0;
+    const totalPurchases = row.totalPurchases || 0;
+    res.json({
+      totalSales,
+      totalPurchases,
+      netProfit: totalSales - totalPurchases,
+      from: from || null,
+      to: to || null
+    });
+  });
+});
+
+// GET /api/ledger/export?from=&to= (Admin only - CSV export)
+app.get('/api/ledger/export', authenticateToken, requireRole('admin'), (req, res) => {
+  const { from, to } = req.query;
+  let query = "SELECT id, type, description, amount, date FROM ledger";
+  let params = [];
+  const conditions = [];
+
+  if (from) {
+    conditions.push("date >= ?");
+    params.push(from);
+  }
+  if (to) {
+    conditions.push("date <= ?");
+    params.push(to);
+  }
+
+  if (conditions.length > 0) {
+    query += " WHERE " + conditions.join(" AND ");
+  }
+
+  query += " ORDER BY date ASC, id ASC";
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve ledger for export.' });
+    }
+
+    const fromStr = from || 'all';
+    const toStr = to || 'all';
+    const filename = `ledger-export-${fromStr}-to-${toStr}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    const csvRows = [
+      ['id', 'type', 'description', 'amount', 'date'].join(',')
+    ];
+
+    rows.forEach(row => {
+      const escapedDesc = `"${String(row.description).replace(/"/g, '""')}"`;
+      csvRows.push([row.id, row.type, escapedDesc, row.amount, row.date].join(','));
+    });
+
+    res.send(csvRows.join('\n'));
+  });
+});
+
+// ===== END ANALYTICS ROUTES =====
+
   // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));

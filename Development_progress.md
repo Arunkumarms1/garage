@@ -269,6 +269,20 @@
 - Non-completed jobs return 400 error "Invoice only available for completed jobs"
 - Generated PDF contains: shop name/logo, invoice #, date, status, customer info, vehicle info, line items table (3 items: 2 parts + 1 labor), grand total (₹800.00), thank you footer
 - PDF downloads as `invoice-<id>.pdf` with correct filename
-## Phase 19 — Analytics Backend ⏳ PENDING
+## Phase 19 — Analytics Backend ✅ COMPLETED
+**Goal:** Admin-only financial analytics and CSV export endpoints with date range filtering.
+
+**Files Modified:**
+- `backend/server.js` - Added analytics routes in `// ===== ANALYTICS ROUTES =====` section:
+  - `GET /api/analytics?from=&to=` (admin only) - returns `totalSales`, `totalPurchases`, `netProfit` with optional date filtering
+  - `GET /api/ledger/export?from=&to=` (admin only) - returns CSV with headers `id,type,description,amount,date`
+
+**Verified:**
+- All-time analytics: totalSales=325, totalPurchases=150, netProfit=175 (matches seeded ledger data)
+- Date range filtering works correctly
+- CSV export returns proper headers and escaped descriptions
+- Role hierarchy enforced: admin only (403 for employee/customer)
+- Existing auth tests (Tests 1-4) still pass
+
 ## Phase 20 — Analytics Dashboard Frontend ⏳ PENDING
 ## Phase 21 — Job History Frontend ⏳ PENDING

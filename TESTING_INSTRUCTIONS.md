@@ -2,16 +2,28 @@
 
 ## Server Testing Strategy
 
-### Start Server & Test Endpoint (One-Liner)
+### ⚠️ CRITICAL: Chain All Commands in One Bash Call
+**The server times out when commands are run separately.** You MUST chain all commands (start server, wait, test endpoints, kill) in a **single bash command** using `& sleep N && curl ...` pattern. Separate bash tool calls will hang.
+
+### Start Server & Test Endpoints (One-Liner - WORKING PATTERN)
 ```bash
-cd /data/data/com.termux/files/home/garage/garage && node backend/server.js & sleep 2 && curl -s http://localhost:3000/api/public-info
+cd /data/data/com.termux/files/home/garage/garage && node backend/server.js & sleep 3 && curl -s http://localhost:3000/api/public-info
 ```
 
-### Manual Testing Steps
-1. Start server in background: `node backend/server.js &`
-2. Wait 2 seconds for startup: `sleep 2`
-3. Test endpoint: `curl -s http://localhost:3000/api/<endpoint>`
-4. Kill server when done: `pkill -f "node backend/server.js"`
+### Full Test Pattern (Login + Multiple Endpoints)
+```bash
+node backend/server.js & sleep 3 && TOKEN=$(curl -s -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"email":"admin@garage.com","password":"SuperStrongAdminPassword!2026"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4) && echo "Token: $TOKEN" && curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/analytics && curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:3000/api/ledger/export?from=2026-01-01&to=2026-12-31"
+```
+
+### Manual Testing Steps (MUST use single command)
+```bash
+node backend/server.js & sleep 3 && curl -s http://localhost:3000/api/public-info
+```
+
+### Kill Server (if needed)
+```bash
+pkill -9 -f "node backend/server.js"
+```
 
 ### Frontend Testing
 - Open `frontend/index.html` directly in browser (file:// protocol works for static assets)
