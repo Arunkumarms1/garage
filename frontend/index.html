@@ -1070,10 +1070,17 @@
       }
     }
 
+    // Helper: Normalize plate number (trim, collapse whitespace, uppercase)
+    function normalizePlate(plate) {
+      return plate.trim().replace(/\s+/g, '').toUpperCase();
+    }
+
     // Helper: Find existing vehicle by plate, or create new
     async function findOrCreateVehicle(token, customer_id, plate_number, make, model, year) {
+      const normalizedPlate = normalizePlate(plate_number);
+      
       // First, try to find existing vehicle by plate
-      const searchRes = await fetch(`/api/vehicles?plate_number=${encodeURIComponent(plate_number)}`, {
+      const searchRes = await fetch(`/api/vehicles?plate_number=${encodeURIComponent(normalizedPlate)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (searchRes.ok) {
@@ -1087,7 +1094,7 @@
       }
 
       // Create new vehicle
-      const body = { owner_id: parseInt(customer_id), plate_number };
+      const body = { owner_id: parseInt(customer_id), plate_number: normalizedPlate };
       if (make) body.make = make;
       if (model) body.model = model;
       if (year) body.year = year;
@@ -1102,7 +1109,7 @@
         const err = await createRes.json();
         // If duplicate plate error, try to find it again (race condition)
         if (err.error && err.error.includes('plate_number')) {
-          const retryRes = await fetch(`/api/vehicles?plate_number=${encodeURIComponent(plate_number)}`, {
+          const retryRes = await fetch(`/api/vehicles?plate_number=${encodeURIComponent(normalizedPlate)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (retryRes.ok) {
@@ -1114,8 +1121,9 @@
         throw new Error(err.error || 'Failed to create vehicle');
       }
 
-      const vehicle = await createRes.json();
-      return vehicle.id;
+      const result = await createRes.json();
+      // Backend returns { message: 'Vehicle created successfully.', vehicle: { id, ... } }
+      return result.vehicle ? result.vehicle.id : result.id;
     }
 
     function renderJobCards(jobs, containerId, isCompleted = false) {
@@ -1244,17 +1252,27 @@
       const token = localStorage.getItem('garage_token');
       if (!token || !currentJobId) return;
 
-      const status = document.getElementById('job-detail-status').value;
+      const newStatus = document.getElementById('job-detail-status').value;
       const notes = document.getElementById('job-detail-notes').value.trim();
 
       try {
+        // First get current job to check if status is changing to completed
+        const currentJobRes = await fetch(`/api/jobs/${currentJobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        let wasCompleted = false;
+        if (currentJobRes.ok) {
+          const currentJob = await currentJobRes.json();
+          wasCompleted = currentJob.status === 'completed';
+        }
+
         const res = await fetch(`/api/jobs/${currentJobId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ status, notes })
+          body: JSON.stringify({ status: newStatus, notes })
         });
 
         if (!res.ok) {
@@ -1265,6 +1283,20 @@
         showToast('Job updated successfully!', 'check_circle', true);
         hideJobDetailModal();
         loadDashboardJobs();
+
+        // If job was just marked as completed, refresh analytics and history tabs
+        if (!wasCompleted && newStatus === 'completed') {
+          // Check which tabs are currently visible and refresh them
+          const analyticsTab = document.getElementById('tab-analytics');
+          const historyTab = document.getElementById('tab-history');
+          
+          if (analyticsTab && !analyticsTab.classList.contains('hidden')) {
+            fetchAnalytics();
+          }
+          if (historyTab && !historyTab.classList.contains('hidden')) {
+            loadJobHistoryTab();
+          }
+        }
       } catch (err) {
         console.error('Failed to save job:', err);
         showToast('Failed to update job: ' + err.message, 'error', false);

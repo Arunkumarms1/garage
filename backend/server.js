@@ -13,6 +13,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'garage-workshop-pwa-super-secret-k
 const GOOGLE_CLIENT_ID = '603122845820-cmodpjdq3uhvpl179o92v7eeo9tll9lp.apps.googleusercontent.com';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
+// Helper to normalize plate number (trim, collapse whitespace, remove non-alphanumeric, uppercase)
+function normalizePlate(plate) {
+  return plate.trim().replace(/\s+/g, '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+}
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Support Base64 logo uploads
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -676,6 +681,8 @@ app.post('/api/vehicles', authenticateToken, requireRole('employee'), (req, res)
     return res.status(400).json({ error: 'Owner ID, make, model, and plate number are required.' });
   }
 
+  const normalizedPlate = normalizePlate(plate_number);
+
   // Verify owner exists and is a customer
   db.get("SELECT id FROM users WHERE id = ? AND role = 'customer'", [owner_id], (err, owner) => {
     if (err) {
@@ -687,7 +694,7 @@ app.post('/api/vehicles', authenticateToken, requireRole('employee'), (req, res)
 
     db.run(
       "INSERT INTO vehicles (owner_id, make, model, plate_number, year) VALUES (?, ?, ?, ?, ?)",
-      [owner_id, make, model, plate_number.toUpperCase(), year || null],
+      [owner_id, make, model, normalizedPlate, year || null],
       function(insertErr) {
         if (insertErr) {
           if (insertErr.message.includes('UNIQUE constraint failed: vehicles.plate_number')) {
@@ -697,7 +704,7 @@ app.post('/api/vehicles', authenticateToken, requireRole('employee'), (req, res)
         }
         res.status(201).json({
           message: 'Vehicle created successfully.',
-          vehicle: { id: this.lastID, owner_id, make, model, plate_number: plate_number.toUpperCase(), year }
+          vehicle: { id: this.lastID, owner_id, make, model, plate_number: normalizedPlate, year }
         });
       }
     );
@@ -711,8 +718,10 @@ app.get('/api/vehicles', authenticateToken, requireRole('employee'), (req, res) 
   let params = [];
 
   if (plate_number) {
-    query += " WHERE v.plate_number LIKE ?";
-    params.push(`%${plate_number.toUpperCase()}%`);
+    const normalizedPlate = normalizePlate(plate_number);
+    // Normalize stored plate: remove spaces, dashes, and other non-alphanumeric for comparison
+    query += " WHERE REPLACE(REPLACE(UPPER(v.plate_number), ' ', ''), '-', '') LIKE ?";
+    params.push(`%${normalizedPlate}%`);
   }
   query += " ORDER BY v.make, v.model";
 
@@ -751,6 +760,8 @@ app.put('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req, r
     return res.status(400).json({ error: 'Make, model, and plate number are required.' });
   }
 
+  const normalizedPlate = normalizePlate(plate_number);
+
   // Verify owner exists if provided
   if (owner_id) {
     db.get("SELECT id FROM users WHERE id = ? AND role = 'customer'", [owner_id], (err, owner) => {
@@ -769,7 +780,7 @@ app.put('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req, r
   function updateVehicle() {
     db.run(
       "UPDATE vehicles SET owner_id = ?, make = ?, model = ?, plate_number = ?, year = ? WHERE id = ?",
-      [owner_id, make, model, plate_number.toUpperCase(), year || null, id],
+      [owner_id, make, model, normalizedPlate, year || null, id],
       function(updateErr) {
         if (updateErr) {
           if (updateErr.message.includes('UNIQUE constraint failed: vehicles.plate_number')) {
@@ -780,7 +791,7 @@ app.put('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req, r
         if (this.changes === 0) {
           return res.status(404).json({ error: 'Vehicle not found.' });
         }
-        res.json({ message: 'Vehicle updated successfully.', vehicle: { id, owner_id, make, model, plate_number: plate_number.toUpperCase(), year } });
+        res.json({ message: 'Vehicle updated successfully.', vehicle: { id, owner_id, make, model, plate_number: normalizedPlate, year } });
       }
     );
   }
