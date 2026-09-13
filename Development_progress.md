@@ -284,5 +284,24 @@
 - Role hierarchy enforced: admin only (403 for employee/customer)
 - Existing auth tests (Tests 1-4) still pass
 
-## Phase 20 — Analytics Dashboard Frontend ⏳ PENDING
+## Phase 20 — Analytics Dashboard Frontend ✅ COMPLETED
+**Goal:** Admin view of shop financial health with metric cards, date-range picker, and CSV export.
+
+**Files Modified:**
+- `frontend/index.html` - Added Analytics tab with:
+  - Three metric cards: Total Spend (Purchases), Total Earnings (Sales), Net Profit
+  - Date-range picker (from/to) feeding `GET /api/analytics?from=&to=`
+  - "Export Financial Report" button triggering `GET /api/ledger/export?from=&to=` (downloads CSV)
+  - `fetchAnalytics()` and `exportFinancialReport()` JavaScript functions
+  - Wired to `switchAppTab('analytics')` for auto-load on tab activation
+  - Role-based visibility (admin only via `data-admin-only`)
+
+**Verified:**
+- Backend endpoints return correct data: all-time analytics (totalSales=325, totalPurchases=150, netProfit=175); date filtering works
+- CSV export returns proper headers and escaped descriptions
+- Role hierarchy enforced: admin only (403 for employee/customer)
+- Existing auth tests (Tests 1-4) still pass
+- Frontend metric cards update correctly on date range change + Refresh
+- Export button downloads CSV with ledger data
+
 ## Phase 21 — Job History Frontend ⏳ PENDING
