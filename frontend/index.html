@@ -528,6 +528,7 @@
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Inventory</button>` : ''}
             ${isAdmin ? `<button onclick="switchAppTab('settings')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Settings</button>` : ''}
             ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Analytics</button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Job History</button>` : ''}
           </div>
 
           <!-- Tab Content -->
@@ -747,6 +748,8 @@
           </div>
 
           <div id="tab-analytics" class="app-tab-content hidden space-y-4" data-admin-only>
+
+          <div id="tab-history" class="app-tab-content hidden space-y-4" data-admin-employee-only>
             <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="font-bold text-slate-900 dark:text-white">Financial Analytics</h3>
@@ -815,6 +818,41 @@
             </div>
           </div>
         </div>
+
+        <div id="tab-history" class="app-tab-content hidden space-y-4" data-admin-employee-only>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-900 dark:text-white">Job History</h3>
+              <button onclick="loadJobHistoryTab()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                <span class="material-icons-round text-base">refresh</span>
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div class="relative md:col-span-2">
+                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
+              </div>
+              <div class="relative">
+                <input type="date" id="history-from" class="w-full pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+              </div>
+              <div class="relative">
+                <input type="date" id="history-to" class="w-full pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+              </div>
+              <button onclick="clearHistoryFilters()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 h-fit">
+                <span class="material-icons-round text-base">filter_alt_off</span>
+                <span>Clear</span>
+              </button>
+            </div>
+
+            <!-- Jobs List -->
+            <div id="history-jobs-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
+              <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading job history...</p>
+            </div>
+          </div>
+        </div>
       `;
     }
 
@@ -857,6 +895,8 @@
         loadJobHistory();
       } else if (tabName === 'analytics') {
         fetchAnalytics();
+      } else if (tabName === 'history') {
+        loadJobHistoryTab();
       }
     }
 
@@ -1429,6 +1469,111 @@
               <div>
                 <p class="text-slate-400 dark:text-slate-500">Status</p>
                 <p class="font-medium text-slate-900 dark:text-white">${formatStatus(job.status)}</p>
+              </div>
+            </div>
+            ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic mt-2 ml-8 line-clamp-1">${job.notes}</p>` : ''}
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error('Failed to load job history:', err);
+        listEl.innerHTML = `<p class="text-sm text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
+        showToast('Failed to load job history', 'error', false);
+      }
+    }
+
+    // ===== JOB HISTORY TAB (Admin/Employee) =====
+
+    let historySearchTimeout = null;
+
+    function debouncedHistorySearch() {
+      clearTimeout(historySearchTimeout);
+      historySearchTimeout = setTimeout(() => {
+        loadJobHistoryTab();
+      }, 300);
+    }
+
+    function clearHistoryFilters() {
+      document.getElementById('history-search').value = '';
+      document.getElementById('history-from').value = '';
+      document.getElementById('history-to').value = '';
+      loadJobHistoryTab();
+    }
+
+    async function loadJobHistoryTab() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const listEl = document.getElementById('history-jobs-list');
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading job history...</p>';
+
+      try {
+        const search = document.getElementById('history-search').value.trim();
+        const from = document.getElementById('history-from').value;
+        const to = document.getElementById('history-to').value;
+
+        const params = new URLSearchParams();
+        params.append('status', 'completed');
+        if (from) params.append('from', from);
+        if (to) params.append('to', to);
+
+        const res = await fetch(`/api/jobs?${params.toString()}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to load job history');
+        }
+
+        let jobs = await res.json();
+
+        if (search) {
+          const searchLower = search.toLowerCase();
+          jobs = jobs.filter(job =>
+            (job.customer_name && job.customer_name.toLowerCase().includes(searchLower)) ||
+            (job.plate_number && job.plate_number.toLowerCase().includes(searchLower)) ||
+            (job.notes && job.notes.toLowerCase().includes(searchLower)) ||
+            (job.make && job.make.toLowerCase().includes(searchLower)) ||
+            (job.model && job.model.toLowerCase().includes(searchLower))
+          );
+        }
+
+        if (!jobs || jobs.length === 0) {
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No completed jobs found matching your criteria</p>';
+          return;
+        }
+
+        listEl.innerHTML = jobs.map(job => `
+          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center space-x-3">
+                <span class="material-icons-round text-emerald-500 dark:text-emerald-400 text-xl">history</span>
+                <div>
+                  <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                Completed
+              </span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs ml-8">
+              <div>
+                <p class="text-slate-400 dark:text-slate-500">Customer</p>
+                <p class="font-medium text-slate-900 dark:text-white">${job.customer_name || 'Unknown'}</p>
+              </div>
+              <div>
+                <p class="text-slate-400 dark:text-slate-500">Date</p>
+                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+              <div>
+                <p class="text-slate-400 dark:text-slate-500">Total</p>
+                <p class="font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</p>
+              </div>
+              <div>
+                <p class="text-slate-400 dark:text-slate-500">Completed</p>
+                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
               </div>
             </div>
             ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic mt-2 ml-8 line-clamp-1">${job.notes}</p>` : ''}

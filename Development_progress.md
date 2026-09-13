@@ -76,7 +76,7 @@
   - `GET /api/customers/:id` (admin/employee) - customer details + their vehicles
   - Full CRUD on `/api/vehicles` (admin/employee) with search by `plate_number`
 
-**Verified:** 
+**Verified:**
 - Admin and employee can access all CRM endpoints (role hierarchy works)
 - Customer role correctly denied access (403 Forbidden)
 - Phone field stored and retrieved correctly
@@ -304,4 +304,24 @@
 - Frontend metric cards update correctly on date range change + Refresh
 - Export button downloads CSV with ledger data
 
-## Phase 21 — Job History Frontend ⏳ PENDING
+## Phase 21 — Job History Frontend ✅ COMPLETED
+**Goal:** Searchable archive of completed jobs for admin/employee with line items and invoice re-download.
+
+**Files Modified:**
+- `frontend/index.html` - Added "Job History" tab (admin/employee only) with:
+  - Search by customer name, plate number, notes
+  - Date range filters (from/to)
+  - Clear filters button
+  - Results table showing completed jobs with vehicle, customer, date, total, completion date
+  - Click row opens job detail modal (existing) with line items and "Generate Invoice" button
+  - Defaults to `status=completed` via `/api/jobs?status=completed&from=&to=`
+
+**Verified:**
+- Server starts without errors
+- `GET /api/jobs?status=completed` returns seeded completed job (id: 3, Toyota Camry, total ₹800.00)
+- `GET /api/jobs/3/invoice` endpoint works (verified in Phase 18)
+- Job History tab accessible for admin/employee roles
+- Search, date filtering, and clear filters work correctly
+- Existing auth tests (Tests 1-4) still pass; Test 5 fails due to Phase 2 schema change (bookings→jobs), unrelated to this phase.
+
+(End of file - total 320 lines)
