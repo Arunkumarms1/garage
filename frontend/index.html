@@ -536,10 +536,16 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="font-bold text-slate-900 dark:text-white">Active Jobs</h3>
-                <button onclick="loadDashboardJobs()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
-                  <span class="material-icons-round text-base">refresh</span>
-                  <span>Refresh</span>
-                </button>
+                <div class="flex items-center space-x-2">
+                  <button onclick="showCreateJobModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs tracking-wide transition-all shadow flex items-center space-x-1 hidden" id="btn-create-job">
+                    <span class="material-icons-round text-base">add</span>
+                    <span>Create Job</span>
+                  </button>
+                  <button onclick="loadDashboardJobs()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                    <span class="material-icons-round text-base">refresh</span>
+                    <span>Refresh</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Kanban Board -->
@@ -961,6 +967,90 @@
         inProgressEl.innerHTML = `<p class="text-xs text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
         completedEl.innerHTML = `<p class="text-xs text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
         showToast('Failed to load dashboard jobs', 'error', false);
+      }
+
+      // Show/hide Create Job button based on role
+      const userStr = localStorage.getItem('garage_user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const isEmployeeOrAdmin = user && (user.role === 'employee' || user.role === 'admin');
+      const btnCreateJob = document.getElementById('btn-create-job');
+      if (btnCreateJob) {
+        btnCreateJob.classList.toggle('hidden', !isEmployeeOrAdmin);
+      }
+    }
+
+    // ===== CREATE JOB MODAL FUNCTIONS =====
+
+    function showCreateJobModal() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      // Reset form
+      document.getElementById('create-job-vehicle').value = '';
+      document.getElementById('create-job-notes').value = '';
+      document.getElementById('create-job-vehicle').innerHTML = '<option value="">Loading vehicles...</option>';
+      document.getElementById('create-job-modal').classList.remove('hidden');
+
+      // Fetch vehicles for dropdown
+      fetch('/api/vehicles', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to load vehicles');
+          return res.json();
+        })
+        .then(vehicles => {
+          const select = document.getElementById('create-job-vehicle');
+          select.innerHTML = '<option value="">Select a vehicle...</option>' + 
+            vehicles.map(v => 
+              `<option value="${v.id}">${v.make} ${v.model} ${v.year ? '(' + v.year + ')' : ''} - ${v.plate_number} (${v.owner_name})</option>`
+            ).join('');
+        })
+        .catch(err => {
+          console.error('Failed to load vehicles:', err);
+          document.getElementById('create-job-vehicle').innerHTML = '<option value="">Failed to load vehicles</option>';
+          showToast('Failed to load vehicles: ' + err.message, 'error', false);
+        });
+    }
+
+    function hideCreateJobModal() {
+      document.getElementById('create-job-modal').classList.add('hidden');
+    }
+
+    async function createJob() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+
+      const vehicle_id = document.getElementById('create-job-vehicle').value;
+      const notes = document.getElementById('create-job-notes').value.trim();
+
+      if (!vehicle_id) {
+        showToast('Please select a vehicle', 'error', false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/jobs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ vehicle_id: parseInt(vehicle_id), notes })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to create job');
+        }
+
+        const result = await res.json();
+        showToast('Job created successfully!', 'check_circle', true);
+        hideCreateJobModal();
+        loadDashboardJobs(); // Refresh dashboard to show new job
+      } catch (err) {
+        console.error('Failed to create job:', err);
+        showToast('Failed to create job: ' + err.message, 'error', false);
       }
     }
 
@@ -2255,18 +2345,6 @@
     function handleSignOut() {
       localStorage.removeItem('garage_token');
       localStorage.removeItem('garage_user');
-
-      document.getElementById('auth-status-container').classList.add('hidden');
-      document.getElementById('tab-login').parentElement.classList.remove('hidden');
-      const gContainer = document.getElementById('google-signin-container');
-      if (gContainer) gContainer.classList.remove('hidden');
-      
-      // Reset input fields
-      document.getElementById('login-password').value = '';
-      document.getElementById('register-password').value = '';
-
-      switchTab('login');
-      showToast('Cleared auth session.', 'logout', true);
       window.location.reload();
     }
 
@@ -2520,6 +2598,34 @@
         <button onclick="hideJobDetailModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all">Close</button>
         <button id="job-detail-save" onclick="saveJobDetail()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn hidden">Save Changes</button>
         <button id="job-detail-invoice" onclick="downloadInvoice(currentJobId)" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all hidden">Generate Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Job Modal -->
+  <div id="create-job-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg text-slate-900 dark:text-white">Create New Job</h3>
+        <button onclick="hideCreateJobModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
+          <span class="material-icons-round text-2xl">close</span>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Vehicle <span class="text-rose-500">*</span></label>
+          <select id="create-job-vehicle" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" required>
+            <option value="">Select a vehicle...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Notes</label>
+          <textarea id="create-job-notes" rows="3" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="Job description, customer requests..."></textarea>
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button onclick="hideCreateJobModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all">Cancel</button>
+        <button onclick="createJob()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Create Job</button>
       </div>
     </div>
   </div>
