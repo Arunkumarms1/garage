@@ -141,7 +141,7 @@ app.post('/api/auth/register', (req, res) => {
   }
 
   // Pre-check if a user with this email already exists
-  db.get("SELECT id FROM users WHERE email = ?", [email], (err, existingUser) => {
+  db.get("SELECT id FROM users WHERE email = ?", [finalEmail], (err, existingUser) => {
     if (err) {
       return res.status(500).json({ error: 'Database error occurred during registration check.' });
     }
@@ -642,11 +642,24 @@ app.put('/api/users/me/picture', authenticateToken, (req, res) => {
 // POST /api/customers (Admin/Employee - create CRM customer record)
 app.post('/api/customers', authenticateToken, requireRole('employee'), (req, res) => {
   const { name, email, phone } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required.' });
+  if (!name) {
+    return res.status(400).json({ error: 'Name is required.' });
+  }
+  // Phone must be exactly 10 digits if provided; generate placeholder email if empty
+  let finalEmail = email || `customer-${(phone || 'unknown').replace(/[^0-9]/g, '')}@garage.local`;
+  let finalPhone = phone || null;
+  
+  // Enforce 10-digit phone if provided
+  if (finalPhone && !/^[0-9]{10}$/.test(finalPhone.replace(/[^0-9]/g, ''))) {
+    return res.status(400).json({ error: 'Phone must be exactly 10 digits.' });
+  }
+  // Clean phone to exactly 10 digits
+  finalPhone = finalPhone ? finalPhone.replace(/[^0-9]/g, '').slice(0, 10) : null;
+  if (finalPhone && finalPhone.length !== 10) {
+    return res.status(400).json({ error: 'Phone must be exactly 10 digits.' });
   }
 
-  db.get("SELECT id FROM users WHERE email = ?", [email], (err, existingUser) => {
+  db.get("SELECT id FROM users WHERE email = ?", [finalEmail], (err, existingUser) => {
     if (err) {
       return res.status(500).json({ error: 'Database error during customer creation check.' });
     }
@@ -661,14 +674,14 @@ app.post('/api/customers', authenticateToken, requireRole('employee'), (req, res
 
     db.run(
       "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
-      [name, email, password_hash, phone || null, role],
+      [name, finalEmail, password_hash, finalPhone, role],
       function(insertErr) {
         if (insertErr) {
           return res.status(500).json({ error: 'Failed to create customer.' });
         }
         res.status(201).json({
           message: 'Customer created successfully.',
-          customer: { id: this.lastID, name, email, phone, role }
+          customer: { id: this.lastID, name, email: finalEmail, phone: finalPhone, role }
         });
       }
     );
@@ -1113,7 +1126,7 @@ app.get('/api/jobs/active', authenticateToken, requireRole('employee'), (req, re
 
 // GET /api/jobs (Employee/Admin - all jobs with filters; Customer - own vehicles only)
 app.get('/api/jobs', authenticateToken, (req, res) => {
-  const { status, from, to } = req.query;
+  const { status, from, to, plate_number } = req.query;
   let query = `
     SELECT j.*, v.make, v.model, v.plate_number, v.year, u.name as customer_name, u.email as customer_email
     FROM jobs j
@@ -1129,6 +1142,14 @@ app.get('/api/jobs', authenticateToken, (req, res) => {
     params.push(req.user.id);
   }
 
+  // Status filter
+  // Plate number filter (primary lookup mechanism)
+  if (plate_number) {
+    const normalizedPlate = normalizePlate(plate_number);
+    conditions.push("REPLACE(REPLACE(UPPER(v.plate_number), ' ', ''), '-', '') LIKE ?");
+    params.push(`%${normalizedPlate}%`);
+  }
+  
   // Status filter
   if (status) {
     conditions.push("j.status = ?");

@@ -1088,7 +1088,20 @@
     function renderCustomerDropdown(customers) {
       const dropdown = document.getElementById('customer-dropdown');
       if (customers.length === 0) {
-        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-slate-500">No customers found</div>';
+        dropdown.innerHTML = `
+          <div class="px-3 py-3 space-y-2">
+            <p class="text-xs text-slate-500 font-semibold">No customers found</p>
+            <button onclick="showQuickAddCustomer()" class="w-full text-left px-3 py-2 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg text-sm text-indigo-700 dark:text-indigo-300 font-bold transition-colors flex items-center gap-2">
+              <span class="material-icons-round text-base">person_add</span>
+              Add New Customer
+            </button>
+            <div id="quick-add-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 pt-2">
+              <input type="text" id="quick-add-name" placeholder="Customer Name" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+              <input type="tel" id="quick-add-phone" placeholder="Phone (10 digits)" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" required>
+              <button onclick="submitQuickAddCustomer()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all shadow">Save Customer</button>
+            </div>
+          </div>
+        `;
       } else {
         dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
       }
@@ -1101,6 +1114,47 @@
         return c.name.toLowerCase().includes(q) || (c.email && c.email.toLowerCase().includes(q)) || (c.phone && c.phone.toLowerCase().includes(q));
       });
       renderCustomerDropdown(filtered);
+    }
+
+
+    function showQuickAddCustomer() {
+      const form = document.getElementById('quick-add-form');
+      if (form) form.classList.remove('hidden');
+    }
+
+    async function submitQuickAddCustomer() {
+      const name = document.getElementById('quick-add-name').value.trim();
+      const phone = document.getElementById('quick-add-phone').value.trim();
+      
+      if (!name) { showToast('Name is required', 'error', false); return; }
+      if (!phone) { showToast('Phone is required', 'error', false); return; }
+      if (!/^[0-9]{10}$/.test(phone)) { showToast('Phone must be exactly 10 digits', 'error', false); return; }
+      
+      const token = localStorage.getItem('garage_token');
+      if (!token) { showToast('Not authenticated', 'error', false); return; }
+      
+      try {
+        const res = await fetch('/api/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ name, email: '', phone })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to create customer');
+        }
+        
+        // Add to dropdown and select
+        const customer = data.customer || { id: data.id || data.customer?.id, name, phone };
+        allCustomers.push(customer);
+        selectCustomer(customer.id, name);
+        showToast('Customer added: ' + name, 'check_circle', true);
+        
+      } catch (err) {
+        console.error('Quick add customer error:', err);
+        showToast(err.message, 'error', false);
+      }
     }
 
     function selectCustomer(id, name) {
