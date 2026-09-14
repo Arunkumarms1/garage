@@ -1494,6 +1494,11 @@ app.post('/api/jobs/:id/items', authenticateToken, requireRole('employee'), (req
     return res.status(400).json({ error: 'Quantity must be positive and unit price non-negative.' });
   }
 
+  // Labor/manual item requires price above 0 rupees
+  if (!inventory_id && price <= 0) {
+    return res.status(400).json({ error: 'Labor cost must be above 0 rupees.' });
+  }
+
   // Verify job exists and is not completed
   db.get("SELECT id, status FROM jobs WHERE id = ?", [id], (err, job) => {
     if (err) {
