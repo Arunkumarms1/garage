@@ -444,7 +444,7 @@ app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => 
     
     let errorOccurred = false;
     for (const [key, value] of Object.entries(settingsUpdate)) {
-      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color'].includes(key)) {
+      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info'].includes(key)) {
         stmt.run(key, String(value), (err) => {
           if (err) errorOccurred = true;
         });
@@ -1536,7 +1536,7 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
       }
 
       // Fetch shop settings
-      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64')", (err, settingsRows) => {
+      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64', 'contact_info')", (err, settingsRows) => {
         if (err) {
           return res.status(500).json({ error: 'Failed to retrieve settings.' });
         }
@@ -1561,6 +1561,7 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
 
         const headerY = 40;
         const shopIcon = settings.logo_base64 || '';
+        const contactInfo = settings.contact_info || '';
 
         // Embedded uploaded logo (if provided); otherwise no icon
         if (shopIcon && shopIcon.startsWith('data:image')) {
@@ -1667,6 +1668,10 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         doc.text('Garage Workshop PWA', 50, footerY + 26, { width: 495, align: 'right' });
         doc.text('Professional Auto Services', 50, footerY + 42, { width: 495, align: 'right' });
         doc.text('Invoice #: ' + id.toString() + '  |  Status: ' + statusLabel, 50, footerY + 58, { width: 495, align: 'right' });
+        if (contactInfo) {
+          doc.fontSize(9).fillColor('#888');
+          doc.text(contactInfo, 50, footerY + 74, { width: 495, align: 'right' });
+        }
 
         doc.end();
       });
