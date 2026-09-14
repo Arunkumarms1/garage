@@ -1560,12 +1560,18 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         const statusLabel = job.status.charAt(0).toUpperCase() + job.status.slice(1).replace('-', ' ');
 
         const headerY = 40;
+        const shopIcon = settings.logo_base64 || '';
 
-        // Approximate gear logo from invoice HTML design
-        const logoCX = 70;
-        const logoCY = headerY + 15;
-        doc.fillColor('#666').circle(logoCX, logoCY, 18).fill('#666');
-        doc.fillColor('#ffffff').circle(logoCX, logoCY, 7).fill('#ffffff');
+        // Embedded uploaded logo (if provided); otherwise no icon
+        if (shopIcon && shopIcon.startsWith('data:image')) {
+          try {
+            const base64Data = shopIcon.split(',')[1];
+            const imgBuffer = Buffer.from(base64Data, 'base64');
+            doc.image(imgBuffer, 50, headerY + 5, { width: 55, height: 55, align: 'left' });
+          } catch (e) {
+            console.warn('Failed to embed logo in PDF:', e);
+          }
+        }
 
         // Header text
         doc.fillColor('#333');
@@ -1583,17 +1589,15 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         const colLeft = 50;
         const colRight = 320;
 
-        // Customer section
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text('CUSTOMER', colLeft, infoY);
-        doc.strokeColor('#eeeeee').moveTo(colLeft, infoY + 14).lineTo(colLeft + 200, infoY + 14).stroke('#eeeeee');
+        // Invoiced to (customer info)
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text('Invoiced to:', colLeft, infoY);
+        doc.strokeColor('#eeeeee').moveTo(colLeft, infoY + 14).lineTo(colLeft + 220, infoY + 14).stroke('#eeeeee');
         doc.fillColor('#333').fontSize(9).font('Helvetica');
         doc.text('Name: ' + (job.customer_name || 'N/A'), colLeft, infoY + 22);
         doc.text('Email: ' + (job.customer_email || 'N/A'), colLeft, infoY + 38);
         doc.text('Phone: ' + (job.customer_phone || 'N/A'), colLeft, infoY + 54);
 
-        // Vehicle section
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text('VEHICLE', colRight, infoY);
-        doc.strokeColor('#eeeeee').moveTo(colRight, infoY + 14).lineTo(colRight + 200, infoY + 14).stroke('#eeeeee');
+        // Vehicle info (no heading)
         doc.fillColor('#333').fontSize(9).font('Helvetica');
         doc.text('Make: ' + (job.make || 'N/A'), colRight, infoY + 22);
         doc.text('Model: ' + (job.model || 'N/A'), colRight, infoY + 38);
@@ -1652,8 +1656,7 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         rowY += 12;
         const grandTotal = job.total_cost || 0;
         doc.fillColor('#111').fontSize(16).font('Helvetica-Bold');
-        doc.text('GRAND TOTAL', col2, rowY, { width: 160, align: 'right' });
-        doc.text('Rs. ' + Number(grandTotal).toFixed(2), col4, rowY, { width: 80, align: 'right' });
+        doc.text('GRAND TOTAL  Rs. ' + Number(grandTotal).toFixed(2), 50, rowY, { width: 495, align: 'right' });
 
         // ===== FOOTER =====
         const footerY = rowY + 50;
