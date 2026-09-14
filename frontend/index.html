@@ -22,6 +22,9 @@
   <!-- HTML5 QR Code Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
+  <!-- Tesseract.js OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
   <!-- Web App Manifest & Meta Tags for iOS -->
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1049,38 +1052,77 @@
 
     // ===== CREATE JOB MODAL FUNCTIONS =====
 
+    // Store customers for searchable dropdown
+    let allCustomers = [];
+
     function showCreateJobModal() {
       const token = localStorage.getItem('garage_token');
       if (!token) return;
 
       // Reset form
+      document.getElementById('create-job-customer-search').value = '';
       document.getElementById('create-job-customer').value = '';
       document.getElementById('create-job-plate').value = '';
       document.getElementById('create-job-make').value = '';
       document.getElementById('create-job-model').value = '';
       document.getElementById('create-job-year').value = '';
       document.getElementById('create-job-notes').value = '';
-      document.getElementById('create-job-customer').innerHTML = '<option value="">Loading customers...</option>';
+      document.getElementById('customer-dropdown').classList.add('hidden');
       document.getElementById('create-job-modal').classList.remove('hidden');
 
       // Fetch customers for dropdown
       fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => { if (!res.ok) throw new Error('Failed to load customers'); return res.json(); })
         .then(customers => {
-          const select = document.getElementById('create-job-customer');
-          select.innerHTML = '<option value="">Select a customer...</option>' + 
-            customers.map(c => `<option value="${c.id}">${c.name} ${c.email ? '(' + c.email + ')' : ''} ${c.phone ? '• ' + c.phone : ''}</option>`).join('');
+          allCustomers = customers;
+          renderCustomerDropdown(allCustomers);
         })
         .catch(err => {
           console.error('Failed to load customers:', err);
-          document.getElementById('create-job-customer').innerHTML = '<option value="">Failed to load customers</option>';
+          document.getElementById('customer-dropdown').innerHTML = '<div class="px-3 py-2 text-sm text-rose-500">Failed to load customers</div>';
+          document.getElementById('customer-dropdown').classList.remove('hidden');
           showToast('Failed to load customers: ' + err.message, 'error', false);
         });
     }
 
+    function renderCustomerDropdown(customers) {
+      const dropdown = document.getElementById('customer-dropdown');
+      if (customers.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-slate-500">No customers found</div>';
+      } else {
+        dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
+      }
+      dropdown.classList.remove('hidden');
+    }
+
+    function filterCustomers(query) {
+      const filtered = allCustomers.filter(c => {
+        const q = query.toLowerCase();
+        return c.name.toLowerCase().includes(q) || (c.email && c.email.toLowerCase().includes(q)) || (c.phone && c.phone.toLowerCase().includes(q));
+      });
+      renderCustomerDropdown(filtered);
+    }
+
+    function selectCustomer(id, name) {
+      document.getElementById('create-job-customer').value = id;
+      document.getElementById('create-job-customer-search').value = name;
+      document.getElementById('customer-dropdown').classList.add('hidden');
+    }
+
     function hideCreateJobModal() {
       document.getElementById('create-job-modal').classList.add('hidden');
+      document.getElementById('customer-dropdown').classList.add('hidden');
+      document.getElementById('create-job-customer-search').value = '';
     }
+
+    // Close customer dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('customer-dropdown');
+      const searchInput = document.getElementById('create-job-customer-search');
+      if (dropdown && searchInput && !dropdown.contains(e.target) && e.target !== searchInput) {
+        dropdown.classList.add('hidden');
+      }
+    });
 
     async function createJob() {
       const token = localStorage.getItem('garage_token');
@@ -1141,6 +1183,123 @@
     // Helper: Normalize plate number (trim, collapse whitespace, uppercase)
     function normalizePlate(plate) {
       return plate.trim().replace(/\s+/g, '').toUpperCase();
+    }
+
+    // Camera / OCR scanning for plate number
+    let plateVideoStream = null;
+    let plateScanning = false;
+
+    function startPlateScan() {
+      const video = document.createElement('video');
+      video.setAttribute('autoplay', '');
+      video.setAttribute('playsinline', '');
+      video.style.width = '100%';
+      video.style.borderRadius = '0.75rem';
+      video.style.backgroundColor = '#000';
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
+        .then(stream => {
+          plateVideoStream = stream;
+          video.srcObject = stream;
+          video.play();
+          
+          // Create scanning overlay in modal area temporarily
+          const modalBody = document.querySelector('#create-job-modal > div');
+          const scanOverlay = document.createElement('div');
+          scanOverlay.id = 'plate-scan-overlay';
+          scanOverlay.className = 'fixed inset-0 bg-black/90 z-[60] flex flex-col items-center justify-center p-6';
+          scanOverlay.innerHTML = `
+            <div class="w-full max-w-md bg-slate-900 rounded-2xl p-4 shadow-2xl">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-white text-sm">Scan Plate</h3>
+                <button onclick="stopPlateScan()" class="text-slate-400 hover:text-white" title="Close">
+                  <span class="material-icons-round text-xl">close</span>
+                </button>
+              </div>
+              <video id="plate-video" autoplay playsinline class="w-full rounded-xl mb-3 bg-black"></video>
+              <canvas id="plate-canvas" class="hidden"></canvas>
+              <p class="text-xs text-slate-400 text-center mb-3">Position the plate number in the frame</p>
+              <div class="flex gap-2">
+                <button onclick="capturePlateFrame()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow">Capture</button>
+                <button onclick="stopPlateScan()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl text-xs transition-all">Cancel</button>
+              </div>
+              <p id="plate-ocr-status" class="text-xs text-slate-400 mt-2 text-center"></p>
+            </div>
+          `;
+          document.body.appendChild(scanOverlay);
+          
+          // Assign video stream to overlay video element
+          setTimeout(() => {
+            const overlayVideo = document.getElementById('plate-video');
+            if (overlayVideo && plateVideoStream) {
+              overlayVideo.srcObject = plateVideoStream;
+            }
+          }, 100);
+        })
+        .catch(err => {
+          console.error('Camera access denied or error:', err);
+          showToast('Camera access denied or unavailable', 'error', false);
+        });
+    }
+
+    function stopPlateScan() {
+      if (plateVideoStream) {
+        plateVideoStream.getTracks().forEach(track => track.stop());
+        plateVideoStream = null;
+      }
+      const overlay = document.getElementById('plate-scan-overlay');
+      if (overlay) overlay.remove();
+      plateScanning = false;
+    }
+
+    function capturePlateFrame() {
+      const video = document.getElementById('plate-video');
+      const canvas = document.getElementById('plate-canvas');
+      const status = document.getElementById('plate-ocr-status');
+      if (!video || !canvas) return;
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      status.textContent = 'Reading plate...';
+      status.className = 'text-xs text-indigo-400 mt-2 text-center';
+
+      // Convert canvas to image data for Tesseract
+      const imageData = canvas.toDataURL('image/png');
+      
+      if (typeof Tesseract === 'undefined') {
+        status.textContent = 'OCR library not loaded';
+        status.className = 'text-xs text-rose-400 mt-2 text-center';
+        return;
+      }
+
+      Tesseract.recognize(
+        imageData,
+        'eng',
+        { logger: m => { if (m.status === 'recognizing text') status.textContent = 'Reading... ' + Math.round(m.progress * 100) + '%'; } }
+      ).then(({ data: { text } }) => {
+        // Clean up OCR result for plate format
+        let result = text.trim().toUpperCase();
+        // Remove common OCR errors and whitespace
+        result = result.replace(/[^A-Z0-9]/g, '').replace(/\s+/g, '');
+        if (result.length < 2) {
+          status.textContent = 'No plate text detected. Try again.';
+          status.className = 'text-xs text-amber-400 mt-2 text-center';
+        } else {
+          document.getElementById('create-job-plate').value = result;
+          status.textContent = 'Detected: ' + result;
+          status.className = 'text-xs text-emerald-400 mt-2 text-center';
+          showToast('Plate detected: ' + result, 'check_circle', true);
+          setTimeout(stopPlateScan, 1500);
+        }
+      }).catch(err => {
+        console.error('OCR error:', err);
+        status.textContent = 'Read error. Try again.';
+        status.className = 'text-xs text-rose-400 mt-2 text-center';
+      });
     }
 
     // Helper: Find existing vehicle by plate, or create new
@@ -2929,13 +3088,20 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Customer <span class="text-rose-500">*</span></label>
-            <select id="create-job-customer" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-              <option value="">Loading customers...</option>
-            </select>
+            <div class="relative">
+              <input type="text" id="create-job-customer-search" placeholder="Search customers..." class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" oninput="filterCustomers(this.value)" autocomplete="off">
+              <input type="hidden" id="create-job-customer" name="customer_id" required>
+              <div id="customer-dropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto hidden"></div>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Plate Number <span class="text-rose-500">*</span></label>
-            <input type="text" id="create-job-plate" placeholder="ABC-1234" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" style="text-transform: uppercase;" required>
+            <div class="flex gap-2">
+              <input type="text" id="create-job-plate" placeholder="ABC-1234" class="flex-1 px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" style="text-transform: uppercase;" required>
+              <button type="button" onclick="startPlateScan()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow ripple-btn" title="Scan plate with camera">
+                <span class="material-icons-round text-base">camera_alt</span>
+              </button>
+            </div>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
