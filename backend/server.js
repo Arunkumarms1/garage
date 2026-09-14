@@ -60,7 +60,14 @@ function authenticateToken(req, res, next) {
       return res.status(403).json({ error: 'Token is invalid or expired. Please re-authenticate.' });
     }
     req.user = user;
-    next();
+    // Server-side role verification: always check current DB role
+    db.get("SELECT role FROM users WHERE id = ?", [user.id], (err, row) => {
+      if (err || !row) {
+        return res.status(403).json({ error: 'Forbidden: User verification failed.' });
+      }
+      req.user.role = row.role;
+      next();
+    });
   });
 }
 

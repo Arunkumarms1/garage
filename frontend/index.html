@@ -544,8 +544,8 @@
 
           <!-- Tab Navigation -->
           <div class="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl space-x-1" id="app-tabs">
-            <button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Dashboard</button>
-            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Invoices</button>` : `<button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Jobs</button>`}
+            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Invoices</button>` : `<button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Dashboard</button>`}
+            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Jobs</button>`}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Customers</button>` : ''}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Inventory</button>` : ''}
             ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Analytics</button>` : ''}
@@ -900,11 +900,9 @@
     }
 
     function setupTabNavigation(user) {
-      const isEmployeeOrAdmin = user.role === 'employee' || user.role === 'admin';
-      const isAdmin = user.role === 'admin';
-      
-      // Default to dashboard
-      switchAppTab('dashboard');
+      const isCustomer = user.role === 'customer';
+      // Default to invoices for customers, dashboard for others
+      switchAppTab(isCustomer ? 'invoices' : 'dashboard');
     }
 
     function switchAppTab(tabName) {
