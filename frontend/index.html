@@ -2695,9 +2695,14 @@
         html5QrCode.stop().catch(() => {});
         document.getElementById('reader').classList.add('hidden');
       }
-      // Use static scanFile method
+      // Use static scanFile method with timeout
+      const scanTimeout = setTimeout(() => {
+        document.getElementById('qr-status').textContent = 'Scanning timeout. Try a clearer image or use camera.';
+        showToast('Scan timeout - try again', 'error', false);
+      }, 15000);
       Html5Qrcode.scanFile(file, true)
         .then(decodedText => {
+          clearTimeout(scanTimeout);
           handleQrSuccess(decodedText);
         })
         .catch(err => {
