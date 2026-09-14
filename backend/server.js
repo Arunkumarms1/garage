@@ -452,7 +452,7 @@ app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => 
     
     let errorOccurred = false;
     for (const [key, value] of Object.entries(settingsUpdate)) {
-      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name'].includes(key)) {
+      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name', 'upi_image'].includes(key)) {
         stmt.run(key, String(value), (err) => {
           if (err) errorOccurred = true;
         });
@@ -1662,7 +1662,7 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
       }
 
       // Fetch shop settings (include UPI settings for QR confirmation)
-      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64', 'contact_info', 'upi_id', 'upi_name')", async (err, settingsRows) => {
+      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64', 'contact_info', 'upi_id', 'upi_name', 'upi_image')", async (err, settingsRows) => {
         if (err) {
           return res.status(500).json({ error: 'Failed to retrieve settings.' });
         }
@@ -1817,22 +1817,40 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
           const upiString = upiId ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${grandTotal}` : 'UPI Payment';
           const adminLookupString = `invoice:${id}`;
 
+          const upiImage = settings.upi_image || '';
+          const hasUpiImage = upiImage && upiImage.trim().length > 0;
+
           try {
-            const [upiBuffer, adminBuffer] = await Promise.all([
-              upiString ? QRCode.toBuffer(upiString) : null,
-              adminLookupString ? QRCode.toBuffer(adminLookupString) : null
-            ]);
+            let adminBuffer = adminLookupString ? await QRCode.toBuffer(adminLookupString) : null;
 
             const qrY = footerY + 90;
 
-            if (showUpiQr && upiBuffer) {
-              doc.image(upiBuffer, 50, qrY, { width: 100, height: 100 });
-              doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
-              doc.text('Scan to Pay (UPI)', 160, qrY + 10, { width: 200, align: 'left' });
-              doc.font('Helvetica').fontSize(8).fillColor('#666');
-              doc.text(upiName ? `Name: ${upiName}` : 'UPI Payment', 160, qrY + 30);
-              doc.text(upiId ? `UPI ID: ${upiId}` : '', 160, qrY + 45);
-              doc.text('Admin scan confirmation: name shown above.', 160, qrY + 60, { width: 200, align: 'left' });
+            if (showUpiQr && hasUpiImage) {
+              try {
+                // Embed saved UPI QR image directly (base64 or URL)
+                if (upiImage.startsWith('data:image')) {
+                  const base64Data = upiImage.split(',')[1];
+                  const imgBuffer = Buffer.from(base64Data, 'base64');
+                  doc.image(imgBuffer, 50, qrY, { width: 100, height: 100 });
+                } else if (upiImage.startsWith('http')) {
+                  doc.image(upiImage, 50, qrY, { width: 100, height: 100 });
+                }
+                doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+                doc.text('Scan to Pay (UPI)', 160, qrY + 10, { width: 200, align: 'left' });
+                doc.font('Helvetica').fontSize(8).fillColor('#666');
+                doc.text(upiName ? `Name: ${upiName}` : 'UPI Payment', 160, qrY + 30);
+                doc.text(upiId ? `UPI ID: ${upiId}` : '', 160, qrY + 45);
+                doc.text('Admin scan confirmation: name shown above.', 160, qrY + 60, { width: 200, align: 'left' });
+              } catch (imgErr) {
+                console.warn('Failed to embed saved UPI image:', imgErr);
+                // Fallback to text description only
+                doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+                doc.text('Scan to Pay (UPI) - Image not loaded', 50, qrY + 10, { width: 200, align: 'left' });
+              }
+            } else if (showUpiQr && !hasUpiImage) {
+              // If no saved image but staff/customer can see, show instructions
+              doc.fontSize(9).font('Helvetica-Bold').fillColor('#666');
+              doc.text('UPI payment info not configured.', 50, qrY + 10, { width: 200, align: 'left' });
             }
 
             if (showAdminLookupQr && adminBuffer) {
