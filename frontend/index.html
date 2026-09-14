@@ -227,29 +227,6 @@
 
     </div>
 
-    <!-- QR Scanner Container -->
-    <div class="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 text-center space-y-4 mt-6">
-      <h3 class="font-bold text-slate-900 dark:text-white">QR Scanner</h3>
-      <div class="flex flex-col space-y-3">
-        <button onclick="startQrScan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
-          <span class="material-icons-round">camera_alt</span>
-          <span>Start Live Camera</span>
-        </button>
-        <div id="reader" class="w-full max-w-xs mx-auto rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 hidden"></div>
-        <div class="flex items-center justify-center space-x-2">
-          <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
-          <span class="text-xs text-slate-400">or</span>
-          <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
-        </div>
-        <label class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all cursor-pointer flex items-center justify-center space-x-2">
-          <span class="material-icons-round">photo_camera</span>
-          <span>Upload Image from Gallery</span>
-          <input type="file" accept="image/*" onchange="handleFileUpload(this)" class="hidden">
-        </label>
-      </div>
-      <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Scan a QR code to save it</p>
-    </div>
-
   </main>
 
   <footer class="text-center py-4 text-xs font-semibold text-slate-400 dark:text-slate-600 border-t border-slate-100 dark:border-slate-800/80">
@@ -823,6 +800,37 @@
                 <!-- Holiday List -->
                 <div id="settings-holiday-list" class="space-y-2">
                   <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Loading holidays...</p>
+                </div>
+              </div>
+
+              <!-- Admin QR Scanner (only admin) -->
+              <div id="admin-qr-scanner" class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <h4 class="font-semibold text-slate-700 dark:text-slate-300">Admin QR Operations (Admin Only)</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Scan UPI settings QR (for invoice payment) or upload an invoice lookup string. Only admin can scan/upload. If empty, nothing is embedded.</p>
+                <div class="flex items-center space-x-2">
+                  <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Scan for:</label>
+                  <select id="scan-option" class="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:outline-none" onchange="document.getElementById('qr-status').textContent = 'Ready to scan: ' + this.value">
+                    <option value="UPI Settings">UPI Settings</option>
+                    <option value="Invoice Lookup">Invoice Lookup</option>
+                  </select>
+                </div>
+                <div class="flex flex-col space-y-3">
+                  <button onclick="startQrScan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
+                    <span class="material-icons-round">camera_alt</span>
+                    <span>Scan QR (Admin Only)</span>
+                  </button>
+                  <div id="reader" class="w-full max-w-xs mx-auto rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 hidden"></div>
+                  <div class="flex items-center justify-center space-x-2">
+                    <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+                    <span class="text-xs text-slate-400">or upload</span>
+                    <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+                  </div>
+                  <label class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all cursor-pointer flex items-center justify-center space-x-2">
+                    <span class="material-icons-round">photo_camera</span>
+                    <span>Upload QR Image (Admin Only)</span>
+                    <input type="file" accept="image/*" onchange="handleFileUpload(this)" class="hidden">
+                  </label>
+                  <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Scan or upload to save QR string</p>
                 </div>
               </div>
             </div>
@@ -2656,6 +2664,11 @@
     }
 
     function saveQrData(qrData) {
+      if (!qrData || typeof qrData !== 'string' || qrData.trim().length === 0) {
+        document.getElementById('qr-status').textContent = 'Invalid or empty QR data. Not saved.';
+        showToast('QR data is empty or invalid', 'error', false);
+        return;
+      }
       fetch('/api/save-qr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2677,18 +2690,19 @@
       const file = input.files[0];
       if (!file) return;
       document.getElementById('qr-status').textContent = 'Reading image...';
+      // Stop any active camera scan
       if (html5QrCode) {
         html5QrCode.stop().catch(() => {});
+        document.getElementById('reader').classList.add('hidden');
       }
-      html5QrCode = new Html5Qrcode('reader');
-      html5QrCode.scanFile(file, true)
+      // Use static scanFile method
+      Html5Qrcode.scanFile(file, true)
         .then(decodedText => {
-          document.getElementById('reader').classList.remove('hidden');
           handleQrSuccess(decodedText);
         })
         .catch(err => {
           console.error('File scan error:', err);
-          document.getElementById('qr-status').textContent = 'Failed to scan file';
+          document.getElementById('qr-status').textContent = 'Failed to scan file: ' + (err.message || 'No code found');
         });
     }
   </script>

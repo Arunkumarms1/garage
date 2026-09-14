@@ -1799,51 +1799,71 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
           doc.text(contactInfo, 50, footerY + 74, { width: 495, align: 'right' });
         }
 
-        // ===== QR CODES (visibility-controlled) =====
-        const isAdmin = req.user.role === 'admin';
-        const isEmployee = req.user.role === 'employee';
-        const isOwnInvoice = job.customer_id === req.user.id;
-        const isStaff = isAdmin || isEmployee;
+        // Verify saved QR data and include if present
+        db.get("SELECT qr_data FROM items ORDER BY id DESC LIMIT 1", async (itemErr, itemRow) => {
+          const savedQrData = (itemRow && itemRow.qr_data && itemRow.qr_data.trim().length > 0) ? itemRow.qr_data.trim() : null;
 
-        const showUpiQr = isStaff || isOwnInvoice;
-        const showAdminLookupQr = isAdmin || isEmployee || isOwnInvoice;
+          // ===== QR CODES (visibility-controlled) =====
+          const isAdmin = req.user.role === 'admin';
+          const isEmployee = req.user.role === 'employee';
+          const isOwnInvoice = job.customer_id === req.user.id;
+          const isStaff = isAdmin || isEmployee;
 
-        const upiId = settings.upi_id || '';
-        const upiName = settings.upi_name || 'Garage Workshop';
-        const upiString = upiId ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${grandTotal}` : 'UPI Payment';
-        const adminLookupString = `invoice:${id}`;
+          const showUpiQr = isStaff || isOwnInvoice;
+          const showAdminLookupQr = isAdmin || isEmployee || isOwnInvoice;
 
-        try {
-          const [upiBuffer, adminBuffer] = await Promise.all([
-            upiString ? QRCode.toBuffer(upiString) : null,
-            adminLookupString ? QRCode.toBuffer(adminLookupString) : null
-          ]);
+          const upiId = settings.upi_id || '';
+          const upiName = settings.upi_name || 'Garage Workshop';
+          const upiString = upiId ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${grandTotal}` : 'UPI Payment';
+          const adminLookupString = `invoice:${id}`;
 
-          const qrY = footerY + 90;
+          try {
+            const [upiBuffer, adminBuffer] = await Promise.all([
+              upiString ? QRCode.toBuffer(upiString) : null,
+              adminLookupString ? QRCode.toBuffer(adminLookupString) : null
+            ]);
 
-          if (showUpiQr && upiBuffer) {
-            doc.image(upiBuffer, 50, qrY, { width: 100, height: 100 });
-            doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
-            doc.text('Scan to Pay (UPI)', 160, qrY + 10, { width: 200, align: 'left' });
-            doc.font('Helvetica').fontSize(8).fillColor('#666');
-            doc.text(upiName ? `Name: ${upiName}` : 'UPI Payment', 160, qrY + 30);
-            doc.text(upiId ? `UPI ID: ${upiId}` : '', 160, qrY + 45);
-            doc.text('Admin scan confirmation: name shown above.', 160, qrY + 60, { width: 200, align: 'left' });
+            const qrY = footerY + 90;
+
+            if (showUpiQr && upiBuffer) {
+              doc.image(upiBuffer, 50, qrY, { width: 100, height: 100 });
+              doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+              doc.text('Scan to Pay (UPI)', 160, qrY + 10, { width: 200, align: 'left' });
+              doc.font('Helvetica').fontSize(8).fillColor('#666');
+              doc.text(upiName ? `Name: ${upiName}` : 'UPI Payment', 160, qrY + 30);
+              doc.text(upiId ? `UPI ID: ${upiId}` : '', 160, qrY + 45);
+              doc.text('Admin scan confirmation: name shown above.', 160, qrY + 60, { width: 200, align: 'left' });
+            }
+
+            if (showAdminLookupQr && adminBuffer) {
+              const adminX = showUpiQr ? 340 : 50;
+              doc.image(adminBuffer, adminX, qrY, { width: 100, height: 100 });
+              doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+              doc.text(isAdmin ? 'Admin Lookup QR' : 'Scan to Find Invoice', adminX + 110, qrY + 10, { width: 180, align: 'left' });
+              doc.font('Helvetica').fontSize(8).fillColor('#666');
+              doc.text(`Invoice #${id}`, adminX + 110, qrY + 30);
+            }
+
+            // Embed saved scanned QR data if verified non-empty
+            if (savedQrData) {
+              try {
+                const savedBuffer = await QRCode.toBuffer(savedQrData);
+                const savedY = (showUpiQr || showAdminLookupQr) ? qrY + 130 : qrY;
+                doc.image(savedBuffer, 50, savedY, { width: 80, height: 80 });
+                doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+                doc.text('Saved QR Data', 140, savedY + 10, { width: 300, align: 'left' });
+                doc.font('Helvetica').fontSize(8).fillColor('#666');
+                doc.text(savedQrData, 140, savedY + 25, { width: 300, align: 'left' });
+              } catch (savedErr) {
+                console.warn('Failed to embed saved QR data:', savedErr);
+              }
+            }
+          } catch (qrErr) {
+            console.warn('Failed to embed invoice QR codes:', qrErr);
           }
 
-          if (showAdminLookupQr && adminBuffer) {
-            const adminX = showUpiQr ? 340 : 50;
-            doc.image(adminBuffer, adminX, qrY, { width: 100, height: 100 });
-            doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
-            doc.text(isAdmin ? 'Admin Lookup QR' : 'Scan to Find Invoice', adminX + 110, qrY + 10, { width: 180, align: 'left' });
-            doc.font('Helvetica').fontSize(8).fillColor('#666');
-            doc.text(`Invoice #${id}`, adminX + 110, qrY + 30);
-          }
-        } catch (qrErr) {
-          console.warn('Failed to embed invoice QR codes:', qrErr);
-        }
-
-        doc.end();
+          doc.end();
+        });
       });
     });
   });
