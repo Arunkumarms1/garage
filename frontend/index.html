@@ -821,19 +821,11 @@
                 </div>
                 <div id="qr-reader-container" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600"></div>
                 <div class="flex flex-col space-y-3">
-                  <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Ready to scan or upload</p>
-                  <label class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all cursor-pointer flex items-center justify-center space-x-2">
-                    <span class="material-icons-round">photo_camera</span>
-                    <span>Upload QR Image (Admin Only)</span>
-                    <input type="file" accept="image/*" id="file-qr-input" class="hidden">
-                  </label>
-                  <div class="border-t border-slate-200 dark:border-slate-700 pt-2">
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Manual QR String (if scan fails)</label>
-                    <input type="text" id="manual-qr-data" placeholder="Paste 'upi://pay?pa=...' or 'invoice:123'" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="document.getElementById('manual-qr-save').disabled = !this.value.trim()">
-                    <button onclick="saveManualQrData()" id="manual-qr-save" disabled class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all shadow ripple-btn">
-                      Save Manual QR String
-                    </button>
-                  </div>
+                  <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Ready to scan</p>
+                  <button onclick="startQrScan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
+                    <span class="material-icons-round">camera_alt</span>
+                    <span>Scan QR (Admin Only)</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -2692,17 +2684,7 @@
       });
     }
 
-    function saveManualQrData() {
-      const manualData = document.getElementById('manual-qr-data').value.trim();
-      if (!manualData) {
-        showToast('Please enter a QR string', 'error', false);
-        return;
-      }
-      document.getElementById('qr-status').textContent = 'Saving manual QR...';
-      saveQrData(manualData);
-    }
-
-    // Helper to read file as base64
+    // Helper to read file as base64 (used by settings image upload)
     function readFileAsBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
