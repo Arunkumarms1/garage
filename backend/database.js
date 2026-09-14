@@ -135,6 +135,7 @@ db.serialize(() => {
       db.run("INSERT INTO settings (key, value) VALUES ('theme_color', 'indigo')"); // Default theme color
       db.run("INSERT INTO settings (key, value) VALUES ('upi_id', 'garage@upi')"); // Default UPI ID
       db.run("INSERT INTO settings (key, value) VALUES ('upi_name', 'Garage Workshop')"); // Default UPI name
+      db.run("INSERT INTO settings (key, value) VALUES ('upi_image', '')"); // Default empty UPI image
       console.log("Seeded default settings.");
     }
   });
