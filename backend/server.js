@@ -2071,6 +2071,50 @@ app.get('/api/generate-pdf/:id', (req, res) => {
 
 // ===== END QR SCANNING & PDF ROUTES =====
 
+// ===== CATALOG ROUTES (reference table for line items) =====
+
+app.get('/api/catalog', authenticateToken, requireRole('employee'), (req, res) => {
+  const { type } = req.query;
+  let query = "SELECT * FROM line_catalog";
+  const params = [];
+  if (type) {
+    query += " WHERE type = ?";
+    params.push(type);
+  }
+  query += " ORDER BY description ASC";
+  db.all(query, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Failed to retrieve catalog.' });
+    res.json(rows);
+  });
+});
+
+app.post('/api/catalog', authenticateToken, requireRole('employee'), (req, res) => {
+  const { description, price, type } = req.body;
+  if (!description || price === undefined || !type) {
+    return res.status(400).json({ error: 'Description, price, and type are required.' });
+  }
+  const p = parseFloat(price);
+  if (isNaN(p) || p < 0) {
+    return res.status(400).json({ error: 'Price must be a valid non-negative number.' });
+  }
+  // If description exists for this type, update price (admin updates new ones, else same old price handled by frontend using stored price)
+  // Actually we insert or replace to keep it simple for admin updates
+  db.get("SELECT id, price FROM line_catalog WHERE description = ? AND type = ?", [description, type], (err, row) => {
+    if (err) return res.status(500).json({ error: 'Database error checking catalog.' });
+    if (row) {
+      // Existing entry: keep old price (same as old)
+      res.json({ message: 'Catalog entry exists.', item: { id: row.id, description, price: row.price, type } });
+    } else {
+      db.run("INSERT INTO line_catalog (description, price, type) VALUES (?, ?, ?)", [description, p, type], function(insertErr) {
+        if (insertErr) return res.status(500).json({ error: 'Failed to create catalog entry.' });
+        res.status(201).json({ message: 'Catalog entry created.', item: { id: this.lastID, description, price: p, type } });
+      });
+    }
+  });
+});
+
+// ===== END CATALOG ROUTES =====
+
   // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));

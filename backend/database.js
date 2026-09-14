@@ -112,6 +112,16 @@ db.serialize(() => {
     )
   `);
 
+  // 6d. Create Line Catalog Table (reference descriptions + prices)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS line_catalog (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      description TEXT NOT NULL,
+      price REAL NOT NULL DEFAULT 0,
+      type TEXT CHECK(type IN ('part', 'labor')) NOT NULL DEFAULT 'labor'
+    )
+  `);
+
   // 4. Create Ledger Table
   db.run(`
     CREATE TABLE IF NOT EXISTS ledger (

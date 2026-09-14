@@ -1105,7 +1105,8 @@
       } else {
         dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
       }
-      dropdown.classList.remove('hidden');
+      // Dropdown stays hidden by default; shown only on input/focus
+      dropdown.classList.add('hidden');
     }
 
     function filterCustomers(query) {
@@ -1114,6 +1115,10 @@
         return c.name.toLowerCase().includes(q) || (c.email && c.email.toLowerCase().includes(q)) || (c.phone && c.phone.toLowerCase().includes(q));
       });
       renderCustomerDropdown(filtered);
+      const dropdown = document.getElementById('customer-dropdown');
+      if (dropdown && (query.trim() !== '' || document.activeElement === document.getElementById('create-job-customer-search'))) {
+        dropdown.classList.remove('hidden');
+      }
     }
 
 
@@ -1169,12 +1174,22 @@
       document.getElementById('create-job-customer-search').value = '';
     }
 
-    // Close customer dropdown when clicking outside
+    // Close dropdowns when clicking outside
     document.addEventListener('click', function(e) {
-      const dropdown = document.getElementById('customer-dropdown');
-      const searchInput = document.getElementById('create-job-customer-search');
-      if (dropdown && searchInput && !dropdown.contains(e.target) && e.target !== searchInput) {
-        dropdown.classList.add('hidden');
+      const customerDropdown = document.getElementById('customer-dropdown');
+      const customerInput = document.getElementById('create-job-customer-search');
+      if (customerDropdown && customerInput && !customerDropdown.contains(e.target) && e.target !== customerInput) {
+        customerDropdown.classList.add('hidden');
+      }
+      const partDropdown = document.getElementById('part-dropdown');
+      const partInput = document.getElementById('part-desc-search');
+      if (partDropdown && partInput && !partDropdown.contains(e.target) && e.target !== partInput) {
+        partDropdown.classList.add('hidden');
+      }
+      const laborDropdown = document.getElementById('labor-dropdown');
+      const laborInput = document.getElementById('labor-desc-search');
+      if (laborDropdown && laborInput && !laborDropdown.contains(e.target) && e.target !== laborInput) {
+        laborDropdown.classList.add('hidden');
       }
     });
 
@@ -1496,13 +1511,8 @@
           if (addItemSection) addItemSection.classList.remove('hidden');
           // Load job items and inventory for parts dropdown
           await loadJobItems(currentJobId);
-          await loadInventoryForJobItems();
-          // Set up part select change handler
-          const partSelect = document.getElementById('job-item-part-select');
-          if (partSelect && !partSelect.dataset.listenerAdded) {
-            partSelect.addEventListener('change', onPartSelectChange);
-            partSelect.dataset.listenerAdded = 'true';
-          }
+          await loadPartCatalog();
+          await loadLaborCatalog();
         } else {
           statusSelect.disabled = true;
           saveBtn.classList.add('hidden');
@@ -1667,38 +1677,95 @@
       }
     }
 
-    async function loadInventoryForJobItems() {
+    let allPartCatalog = [];
+    let allLaborCatalog = [];
+
+    async function loadPartCatalog() {
       const token = localStorage.getItem('garage_token');
       if (!token) return;
-
       try {
-        const res = await fetch('/api/inventory', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) return;
-
-        const items = await res.json();
-        const select = document.getElementById('job-item-part-select');
-        if (select) {
-          select.innerHTML = '<option value="">Select a part from inventory...</option>' + items.map(item => 
-            `<option value="${item.id}" data-price="${item.selling_price}" data-name="${item.item_name}">${item.item_name} (₹${Number(item.selling_price).toFixed(2)}) - Stock: ${item.quantity}</option>`
-          ).join('');
+        const res = await fetch('/api/catalog?type=part', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+          allPartCatalog = await res.json();
         }
       } catch (err) {
-        console.warn('Failed to load inventory for job items:', err);
+        console.warn('Failed to load part catalog:', err);
       }
     }
 
-    function onPartSelectChange() {
-      const select = document.getElementById('job-item-part-select');
-      const priceInput = document.getElementById('job-item-part-price');
-      const selectedOption = select.options[select.selectedIndex];
-      if (selectedOption && selectedOption.dataset.price) {
-        priceInput.value = selectedOption.dataset.price;
-      } else {
-        priceInput.value = '';
+    async function loadLaborCatalog() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/catalog?type=labor', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+          allLaborCatalog = await res.json();
+        }
+      } catch (err) {
+        console.warn('Failed to load labor catalog:', err);
       }
+    }
+
+    function filterPartCatalog(query) {
+      const q = (query || '').toLowerCase();
+      const filtered = allPartCatalog.filter(c => c.description.toLowerCase().includes(q));
+      renderPartDropdown(filtered);
+      const dropdown = document.getElementById('part-dropdown');
+      const input = document.getElementById('part-desc-search');
+      if (dropdown && input && (q !== '' || document.activeElement === input)) {
+        dropdown.classList.remove('hidden');
+      } else if (dropdown && (!q || document.activeElement !== input)) {
+        dropdown.classList.add('hidden');
+      }
+    }
+
+    function renderPartDropdown(items) {
+      const dropdown = document.getElementById('part-dropdown');
+      if (!dropdown) return;
+      if (items.length === 0) {
+        dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
+      } else {
+        dropdown.innerHTML = items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('');
+      }
+      dropdown.classList.add('hidden');
+    }
+
+    function selectPart(id, desc, price) {
+      document.getElementById('part-desc-search').value = desc;
+      document.getElementById('part-desc-id').value = id || '';
+      document.getElementById('job-item-part-price').value = price || '';
+      document.getElementById('part-dropdown').classList.add('hidden');
+    }
+
+    function filterLaborCatalog(query) {
+      const q = (query || '').toLowerCase();
+      const filtered = allLaborCatalog.filter(c => c.description.toLowerCase().includes(q));
+      renderLaborDropdown(filtered);
+      const dropdown = document.getElementById('labor-dropdown');
+      const input = document.getElementById('labor-desc-search');
+      if (dropdown && input && (q !== '' || document.activeElement === input)) {
+        dropdown.classList.remove('hidden');
+      } else if (dropdown && (!q || document.activeElement !== input)) {
+        dropdown.classList.add('hidden');
+      }
+    }
+
+    function renderLaborDropdown(items) {
+      const dropdown = document.getElementById('labor-dropdown');
+      if (!dropdown) return;
+      if (items.length === 0) {
+        dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
+      } else {
+        dropdown.innerHTML = items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('');
+      }
+      dropdown.classList.add('hidden');
+    }
+
+    function selectLabor(id, desc, price) {
+      document.getElementById('labor-desc-search').value = desc;
+      document.getElementById('labor-desc-id').value = id || '';
+      document.getElementById('job-item-labor-price').value = price || '';
+      document.getElementById('labor-dropdown').classList.add('hidden');
     }
 
     async function addJobItem(type) {
@@ -1708,14 +1775,13 @@
       let description, quantity, unit_price, inventory_id = null;
 
       if (type === 'part') {
-        const select = document.getElementById('job-item-part-select');
-        inventory_id = select.value;
-        description = select.options[select.selectedIndex]?.dataset.name || '';
+        const searchInput = document.getElementById('part-desc-search');
+        description = searchInput ? searchInput.value.trim() : '';
         quantity = parseInt(document.getElementById('job-item-part-qty').value);
         unit_price = parseFloat(document.getElementById('job-item-part-price').value);
 
-        if (!inventory_id) {
-          showToast('Please select a part', 'error', false);
+        if (!description) {
+          showToast('Please select or enter a part', 'error', false);
           return;
         }
 
@@ -1724,7 +1790,7 @@
           return;
         }
       } else {
-        description = document.getElementById('job-item-labor-desc').value.trim();
+        description = document.getElementById('labor-desc-search').value.trim();
         quantity = parseInt(document.getElementById('job-item-labor-qty').value);
         unit_price = parseFloat(document.getElementById('job-item-labor-price').value);
 
@@ -1764,17 +1830,32 @@
           throw new Error(err.error || 'Failed to add job item');
         }
 
+        // Upsert catalog entry (new price for new descriptions, same old price kept by backend)
+        try {
+          await fetch('/api/catalog', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ description, price: unit_price, type: type === 'part' ? 'part' : 'labor' })
+          });
+        } catch (catalogErr) {
+          console.warn('Catalog update skipped:', catalogErr);
+        }
+
         showToast(`${type === 'part' ? 'Part' : 'Labor'} added successfully!`, 'check_circle', true);
 
         // Reset form
         if (type === 'part') {
-          document.getElementById('job-item-part-select').value = '';
+          document.getElementById('part-desc-search').value = '';
+          document.getElementById('part-desc-id').value = '';
           document.getElementById('job-item-part-qty').value = 1;
           document.getElementById('job-item-part-price').value = '';
+          document.getElementById('part-dropdown').classList.add('hidden');
         } else {
-          document.getElementById('job-item-labor-desc').value = '';
+          document.getElementById('labor-desc-search').value = '';
+          document.getElementById('labor-desc-id').value = '';
           document.getElementById('job-item-labor-qty').value = 1;
           document.getElementById('job-item-labor-price').value = '';
+          document.getElementById('labor-dropdown').classList.add('hidden');
         }
 
         // Reload items and job detail (for updated total)
@@ -3097,9 +3178,11 @@
           <div id="part-form" class="space-y-2">
             <div>
               <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Part <span class="text-rose-500">*</span></label>
-              <select id="job-item-part-select" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Select a part from inventory...</option>
-              </select>
+              <div class="relative">
+                <input type="text" id="part-desc-search" placeholder="Search part..." class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" oninput="filterPartCatalog(this.value)" autocomplete="off">
+                <input type="hidden" id="part-desc-id">
+                <div id="part-dropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto hidden"></div>
+              </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
@@ -3108,7 +3191,7 @@
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Unit Price <span class="text-rose-500">*</span></label>
-                <input type="number" id="job-item-part-price" step="0.01" min="0" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Auto-filled from inventory">
+                <input type="number" id="job-item-part-price" step="0.01" min="0" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Auto-filled from catalog">
               </div>
             </div>
             <button onclick="addJobItem('part')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all">Add Part</button>
@@ -3118,7 +3201,11 @@
           <div id="labor-form" class="hidden space-y-2">
             <div>
               <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Description <span class="text-rose-500">*</span></label>
-              <input type="text" id="job-item-labor-desc" placeholder="e.g., Brake pad replacement, Oil change" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+              <div class="relative">
+                <input type="text" id="labor-desc-search" placeholder="Search labor..." class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="filterLaborCatalog(this.value)" autocomplete="off">
+                <input type="hidden" id="labor-desc-id">
+                <div id="labor-dropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto hidden"></div>
+              </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
