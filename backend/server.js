@@ -1490,6 +1490,10 @@ app.post('/api/jobs/:id/items', authenticateToken, requireRole('employee'), (req
   const qty = parseInt(quantity);
   const price = parseFloat(unit_price);
 
+  if (isNaN(qty) || isNaN(price)) {
+    return res.status(400).json({ error: 'Quantity and unit price must be valid numbers.' });
+  }
+
   if (qty <= 0 || price < 0) {
     return res.status(400).json({ error: 'Quantity must be positive and unit price non-negative.' });
   }

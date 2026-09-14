@@ -1711,31 +1711,41 @@
         const select = document.getElementById('job-item-part-select');
         inventory_id = select.value;
         description = select.options[select.selectedIndex]?.dataset.name || '';
-        quantity = parseInt(document.getElementById('job-item-part-qty').value) || 1;
-        unit_price = parseFloat(document.getElementById('job-item-part-price').value) || 0;
+        quantity = parseInt(document.getElementById('job-item-part-qty').value);
+        unit_price = parseFloat(document.getElementById('job-item-part-price').value);
 
         if (!inventory_id) {
           showToast('Please select a part', 'error', false);
           return;
         }
+
+        if (isNaN(quantity) || isNaN(unit_price)) {
+          showToast('Quantity and price must be valid numbers', 'error', false);
+          return;
+        }
       } else {
         description = document.getElementById('job-item-labor-desc').value.trim();
-        quantity = parseInt(document.getElementById('job-item-labor-qty').value) || 1;
-        unit_price = parseFloat(document.getElementById('job-item-labor-price').value) || 0;
+        quantity = parseInt(document.getElementById('job-item-labor-qty').value);
+        unit_price = parseFloat(document.getElementById('job-item-labor-price').value);
 
         if (!description) {
           showToast('Please enter a description for labor', 'error', false);
           return;
         }
 
-        if (unit_price <= 0) {
-          showToast('Labor price must be above 0 rupees', 'error', false);
+        if (isNaN(quantity) || isNaN(unit_price)) {
+          showToast('Quantity and price must be valid numbers', 'error', false);
+          return;
+        }
+
+        if (quantity <= 0 || unit_price <= 0) {
+          showToast('Labor price must be above 0 rupees and quantity positive', 'error', false);
           return;
         }
       }
 
-      if (quantity <= 0 || unit_price < 0) {
-        showToast('Quantity must be positive and price non-negative', 'error', false);
+      if (isNaN(quantity) || isNaN(unit_price) || quantity <= 0 || unit_price < 0) {
+        showToast('Quantity and unit price must be valid positive numbers', 'error', false);
         return;
       }
 
