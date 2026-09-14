@@ -567,9 +567,10 @@ app.get('/api/admin/users', authenticateToken, requireRole('admin'), (req, res) 
   const query = `
     SELECT 
       u.id, u.name, u.email, u.role, u.picture,
-      COUNT(b.id) as total_services
+      COUNT(j.id) as total_services
     FROM users u
-    LEFT JOIN bookings b ON u.name = b.customer_name AND b.status = 'service finished'
+    LEFT JOIN vehicles v ON u.id = v.owner_id
+    LEFT JOIN jobs j ON v.id = j.vehicle_id AND j.status = 'completed'
     GROUP BY u.id
     ORDER BY total_services DESC
   `;
@@ -579,6 +580,39 @@ app.get('/api/admin/users', authenticateToken, requireRole('admin'), (req, res) 
       return res.status(500).json({ error: 'Failed to retrieve users.' });
     }
     res.json(rows);
+  });
+});
+
+// DELETE /api/admin/users/:id (Admin only - delete user and their vehicles)
+app.delete('/api/admin/users/:id', authenticateToken, requireRole('admin'), (req, res) => {
+  const { id } = req.params;
+
+  db.get("SELECT id, role FROM users WHERE id = ?", [id], (err, user) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying user.' });
+    }
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Prevent deleting yourself? Not required, but safe to allow.
+
+    // Delete vehicles for this user first
+    db.run("DELETE FROM vehicles WHERE owner_id = ?", [id], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to delete user vehicles.' });
+      }
+
+      db.run("DELETE FROM users WHERE id = ?", [id], function(deleteErr) {
+        if (deleteErr) {
+          return res.status(500).json({ error: 'Failed to delete user.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'User not found.' });
+        }
+        res.json({ message: 'User and associated vehicles deleted.' });
+      });
+    });
   });
 });
 
@@ -677,6 +711,90 @@ app.get('/api/customers/:id', authenticateToken, requireRole('employee'), (req, 
         return res.status(500).json({ error: 'Failed to retrieve vehicles.' });
       }
       res.json({ ...customer, vehicles });
+    });
+  });
+});
+
+// PUT /api/customers/:id (Admin only - update customer)
+app.put('/api/customers/:id', authenticateToken, requireRole('admin'), (req, res) => {
+  const { id } = req.params;
+  const { name, email, phone } = req.body;
+
+  db.get("SELECT id FROM users WHERE id = ? AND role = 'customer'", [id], (err, customer) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying customer.' });
+    }
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found.' });
+    }
+
+    // Check email uniqueness if email is being changed
+    if (email !== undefined && email !== '') {
+      db.get("SELECT id FROM users WHERE email = ? AND id != ?", [email, id], (err, existing) => {
+        if (err) {
+          return res.status(500).json({ error: 'Database error checking email uniqueness.' });
+        }
+        if (existing) {
+          return res.status(400).json({ error: 'A user with this email already exists.' });
+        }
+        applyUpdate();
+      });
+    } else {
+      applyUpdate();
+    }
+
+    function applyUpdate() {
+      const updates = [];
+      const params = [];
+      if (name !== undefined) { updates.push("name = ?"); params.push(name); }
+      if (email !== undefined) { updates.push("email = ?"); params.push(email); }
+      if (phone !== undefined) { updates.push("phone = ?"); params.push(phone || null); }
+
+      if (updates.length === 0) {
+        return res.status(400).json({ error: 'No fields to update.' });
+      }
+      params.push(id);
+
+      db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params, function(updateErr) {
+        if (updateErr) {
+          return res.status(500).json({ error: 'Failed to update customer.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Customer not found.' });
+        }
+        res.json({ message: 'Customer updated successfully.' });
+      });
+    }
+  });
+});
+
+// DELETE /api/customers/:id (Admin only - delete customer and vehicles)
+app.delete('/api/customers/:id', authenticateToken, requireRole('admin'), (req, res) => {
+  const { id } = req.params;
+
+  db.get("SELECT id FROM users WHERE id = ? AND role = 'customer'", [id], (err, customer) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error verifying customer.' });
+    }
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found.' });
+    }
+
+    // Delete vehicles for this customer first (SQLite foreign keys may not be enforced)
+    db.run("DELETE FROM vehicles WHERE owner_id = ?", [id], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to delete customer vehicles.' });
+      }
+
+      db.run("DELETE FROM users WHERE id = ? AND role = 'customer'", [id], function(deleteErr) {
+        if (deleteErr) {
+          return res.status(500).json({ error: 'Failed to delete customer.' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Customer not found.' });
+        }
+        res.json({ message: 'Customer and associated vehicles deleted.' });
+      });
     });
   });
 });
