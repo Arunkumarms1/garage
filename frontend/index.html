@@ -1684,12 +1684,12 @@
       const token = localStorage.getItem('garage_token');
       if (!token) return;
       try {
-        const res = await fetch('/api/catalog?type=part', { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch('/api/inventory', { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) {
           allPartCatalog = await res.json();
         }
       } catch (err) {
-        console.warn('Failed to load part catalog:', err);
+        console.warn('Failed to load inventory for parts:', err);
       }
     }
 
@@ -1708,7 +1708,7 @@
 
     function filterPartCatalog(query) {
       const q = (query || '').toLowerCase();
-      const filtered = allPartCatalog.filter(c => c.description.toLowerCase().includes(q));
+      const filtered = allPartCatalog.filter(c => c.item_name.toLowerCase().includes(q));
       renderPartDropdown(filtered);
       const dropdown = document.getElementById('part-dropdown');
       const input = document.getElementById('part-desc-search');
@@ -1725,16 +1725,20 @@
       if (items.length === 0) {
         dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
       } else {
-        dropdown.innerHTML = items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('');
+        dropdown.innerHTML = items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('');
       }
       dropdown.classList.add('hidden');
     }
 
-    function selectPart(id, desc, price) {
+    function selectPart(id, desc, price, qty) {
       document.getElementById('part-desc-search').value = desc;
       document.getElementById('part-desc-id').value = id || '';
       document.getElementById('job-item-part-price').value = price || '';
       document.getElementById('part-dropdown').classList.add('hidden');
+      // If selecting from inventory, also fill quantity if needed
+      if (qty !== undefined) {
+        document.getElementById('job-item-part-qty').value = qty > 0 ? qty : 1;
+      }
     }
 
     function filterLaborCatalog(query) {
@@ -1777,6 +1781,7 @@
       if (type === 'part') {
         const searchInput = document.getElementById('part-desc-search');
         description = searchInput ? searchInput.value.trim() : '';
+        inventory_id = document.getElementById('part-desc-id').value ? parseInt(document.getElementById('part-desc-id').value) : null;
         quantity = parseInt(document.getElementById('job-item-part-qty').value);
         unit_price = parseFloat(document.getElementById('job-item-part-price').value);
 
