@@ -1665,7 +1665,7 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         doc.fillColor('#555').fontSize(11).font('Helvetica');
         doc.text('Thank you for choosing us!', 50, footerY + 10, { width: 495, align: 'right' });
         doc.fontSize(10);
-        doc.text('Garage Workshop PWA', 50, footerY + 26, { width: 495, align: 'right' });
+        doc.text(shopName, 50, footerY + 26, { width: 495, align: 'right' });
         doc.text('Professional Auto Services', 50, footerY + 42, { width: 495, align: 'right' });
         doc.text('Invoice #: ' + id.toString() + '  |  Status: ' + statusLabel, 50, footerY + 58, { width: 495, align: 'right' });
         if (contactInfo) {
