@@ -95,6 +95,14 @@ db.serialize(() => {
     )
   `);
 
+  // 6. Create Items Table (QR data storage)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      qr_data TEXT NOT NULL
+    )
+  `);
+
   // 6c. Create Services Table
   db.run(`
     CREATE TABLE IF NOT EXISTS services (
@@ -125,6 +133,8 @@ db.serialize(() => {
       db.run("INSERT INTO settings (key, value) VALUES ('is_open', 'true')");
       db.run("INSERT INTO settings (key, value) VALUES ('logo_base64', '')"); // Default empty logo
       db.run("INSERT INTO settings (key, value) VALUES ('theme_color', 'indigo')"); // Default theme color
+      db.run("INSERT INTO settings (key, value) VALUES ('upi_id', 'garage@upi')"); // Default UPI ID
+      db.run("INSERT INTO settings (key, value) VALUES ('upi_name', 'Garage Workshop')"); // Default UPI name
       console.log("Seeded default settings.");
     }
   });

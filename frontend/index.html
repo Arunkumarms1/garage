@@ -19,6 +19,9 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async></script>
 
+  <!-- HTML5 QR Code Scanner -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
   <!-- Web App Manifest & Meta Tags for iOS -->
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -223,6 +226,30 @@
       </div>
 
     </div>
+
+    <!-- QR Scanner Container -->
+    <div class="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 text-center space-y-4 mt-6">
+      <h3 class="font-bold text-slate-900 dark:text-white">QR Scanner</h3>
+      <div class="flex flex-col space-y-3">
+        <button onclick="startQrScan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
+          <span class="material-icons-round">camera_alt</span>
+          <span>Start Live Camera</span>
+        </button>
+        <div id="reader" class="w-full max-w-xs mx-auto rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 hidden"></div>
+        <div class="flex items-center justify-center space-x-2">
+          <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+          <span class="text-xs text-slate-400">or</span>
+          <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+        </div>
+        <label class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all cursor-pointer flex items-center justify-center space-x-2">
+          <span class="material-icons-round">photo_camera</span>
+          <span>Upload Image from Gallery</span>
+          <input type="file" accept="image/*" onchange="handleFileUpload(this)" class="hidden">
+        </label>
+      </div>
+      <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Scan a QR code to save it</p>
+    </div>
+
   </main>
 
   <footer class="text-center py-4 text-xs font-semibold text-slate-400 dark:text-slate-600 border-t border-slate-100 dark:border-slate-800/80">
@@ -759,6 +786,14 @@
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Contact Info</label>
                     <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">UPI ID (for invoice payment QR)</label>
+                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">UPI Name (confirmation for admin scan)</label>
+                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <button onclick="saveBrandingSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Branding</button>
                 </div>
@@ -1883,6 +1918,8 @@
           document.getElementById('settings-shop-name').value = settings.carwash_name || '';
           document.getElementById('settings-shop-icon').value = settings.logo_base64 || '';
           document.getElementById('settings-contact-info').value = settings.contact_info || '';
+          document.getElementById('settings-upi-id').value = settings.upi_id || '';
+          document.getElementById('settings-upi-name').value = settings.upi_name || '';
         }
 
         // Fetch holidays
@@ -1934,6 +1971,8 @@
       const shopName = document.getElementById('settings-shop-name').value.trim();
       const shopIcon = document.getElementById('settings-shop-icon').value.trim();
       const contactInfo = document.getElementById('settings-contact-info').value.trim();
+      const upiId = document.getElementById('settings-upi-id').value.trim();
+      const upiName = document.getElementById('settings-upi-name').value.trim();
 
       try {
         const res = await fetch('/api/settings', {
@@ -1945,7 +1984,9 @@
           body: JSON.stringify({
             carwash_name: shopName,
             logo_base64: shopIcon,
-            contact_info: contactInfo
+            contact_info: contactInfo,
+            upi_id: upiId,
+            upi_name: upiName
           })
         });
 
@@ -2565,6 +2606,91 @@
         });
       }
     });
+
+    // QR Scanner Functions
+    let html5QrCode = null;
+
+    function startQrScan() {
+      const readerDiv = document.getElementById('reader');
+      readerDiv.classList.remove('hidden');
+      document.getElementById('qr-status').textContent = 'Starting camera...';
+
+      if (html5QrCode) {
+        html5QrCode.clear();
+      }
+      html5QrCode = new Html5Qrcode('reader');
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          html5QrCode.start(
+            devices[0].id,
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+              handleQrSuccess(decodedText);
+            },
+            (errorMessage) => {
+              console.warn('QR scan error:', errorMessage);
+            }
+          ).catch(err => {
+            console.error('Failed to start camera:', err);
+            document.getElementById('qr-status').textContent = 'Camera start failed';
+          });
+        } else {
+          document.getElementById('qr-status').textContent = 'No camera found';
+        }
+      }).catch(err => {
+        console.error('Camera access error:', err);
+        document.getElementById('qr-status').textContent = 'Camera access denied';
+      });
+    }
+
+    function handleQrSuccess(decodedText) {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          document.getElementById('reader').classList.add('hidden');
+          document.getElementById('qr-status').textContent = 'QR scanned successfully! Saving...';
+          saveQrData(decodedText);
+        }).catch(err => console.warn('Stop error:', err));
+      } else {
+        saveQrData(decodedText);
+      }
+    }
+
+    function saveQrData(qrData) {
+      fetch('/api/save-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qr_data: qrData })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('qr-status').textContent = 'Saved! Item ID: ' + (data.id || 'N/A');
+        showToast('QR saved successfully!', 'check_circle', true);
+      })
+      .catch(err => {
+        console.error('Failed to save QR:', err);
+        document.getElementById('qr-status').textContent = 'Failed to save';
+        showToast('Failed to save QR', 'error', false);
+      });
+    }
+
+    function handleFileUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      document.getElementById('qr-status').textContent = 'Reading image...';
+      if (html5QrCode) {
+        html5QrCode.stop().catch(() => {});
+      }
+      html5QrCode = new Html5Qrcode('reader');
+      html5QrCode.scanFile(file, true)
+        .then(decodedText => {
+          document.getElementById('reader').classList.remove('hidden');
+          handleQrSuccess(decodedText);
+        })
+        .catch(err => {
+          console.error('File scan error:', err);
+          document.getElementById('qr-status').textContent = 'Failed to scan file';
+        });
+    }
   </script>
 
   <!-- Customer Modal -->

@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
 const { OAuth2Client } = require('google-auth-library');
 const { db, hashPassword, verifyPassword } = require('./database');
 
@@ -451,7 +452,7 @@ app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => 
     
     let errorOccurred = false;
     for (const [key, value] of Object.entries(settingsUpdate)) {
-      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info'].includes(key)) {
+      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name'].includes(key)) {
         stmt.run(key, String(value), (err) => {
           if (err) errorOccurred = true;
         });
@@ -1660,8 +1661,8 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         return res.status(500).json({ error: 'Failed to retrieve job items.' });
       }
 
-      // Fetch shop settings
-      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64', 'contact_info')", (err, settingsRows) => {
+      // Fetch shop settings (include UPI settings for QR confirmation)
+      db.all("SELECT key, value FROM settings WHERE key IN ('carwash_name', 'logo_base64', 'contact_info', 'upi_id', 'upi_name')", async (err, settingsRows) => {
         if (err) {
           return res.status(500).json({ error: 'Failed to retrieve settings.' });
         }
@@ -1798,6 +1799,50 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
           doc.text(contactInfo, 50, footerY + 74, { width: 495, align: 'right' });
         }
 
+        // ===== QR CODES (visibility-controlled) =====
+        const isAdmin = req.user.role === 'admin';
+        const isEmployee = req.user.role === 'employee';
+        const isOwnInvoice = job.customer_id === req.user.id;
+        const isStaff = isAdmin || isEmployee;
+
+        const showUpiQr = isStaff || isOwnInvoice;
+        const showAdminLookupQr = isAdmin || isEmployee || isOwnInvoice;
+
+        const upiId = settings.upi_id || '';
+        const upiName = settings.upi_name || 'Garage Workshop';
+        const upiString = upiId ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${grandTotal}` : 'UPI Payment';
+        const adminLookupString = `invoice:${id}`;
+
+        try {
+          const [upiBuffer, adminBuffer] = await Promise.all([
+            upiString ? QRCode.toBuffer(upiString) : null,
+            adminLookupString ? QRCode.toBuffer(adminLookupString) : null
+          ]);
+
+          const qrY = footerY + 90;
+
+          if (showUpiQr && upiBuffer) {
+            doc.image(upiBuffer, 50, qrY, { width: 100, height: 100 });
+            doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+            doc.text('Scan to Pay (UPI)', 160, qrY + 10, { width: 200, align: 'left' });
+            doc.font('Helvetica').fontSize(8).fillColor('#666');
+            doc.text(upiName ? `Name: ${upiName}` : 'UPI Payment', 160, qrY + 30);
+            doc.text(upiId ? `UPI ID: ${upiId}` : '', 160, qrY + 45);
+            doc.text('Admin scan confirmation: name shown above.', 160, qrY + 60, { width: 200, align: 'left' });
+          }
+
+          if (showAdminLookupQr && adminBuffer) {
+            const adminX = showUpiQr ? 340 : 50;
+            doc.image(adminBuffer, adminX, qrY, { width: 100, height: 100 });
+            doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+            doc.text(isAdmin ? 'Admin Lookup QR' : 'Scan to Find Invoice', adminX + 110, qrY + 10, { width: 180, align: 'left' });
+            doc.font('Helvetica').fontSize(8).fillColor('#666');
+            doc.text(`Invoice #${id}`, adminX + 110, qrY + 30);
+          }
+        } catch (qrErr) {
+          console.warn('Failed to embed invoice QR codes:', qrErr);
+        }
+
         doc.end();
       });
     });
@@ -1899,6 +1944,64 @@ app.get('/api/ledger/export', authenticateToken, requireRole('admin'), (req, res
 });
 
 // ===== END ANALYTICS ROUTES =====
+
+// ===== QR SCANNING & PDF ROUTES =====
+
+// POST /api/save-qr (Save scanned QR data)
+app.post('/api/save-qr', (req, res) => {
+  const { qr_data } = req.body;
+  if (!qr_data) {
+    return res.status(400).json({ error: 'qr_data is required.' });
+  }
+  db.run("INSERT INTO items (qr_data) VALUES (?)", [qr_data], function(err) {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to save QR data.' });
+    }
+    res.json({ id: this.lastID, qr_data });
+  });
+});
+
+// GET /api/generate-pdf/:id (Generate PDF with embedded QR image and raw text)
+app.get('/api/generate-pdf/:id', (req, res) => {
+  const { id } = req.params;
+  db.get("SELECT qr_data FROM items WHERE id = ?", [id], async (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to retrieve QR data.' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'Item not found.' });
+    }
+
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="qr-pdf-${id}.pdf"`);
+    doc.pipe(res);
+
+    // Title
+    doc.fontSize(20).font('Helvetica-Bold').text('QR Code Document', 50, 50);
+    doc.fontSize(12).font('Helvetica').text('Scanned from item ID: ' + id, 50, 80);
+
+    try {
+      const buffer = await QRCode.toBuffer(row.qr_data, { errorCorrectionLevel: 'M' });
+      doc.image(buffer, 50, 120, { width: 200, height: 200 });
+      doc.fontSize(10).font('Helvetica').text('Embedded QR Image', 50, 330);
+    } catch (qrErr) {
+      doc.fontSize(10).fillColor('#cc0000').text('Failed to generate QR image.', 50, 330);
+      console.warn('QR buffer generation failed:', qrErr);
+    }
+
+    // Raw text
+    doc.moveDown();
+    doc.fontSize(12).font('Helvetica-Bold').text('Raw QR Data:', 50, 360);
+    doc.fontSize(10).font('Helvetica').text(row.qr_data || '', 50, 380, { width: 450, align: 'left' });
+
+    doc.end();
+  });
+});
+
+// ===== END QR SCANNING & PDF ROUTES =====
 
   // Fallback to route index.html for SPA client-side routing support
 app.get('*', (req, res) => {
