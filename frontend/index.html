@@ -811,14 +811,7 @@
               <!-- Admin QR Scanner (Admin Only) -->
               <div id="admin-qr-scanner" class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Admin QR Operations (Admin Only)</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Scan UPI settings QR (for invoice payment) or upload an invoice lookup string. Only admin can scan/upload. If empty, nothing is embedded.</p>
-                <div class="flex items-center space-x-2">
-                  <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Scan for:</label>
-                  <select id="scan-option" class="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:outline-none" onchange="document.getElementById('qr-status').textContent = 'Ready to scan: ' + this.value">
-                    <option value="UPI Settings">UPI Settings</option>
-                    <option value="Invoice Lookup">Invoice Lookup</option>
-                  </select>
-                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Admin scan-only QR operations. Scan UPI or lookup codes directly. If empty, nothing embedded.</p>
                 <div id="qr-reader-container" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600"></div>
                 <div class="flex flex-col space-y-3">
                   <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Ready to scan</p>
