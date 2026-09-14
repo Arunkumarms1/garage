@@ -866,7 +866,7 @@ app.post('/api/inventory', authenticateToken, requireRole('employee'), (req, res
       if (qty > 0) {
         const today = new Date().toISOString().split('T')[0];
         const amount = qty * cost;
-        const desc = `Initial stock: ${item_name} (${qty} units @ ₹${cost.toFixed(2)})`;
+        const desc = `Initial stock: ${item_name} (${qty} units @ Rs.${cost.toFixed(2)})`;
         
         db.run(
           "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
@@ -932,7 +932,7 @@ app.put('/api/inventory/:id', authenticateToken, requireRole('employee'), (req, 
         if (qtyIncrease > 0) {
           const today = new Date().toISOString().split('T')[0];
           const amount = qtyIncrease * cost;
-          const desc = `Restock: ${itemName} (+${qtyIncrease} units @ ₹${cost.toFixed(2)})`;
+          const desc = `Restock: ${itemName} (+${qtyIncrease} units @ Rs.${cost.toFixed(2)})`;
           
           db.run(
             "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
@@ -1556,130 +1556,114 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
 
         // ===== HEADER =====
         const shopName = settings.carwash_name || 'Garage Workshop PWA';
-        const shopIcon = settings.logo_base64 || '';
+        const invoiceDate = job.updated_at ? new Date(job.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        const statusLabel = job.status.charAt(0).toUpperCase() + job.status.slice(1).replace('-', ' ');
 
-        // Shop name
-        doc.fontSize(24).font('Helvetica-Bold').text(shopName, { align: 'center' });
-        doc.moveDown(0.5);
+        const headerY = 40;
 
-        // Shop icon if base64
-        if (shopIcon && shopIcon.startsWith('data:image')) {
-          try {
-            const base64Data = shopIcon.split(',')[1];
-            const imgBuffer = Buffer.from(base64Data, 'base64');
-            doc.image(imgBuffer, { width: 80, align: 'center' });
-            doc.moveDown(0.5);
-          } catch (e) {
-            console.warn('Failed to embed logo in PDF:', e);
-          }
-        }
+        // Approximate gear logo from invoice HTML design
+        const logoCX = 70;
+        const logoCY = headerY + 15;
+        doc.fillColor('#666').circle(logoCX, logoCY, 18).fill('#666');
+        doc.fillColor('#ffffff').circle(logoCX, logoCY, 7).fill('#ffffff');
 
-        // Invoice title
-        doc.fontSize(18).font('Helvetica-Bold').text('INVOICE', { align: 'center' });
-        doc.moveDown(1);
+        // Header text
+        doc.fillColor('#333');
+        doc.fontSize(20).font('Helvetica-Bold').text(shopName, 120, headerY + 5, { width: 350, align: 'left' });
+        doc.fontSize(10).font('Helvetica').fillColor('#666').text('Professional Auto Workshop', 120, headerY + 30, { width: 350, align: 'left' });
 
-        // Invoice metadata table
-        const invoiceDate = job.updated_at ? new Date(job.updated_at).toLocaleDateString() : new Date().toLocaleDateString();
-        const invoiceData = [
-          ['Invoice #:', id.toString()],
-          ['Date:', invoiceDate],
-          ['Status:', job.status.charAt(0).toUpperCase() + job.status.slice(1).replace('-', ' ')],
-        ];
-
-        let y = doc.y;
-        invoiceData.forEach(([label, value]) => {
-          doc.fontSize(10).font('Helvetica-Bold').text(label, 50, y, { width: 100 });
-          doc.fontSize(10).font('Helvetica').text(value, 150, y, { width: 300 });
-          y += 20;
-        });
-        doc.y = y + 10;
+        // Date bar (light beige)
+        const dateBarY = headerY + 65;
+        doc.rect(50, dateBarY, 495, 30).fill('#f8f6f0');
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#666').text('Date:', 390, dateBarY + 8);
+        doc.font('Helvetica').fillColor('#333').text(' ' + invoiceDate, 425, dateBarY + 8);
 
         // ===== CUSTOMER & VEHICLE INFO =====
-        doc.fontSize(12).font('Helvetica-Bold').text('Customer Information', { underline: true });
-        doc.moveDown(0.3);
+        const infoY = dateBarY + 45;
+        const colLeft = 50;
+        const colRight = 320;
 
-        const customerInfo = [
-          ['Name:', job.customer_name || ''],
-          ['Email:', job.customer_email || ''],
-          ['Phone:', job.customer_phone || 'N/A'],
-        ];
+        // Customer section
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text('CUSTOMER', colLeft, infoY);
+        doc.strokeColor('#eeeeee').moveTo(colLeft, infoY + 14).lineTo(colLeft + 200, infoY + 14).stroke('#eeeeee');
+        doc.fillColor('#333').fontSize(9).font('Helvetica');
+        doc.text('Name: ' + (job.customer_name || 'N/A'), colLeft, infoY + 22);
+        doc.text('Email: ' + (job.customer_email || 'N/A'), colLeft, infoY + 38);
+        doc.text('Phone: ' + (job.customer_phone || 'N/A'), colLeft, infoY + 54);
 
-        customerInfo.forEach(([label, value]) => {
-          doc.fontSize(10).font('Helvetica-Bold').text(label, { continued: true });
-          doc.font('Helvetica').text(' ' + value);
-        });
-        doc.moveDown(0.5);
+        // Vehicle section
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text('VEHICLE', colRight, infoY);
+        doc.strokeColor('#eeeeee').moveTo(colRight, infoY + 14).lineTo(colRight + 200, infoY + 14).stroke('#eeeeee');
+        doc.fillColor('#333').fontSize(9).font('Helvetica');
+        doc.text('Make: ' + (job.make || 'N/A'), colRight, infoY + 22);
+        doc.text('Model: ' + (job.model || 'N/A'), colRight, infoY + 38);
+        doc.text('Year: ' + (job.year || 'N/A'), colRight, infoY + 54);
+        doc.text('Plate: ' + (job.plate_number || 'N/A'), colRight, infoY + 70);
 
-        doc.fontSize(12).font('Helvetica-Bold').text('Vehicle Information', { underline: true });
-        doc.moveDown(0.3);
-
-        const vehicleInfo = [
-          ['Make:', job.make || ''],
-          ['Model:', job.model || ''],
-          ['Year:', job.year || 'N/A'],
-          ['Plate:', job.plate_number || ''],
-        ];
-
-        vehicleInfo.forEach(([label, value]) => {
-          doc.fontSize(10).font('Helvetica-Bold').text(label, { continued: true });
-          doc.font('Helvetica').text(' ' + value);
-        });
-        doc.moveDown(1);
+        doc.strokeColor('#eeeeee').moveTo(colLeft, infoY + 95).lineTo(550, infoY + 95).stroke('#eeeeee');
 
         // ===== LINE ITEMS TABLE =====
-        doc.fontSize(12).font('Helvetica-Bold').text('Line Items', { underline: true });
-        doc.moveDown(0.5);
-
-        // Table header
-        const tableTop = doc.y;
+        const tableTop = infoY + 110;
         const col1 = 50;   // Description
-        const col2 = 300;  // Qty
-        const col3 = 360;  // Unit Price
+        const col2 = 310;  // Qty
+        const col3 = 370;  // Unit Price
         const col4 = 450;  // Total
 
-        doc.fontSize(9).font('Helvetica-Bold');
-        doc.text('Description', col1, tableTop, { width: 240 });
-        doc.text('Qty', col2, tableTop, { width: 50, align: 'center' });
-        doc.text('Unit Price', col3, tableTop, { width: 80, align: 'right' });
-        doc.text('Total', col4, tableTop, { width: 80, align: 'right' });
+        // Light grey header row
+        doc.rect(50, tableTop - 8, 495, 22).fill('#e6e6e6');
+        doc.fillColor('#333').fontSize(9).font('Helvetica-Bold');
+        doc.text('DESCRIPTION', col1, tableTop, { width: 230, align: 'left' });
+        doc.text('QTY', col2, tableTop, { width: 40, align: 'center' });
+        doc.text('UNIT PRICE', col3, tableTop, { width: 80, align: 'right' });
+        doc.text('TOTAL', col4, tableTop, { width: 80, align: 'right' });
 
-        // Header line
-        doc.moveTo(50, tableTop + 18).lineTo(530, tableTop + 18).stroke();
-
-        let rowY = tableTop + 22;
+        // Rows
+        let rowY = tableTop + 26;
         doc.fontSize(9).font('Helvetica');
-
-        (items || []).forEach(item => {
+        (items || []).forEach((item, idx) => {
           const lineTotal = item.quantity * item.unit_price;
-          
-          // Check if we need a new page
-          if (rowY > 700) {
+
+          if (rowY > 720) {
             doc.addPage();
-            rowY = 50;
+            // Repeat table header on new page
+            doc.rect(50, 50 - 8, 495, 22).fill('#e6e6e6');
+            doc.fillColor('#333').fontSize(9).font('Helvetica-Bold');
+            doc.text('DESCRIPTION', col1, 50, { width: 230, align: 'left' });
+            doc.text('QTY', col2, 50, { width: 40, align: 'center' });
+            doc.text('UNIT PRICE', col3, 50, { width: 80, align: 'right' });
+            doc.text('TOTAL', col4, 50, { width: 80, align: 'right' });
+            rowY = 58;
           }
 
-          doc.text(item.description || 'Item', col1, rowY, { width: 240 });
-          doc.text(item.quantity.toString(), col2, rowY, { width: 50, align: 'center' });
-          doc.text('₹' + Number(item.unit_price).toFixed(2), col3, rowY, { width: 80, align: 'right' });
-          doc.text('₹' + lineTotal.toFixed(2), col4, rowY, { width: 80, align: 'right' });
-          
-          rowY += 18;
+          doc.fillColor('#444');
+          doc.font('Helvetica');
+          doc.text(item.description || 'Item', col1, rowY, { width: 230, align: 'left' });
+          doc.text(String(item.quantity), col2, rowY, { width: 40, align: 'center' });
+          doc.text('Rs. ' + Number(item.unit_price).toFixed(2), col3, rowY, { width: 80, align: 'right' });
+          doc.text('Rs. ' + lineTotal.toFixed(2), col4, rowY, { width: 80, align: 'right' });
+
+          // Row bottom border
+          doc.strokeColor('#eeeeee').moveTo(50, rowY + 14).lineTo(545, rowY + 14).stroke('#eeeeee');
+
+          rowY += 16;
         });
 
-        // Total line
-        doc.moveTo(50, rowY).lineTo(530, rowY).stroke();
-        rowY += 10;
-
+        // Grand total
+        rowY += 12;
         const grandTotal = job.total_cost || 0;
-        doc.fontSize(11).font('Helvetica-Bold');
-        doc.text('Grand Total:', col2, rowY, { width: 190, align: 'right' });
-        doc.text('₹' + Number(grandTotal).toFixed(2), col4, rowY, { width: 80, align: 'right' });
+        doc.fillColor('#111').fontSize(16).font('Helvetica-Bold');
+        doc.text('GRAND TOTAL', col2, rowY, { width: 160, align: 'right' });
+        doc.text('Rs. ' + Number(grandTotal).toFixed(2), col4, rowY, { width: 80, align: 'right' });
 
         // ===== FOOTER =====
-        doc.moveDown(2);
-        doc.fontSize(10).font('Helvetica').text('Thank you for your business!', { align: 'center' });
-        doc.moveDown(0.5);
-        doc.fontSize(8).font('Helvetica-Oblique').text('Generated by Garage Workshop PWA', { align: 'center', color: '#999' });
+        const footerY = rowY + 50;
+        doc.strokeColor('#dddddd').moveTo(50, footerY).lineTo(545, footerY).stroke('#dddddd');
+        doc.fillColor('#555').fontSize(11).font('Helvetica');
+        doc.text('Thank you for choosing us!', 50, footerY + 10, { width: 495, align: 'right' });
+        doc.fontSize(10);
+        doc.text('Garage Workshop PWA', 50, footerY + 26, { width: 495, align: 'right' });
+        doc.text('Professional Auto Services', 50, footerY + 42, { width: 495, align: 'right' });
+        doc.text('Invoice #: ' + id.toString() + '  |  Status: ' + statusLabel, 50, footerY + 58, { width: 495, align: 'right' });
 
         doc.end();
       });
