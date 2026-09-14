@@ -76,9 +76,14 @@
     </div>
     
     <!-- Quick Theme Toggle -->
-    <button onclick="toggleDarkMode()" class="text-white hover:bg-indigo-600 p-2 rounded-full focus:outline-none transition-colors">
-      <span id="dark-mode-icon" class="material-icons-round">dark_mode</span>
-    </button>
+    <div class="flex items-center space-x-1">
+      <button onclick="openSettings()" id="settings-cog" class="hidden text-white hover:bg-indigo-600 p-2 rounded-full focus:outline-none transition-colors" title="Settings" aria-label="Settings">
+        <span class="material-icons-round">settings</span>
+      </button>
+      <button onclick="toggleDarkMode()" class="text-white hover:bg-indigo-600 p-2 rounded-full focus:outline-none transition-colors">
+        <span id="dark-mode-icon" class="material-icons-round">dark_mode</span>
+      </button>
+    </div>
   </header>
 
   <!-- ==========================================
@@ -345,6 +350,17 @@
       loginScreen.insertBefore(bannerContainer, loginScreen.firstChild);
     }
 
+    // Settings Cog (Admin Only) - opens settings tab
+    function openSettings() {
+      const userStr = localStorage.getItem('garage_user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (user && user.role === 'admin') {
+        switchAppTab('settings');
+      } else {
+        showToast('Admin access required', 'error', false);
+      }
+    }
+
     // Dark Mode Toggle
     function toggleDarkMode() {
       const isDark = document.documentElement.classList.toggle('dark');
@@ -497,6 +513,11 @@
       }
 
       setupTabNavigation(user);
+      // Show/hide settings cog based on role
+      const cogBtn = document.getElementById('settings-cog');
+      if (cogBtn) {
+        cogBtn.classList.toggle('hidden', user.role !== 'admin');
+      }
       if (user.role === 'admin') {
         loadSettingsTab();
       }
@@ -505,6 +526,7 @@
     function renderAppShell(user) {
       const isAdmin = user.role === 'admin';
       const isEmployeeOrAdmin = user.role === 'employee' || user.role === 'admin';
+      const isCustomer = user.role === 'customer';
 
       return `
         <div class="space-y-4">
@@ -523,10 +545,9 @@
           <!-- Tab Navigation -->
           <div class="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl space-x-1" id="app-tabs">
             <button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Dashboard</button>
-            <button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Jobs</button>
+            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Invoices</button>` : `<button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Jobs</button>`}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Customers</button>` : ''}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Inventory</button>` : ''}
-            ${isAdmin ? `<button onclick="switchAppTab('settings')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Settings</button>` : ''}
             ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Analytics</button>` : ''}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Job History</button>` : ''}
           </div>
@@ -630,6 +651,21 @@
               <!-- Jobs List -->
               <div id="job-history-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
                 <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading job history...</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-invoices" class="app-tab-content hidden space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 dark:text-white">Your Invoices</h3>
+                <button onclick="loadInvoices()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                  <span class="material-icons-round text-base">refresh</span>
+                  <span>Refresh</span>
+                </button>
+              </div>
+              <div id="invoices-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
+                <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading invoices...</p>
               </div>
             </div>
           </div>
@@ -904,6 +940,8 @@
         fetchAnalytics();
       } else if (tabName === 'history') {
         loadJobHistoryTab();
+      } else if (tabName === 'invoices') {
+        loadInvoices();
       }
     }
 
@@ -1771,6 +1809,63 @@
         console.error('Failed to load job history:', err);
         listEl.innerHTML = `<p class="text-sm text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
         showToast('Failed to load job history', 'error', false);
+      }
+    }
+
+    // ===== INVOICES TAB (CUSTOMER ONLY) =====
+    async function loadInvoices() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+      const listEl = document.getElementById('invoices-list');
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">Loading invoices...</p>';
+
+      try {
+        const res = await fetch('/api/jobs?status=completed', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to load invoices');
+        }
+        let jobs = await res.json();
+        if (!jobs || jobs.length === 0) {
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No completed jobs found</p>';
+          return;
+        }
+        listEl.innerHTML = jobs.map(job => `
+          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center space-x-3">
+                <span class="material-icons-round text-emerald-500 dark:text-emerald-400 text-xl">receipt</span>
+                <div>
+                  <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">Completed</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs ml-8">
+              <div>
+                <p class="text-slate-400 dark:text-slate-500">Date</p>
+                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+              <div>
+                <p class="text-slate-400 dark:text-slate-500">Total</p>
+                <p class="font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</p>
+              </div>
+            </div>
+            <div class="mt-3 flex justify-end">
+              <button onclick="downloadInvoice(${job.id})" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">
+                <span class="material-icons-round text-base">download</span>
+                <span>Download Invoice</span>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load invoices:', err);
+        listEl.innerHTML = `<p class="text-sm text-rose-500 dark:text-rose-400 text-center py-8">Failed to load: ${err.message}</p>`;
+        showToast('Failed to load invoices', 'error', false);
       }
     }
 
