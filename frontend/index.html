@@ -8,8 +8,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Garage Workshop PWA</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -20,7 +18,26 @@
       ]
     }
   </script>
-  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Force pure black backgrounds in OLED mode */
+    html.oled, html.oled body, html.oled main, html.oled header, html.oled nav, html.oled footer,
+    html.oled .bg-slate-900, html.oled .bg-slate-800, html.oled .dark\:bg-slate-900, html.oled .dark\:bg-slate-800 {
+      background-color: #000000 !important;
+    }
+    /* Darken borders to prevent glowing gray lines */
+    html.oled .border-slate-800, html.oled .border-slate-700,
+    html.oled .dark\:border-slate-800, html.oled .dark\:border-slate-700 {
+      border-color: #171717 !important;
+    }
+    /* Adjust muted text for contrast */
+    html.oled .text-slate-400, html.oled .text-slate-500 {
+      color: #9ca3af !important;
+    }
+  </style>
+
   <!-- Google Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   
@@ -267,7 +284,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">
