@@ -349,17 +349,6 @@
 
       return `
         <div class="space-y-4">
-          <!-- User Info Bar -->
-          <header class="w-full bg-slate-900 border-b border-slate-800 px-4 py-3 flex justify-between items-center sticky top-0 z-40">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${user.name.charAt(0).toUpperCase()}</div>
-              <div>
-                <p class="text-sm font-bold text-slate-100">${user.name}</p>
-                <p class="text-xs text-slate-400">${user.email} • <span class="px-1.5 py-0.5 bg-slate-800 text-slate-300 text-[9px] uppercase font-bold">${user.role}</span></p>
-              </div>
-            </div>
-            <button onclick="handleSignOut()" class="text-red-500 font-bold uppercase text-sm tracking-wider">Logout</button>
-          </header>
 
           <!-- Tab Navigation -->
           <nav class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 flex justify-around items-center h-16 px-2 z-50" id="app-tabs">
