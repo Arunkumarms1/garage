@@ -22,19 +22,49 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* Force pure black backgrounds in OLED mode */
-    html.oled, html.oled body, html.oled main, html.oled header, html.oled nav, html.oled footer,
-    html.oled .bg-slate-900, html.oled .bg-slate-800, html.oled .dark\:bg-slate-900, html.oled .dark\:bg-slate-800 {
+    /* ==========================================
+       1. OLED MODE BRUTE-FORCE
+       ========================================== */
+    html.oled body, html.oled main, html.oled header, html.oled nav, html.oled footer,
+    html.oled [class*="bg-slate-9"], html.oled [class*="bg-slate-8"], html.oled [class*="bg-slate-7"],
+    html.oled input, html.oled select, html.oled button {
       background-color: #000000 !important;
     }
-    /* Darken borders to prevent glowing gray lines */
-    html.oled .border-slate-800, html.oled .border-slate-700,
-    html.oled .dark\:border-slate-800, html.oled .dark\:border-slate-700 {
+    html.oled [class*="border-slate-"], html.oled input, html.oled select {
       border-color: #171717 !important;
     }
-    /* Adjust muted text for contrast */
     html.oled .text-slate-400, html.oled .text-slate-500 {
       color: #9ca3af !important;
+    }
+    /* ==========================================
+       2. LIGHT MODE BRUTE-FORCE
+       (Applies when HTML lacks .dark and .oled)
+       ========================================== */
+    html:not(.dark):not(.oled) body,
+    html:not(.dark):not(.oled) main,
+    html:not(.dark):not(.oled) header,
+    html:not(.dark):not(.oled) nav,
+    html:not(.dark):not(.oled) footer {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+    }
+    html:not(.dark):not(.oled) [class*="bg-slate-8"],
+    html:not(.dark):not(.oled) [class*="bg-slate-9"] {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+    }
+    html:not(.dark):not(.oled) input,
+    html:not(.dark):not(.oled) select {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html:not(.dark):not(.oled) .text-white,
+    html:not(.dark):not(.oled) .text-slate-300,
+    html:not(.dark):not(.oled) .text-slate-400 {
+      color: #475569 !important;
     }
   </style>
 
@@ -284,7 +314,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">
