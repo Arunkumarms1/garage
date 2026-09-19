@@ -354,12 +354,12 @@
 
           <!-- Tab Navigation -->
           <div class="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl space-x-1" id="app-tabs">
-            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Invoices</button>` : `<button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm">Dashboard</button>`}
-            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Jobs</button>`}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Customers</button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Inventory</button>` : ''}
-            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Analytics</button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all">Job History</button>` : ''}
+            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="flex-1 py-2 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><img src="icons/invoice.png" alt="Invoices" class="w-5 h-5"></button>` : `<button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><img src="icons/dashboard.png" alt="Dashboard" class="w-5 h-5"></button>`}
+            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><img src="icons/work.png" alt="Jobs" class="w-5 h-5"></button>`}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><img src="icons/customers.png" alt="Customers" class="w-5 h-5"></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><img src="icons/warehouse.png" alt="Inventory" class="w-5 h-5"></button>` : ''}
+            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><img src="icons/analytics.png" alt="Analytics" class="w-5 h-5"></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><img src="icons/archive.png" alt="Job History" class="w-5 h-5"></button>` : ''}
           </div>
 
           <!-- Tab Content -->
@@ -782,8 +782,12 @@
       document.querySelectorAll('#app-tabs button').forEach(btn => {
         const isActive = btn.onclick && btn.onclick.toString().includes(tabName);
         btn.className = isActive
-          ? "flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm"
-          : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all";
+          ? "flex-1 py-2 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"
+          : "flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center";
+        const img = btn.querySelector('img');
+        if (img) {
+          img.className = isActive ? "w-5 h-5" : "w-5 h-5 opacity-70 hover:opacity-100";
+        }
       });
 
       // Load tab-specific data
