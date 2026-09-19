@@ -69,7 +69,7 @@
     function renderOntologyData(entities, relations) {
       let displayEl = document.getElementById('ontology-display');
       if (!displayEl) {
-        const container = document.querySelector('main .max-w-md');
+        const container = document.querySelector('main > div');
         if (!container) return;
         displayEl = document.createElement('div');
         displayEl.id = 'ontology-display';
@@ -148,7 +148,7 @@
       if (upcomingHolidays.length === 0) return;
       
       // Only show on login screen (when auth forms are visible)
-      const loginScreen = document.querySelector('main .max-w-md');
+      const loginScreen = document.querySelector('main > div');
       if (!loginScreen || loginScreen.querySelector('#holiday-banner')) return;
       
       const bannerHtml = upcomingHolidays.map(h => `
@@ -326,7 +326,7 @@
       const gContainer = document.getElementById('google-signin-container');
       if (gContainer) gContainer.classList.add('hidden');
 
-      const mainContent = document.querySelector('main .max-w-md');
+      const mainContent = document.querySelector('main > div');
       if (mainContent) {
         mainContent.innerHTML = renderAppShell(user);
       }
