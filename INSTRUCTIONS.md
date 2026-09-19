@@ -20,6 +20,9 @@
 - Static assets (`app.js`, `icons/*.png`) use `Stale-While-Revalidate`: serve cached instantly, update in background. No manual hard-refresh needed.
 - `index.html` references `app.js?v=3` (bump version in HTML when deploying updated JS).
 
+## Branch Check (MANDATORY)
+Before any deploy, verify the remote branch matches the local working branch (`visual-tweaks`). Run: `git branch -v` — must show `* visual-tweaks ... up to date with 'origin/visual-tweaks'`. If not checked out on remote, do not proceed with deploy.
+
 ## Deploy Rule
 When user says "deploy": agent MUST `git commit`, `git push`, then run `deploy.sh`. Sequence: commit → push → deploy. Never skip.
 

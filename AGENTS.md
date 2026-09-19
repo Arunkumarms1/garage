@@ -5,6 +5,9 @@
 2. Read `TESTING_INSTRUCTIONS.md` (test patterns, kill commands).
 3. Only edit files for the current/new phase. Completed phases: 1–21.
 
+## Branch Check (MANDATORY)
+Before `deploy`: verify `git branch -v` shows `visual-tweaks` is `up to date with 'origin/visual-tweaks'`. If the branch is not checked out on remote, add this to instructions (`INSTRUCTIONS.md`) and `AGENTS.md`, then checkout the correct branch before committing/pushing.
+
 ## Deploy Protocol (MANDATORY)
 When user says "deploy":
 1. `git add .`

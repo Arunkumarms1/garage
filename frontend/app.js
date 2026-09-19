@@ -1,6 +1,6 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=5')
+        navigator.serviceWorker.register('/sw.js?v=3')
           .then(reg => console.log('Service Worker registered successfully!', reg.scope))
           .catch(err => console.error('Service Worker registration failed:', err));
       });
@@ -76,13 +76,13 @@
         container.appendChild(displayEl);
       }
       const entitiesHtml = (entities.entities || entities).map(e => `
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm mb-2">
+        <div class="bg-slate-800 border border-slate-700 p-3 shadow-sm mb-2">
           <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">${e.name}</h4>
           <p class="text-xs text-slate-500 dark:text-slate-400">Attributes: ${(e.attributes || []).join(', ') || 'none'}</p>
         </div>
       `).join('');
       const relationsHtml = (relations.relations || relations).map(r => `
-        <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm mb-2">
+        <div class="bg-slate-900/50 border border-slate-700 p-3 shadow-sm mb-2">
           <p class="text-xs font-bold text-slate-700 dark:text-slate-300">${r.source || r.sourceEntity || ''} → ${r.target || r.targetEntity || ''}</p>
           <p class="text-[10px] text-slate-500 dark:text-slate-400">${r.relation || r.name || ''} (${r.cardinality || 'N:N'})</p>
         </div>
@@ -152,10 +152,10 @@
       if (!loginScreen || loginScreen.querySelector('#holiday-banner')) return;
       
       const bannerHtml = upcomingHolidays.map(h => `
-        <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4 flex items-start space-x-2.5">
+        <div class="bg-amber-950/30 border border-amber-900/40 p-3 mb-4 flex items-start space-x-2.5">
           <span class="material-icons-round text-amber-600 dark:text-amber-400 text-lg mt-0.5">event</span>
           <div>
-            <p class="text-xs font-bold text-slate-900 dark:text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+            <p class="text-xs font-bold text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
             <p class="text-xs text-slate-600 dark:text-slate-300">${h.reason}</p>
           </div>
         </div>
@@ -350,32 +350,32 @@
       return `
         <div class="space-y-4">
           <!-- User Info Bar -->
-          <div class="flex justify-between items-center w-full p-4 border-b border-slate-800 bg-slate-900">
+          <header class="w-full bg-slate-900 border-b border-slate-800 px-4 py-3 flex justify-between items-center sticky top-0 z-40">
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${user.name.charAt(0).toUpperCase()}</div>
               <div>
-                <p class="text-xs font-bold text-slate-900 dark:text-white">${user.name}</p>
-                <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${user.email} • <span class="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded text-[9px] uppercase">${user.role}</span></p>
+                <p class="text-sm font-bold text-slate-100">${user.name}</p>
+                <p class="text-xs text-slate-400">${user.email} • <span class="px-1.5 py-0.5 bg-slate-800 text-slate-300 text-[9px] uppercase font-bold">${user.role}</span></p>
               </div>
             </div>
-            <button onclick="handleSignOut()" class="text-red-400 font-medium px-4 py-2 uppercase tracking-wide text-sm">Logout</button>
-          </div>
+            <button onclick="handleSignOut()" class="text-red-500 font-bold uppercase text-sm tracking-wider">Logout</button>
+          </header>
 
           <!-- Tab Navigation -->
-          <div class="w-full flex justify-around items-center py-3 bg-slate-900 border-b border-slate-800" id="app-tabs">
-            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">dashboard</span></button>`}
-            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">work</span></button>`}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">people</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
-            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">history</span></button>` : ''}
+          <nav class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 flex justify-around items-center h-16 px-2 z-50" id="app-tabs">
+            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-2xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-2xl">dashboard</span></button>`}
+            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 hover:text-slate-800 flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">work</span></button>`}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 hover:text-slate-800 flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">people</span></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 hover:text-slate-800 flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
+            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 hover:text-slate-800 flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 hover:text-slate-800 flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">history</span></button>` : ''}
           </div>
 
           <!-- Tab Content -->
           <div id="tab-dashboard" class="app-tab-content space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="bg-slate-900 p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-900 dark:text-white">Active Jobs</h3>
+                <h3 class="font-bold text-white">Active Jobs</h3>
                 <div class="flex items-center space-x-2">
                   <button onclick="showCreateJobModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs tracking-wide transition-all shadow flex items-center space-x-1 hidden" id="btn-create-job">
                     <span class="material-icons-round text-base">add</span>
@@ -391,7 +391,7 @@
               <!-- Kanban Board -->
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboard-kanban">
                 <!-- Pending Column -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 min-h-[400px] flex flex-col">
+                <div class="bg-slate-900/50 p-3 min-h-[400px] flex flex-col">
                   <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
@@ -405,7 +405,7 @@
                 </div>
 
                 <!-- In Progress Column -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 min-h-[400px] flex flex-col">
+                <div class="bg-slate-900/50 p-3 min-h-[400px] flex flex-col">
                   <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
@@ -419,7 +419,7 @@
                 </div>
 
                 <!-- Completed Column (recent) -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 min-h-[400px] flex flex-col">
+                <div class="bg-slate-900/50 p-3 min-h-[400px] flex flex-col">
                   <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
@@ -436,9 +436,9 @@
           </div>
 
           <div id="tab-jobs" class="app-tab-content hidden space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="bg-slate-900 p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-900 dark:text-white">Job History</h3>
+                <h3 class="font-bold text-white">Job History</h3>
                 <button onclick="loadJobHistory()" class="min-h-[48px] px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
                   <span class="material-icons-round text-base">refresh</span>
                   <span>Refresh</span>
@@ -475,9 +475,9 @@
           </div>
 
           <div id="tab-invoices" class="app-tab-content hidden space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="bg-slate-900 p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-900 dark:text-white">Your Invoices</h3>
+                <h3 class="font-bold text-white">Your Invoices</h3>
                 <button onclick="loadInvoices()" class="min-h-[48px] px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
                   <span class="material-icons-round text-base">refresh</span>
                   <span>Refresh</span>
@@ -490,9 +490,9 @@
           </div>
 
           <div id="tab-customers" class="app-tab-content hidden space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="bg-slate-900 p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-900 dark:text-white">Customers & Vehicles</h3>
+                <h3 class="font-bold text-white">Customers & Vehicles</h3>
                 <button onclick="showCustomerModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5">
                   <span class="material-icons-round text-base">person_add</span>
                   <span>Add Customer</span>
@@ -516,9 +516,9 @@
           </div>
 
           <div id="tab-inventory" class="app-tab-content hidden space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="bg-slate-900 p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-900 dark:text-white">Inventory Management</h3>
+                <h3 class="font-bold text-white">Inventory Management</h3>
                 <button onclick="showInventoryModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5">
                   <span class="material-icons-round text-base">add</span>
                   <span>Add Item</span>
@@ -560,7 +560,7 @@
 
           <div id="tab-settings" class="app-tab-content hidden space-y-4" data-admin-only>
             <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-6">
-              <h3 class="font-bold text-slate-900 dark:text-white">Shop Settings</h3>
+              <h3 class="font-bold text-white">Shop Settings</h3>
               
               <!-- Branding Section -->
               <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 pb-4">
@@ -603,7 +603,7 @@
                 </div>
                 
                 <!-- Add Holiday Form -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 space-y-2">
+                <div class="bg-slate-900/50 p-3 space-y-2">
                   <div class="grid grid-cols-2 gap-2">
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Date</label>
@@ -666,13 +666,13 @@
           </div>
 
           <div id="tab-analytics" class="app-tab-content hidden space-y-4" data-admin-only>
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+            <div class="bg-slate-900 p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-900 dark:text-white">Financial Analytics</h3>
+                <h3 class="font-bold text-white">Financial Analytics</h3>
               </div>
 
               <!-- Date Range Picker -->
-              <div class="flex flex-wrap items-end gap-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4">
+              <div class="flex flex-wrap items-end gap-4 bg-slate-900/50 p-4">
                 <div class="flex-1 min-w-[140px]">
                   <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">From</label>
                   <input type="date" id="analytics-from" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
@@ -694,7 +694,7 @@
               <!-- Metric Cards -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Total Spend (Purchases) -->
-                <div class="bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 rounded-xl p-4">
+                <div class="bg-rose-950/30 border border-rose-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Spend</p>
@@ -705,7 +705,7 @@
                 </div>
 
                 <!-- Total Earnings (Sales) -->
-                <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-4">
+                <div class="bg-emerald-950/30 border border-emerald-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Earnings</p>
@@ -716,7 +716,7 @@
                 </div>
 
                 <!-- Net Profit -->
-                <div class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl p-4">
+                <div class="bg-indigo-950/30 border border-indigo-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Net Profit</p>
@@ -735,9 +735,9 @@
           </div>
 
         <div id="tab-history" class="app-tab-content hidden space-y-4" data-admin-employee-only>
-          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
+          <div class="bg-slate-900 p-4 space-y-4">
             <div class="flex items-center justify-between">
-              <h3 class="font-bold text-slate-900 dark:text-white">Job History</h3>
+              <h3 class="font-bold text-white">Job History</h3>
                 <button onclick="loadJobHistoryTab()" class="min-h-[48px] px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
                 <span class="material-icons-round text-base">refresh</span>
                 <span>Refresh</span>
@@ -799,11 +799,11 @@
       document.querySelectorAll('#app-tabs button').forEach(btn => {
         const isActive = btn.onclick && btn.onclick.toString().includes(tabName);
         btn.className = isActive
-          ? "min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"
-          : "min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center";
+          ? "min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"
+          : "min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 hover:text-slate-800 flex items-center justify-center";
         const iconSpan = btn.querySelector('span.material-icons-round');
         if (iconSpan) {
-          iconSpan.className = isActive ? "material-icons-round text-xl" : "material-icons-round text-xl opacity-70 hover:opacity-100";
+          iconSpan.className = isActive ? "material-icons-round text-2xl" : "material-icons-round text-2xl opacity-70 hover:opacity-100";
         }
       });
 
@@ -1323,25 +1323,15 @@
       }
 
       container.innerHTML = jobs.map(job => `
-        <div class="flex flex-col gap-2 p-4 bg-slate-800 mb-2" onclick="showJobDetailModal(${job.id})">
-          <div class="flex justify-between items-start w-full">
-            <div class="text-left">
-              <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
-            </div>
-            <span class="px-1.5 py-0.5 text-[10px] font-bold rounded-full ${getStatusBadgeClass(job.status)} shrink-0 ml-2">
-              ${formatStatus(job.status)}
-            </span>
+        <div class="w-full bg-slate-900 border-b border-slate-800 p-4 active:bg-slate-800 transition-colors" onclick="showJobDetailModal(${job.id})">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-lg text-white">${job.make} ${job.model}</span>
+            <span class="text-xs px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">${formatStatus(job.status)}</span>
           </div>
-          <div class="flex justify-between items-center w-full">
-            <div class="text-left">
-              <p class="text-xs text-slate-600 dark:text-slate-400">${job.customer_name || 'Unknown Customer'}</p>
-              ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">${job.notes}</p>` : ''}
-            </div>
-            <div class="text-right">
-              <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 block">₹${Number(job.total_cost || 0).toFixed(2)}</span>
-              <span class="text-xs text-slate-400 dark:text-slate-500 block">${new Date(job.created_at || Date.now()).toLocaleDateString()}</span>
-            </div>
+          <div class="text-sm text-slate-400 mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300 italic">${job.notes || ''}</span>
+            <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
           </div>
         </div>
       `).join('');
@@ -1576,13 +1566,13 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center space-x-2 mb-1">
                   <span class="material-icons-round text-xs ${isPart ? 'text-indigo-500' : 'text-amber-500'}">${isPart ? 'build' : 'handyman'}</span>
-                  <span class="font-medium text-slate-900 dark:text-white text-sm truncate">${item.description}</span>
+                  <span class="font-medium text-white text-sm truncate">${item.description}</span>
                   ${isPart ? '<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">Part</span>' : '<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">Labor</span>'}
                 </div>
                 <div class="flex items-center space-x-4 text-xs text-slate-500 dark:text-slate-400 ml-5">
                   <span>Qty: ${item.quantity}</span>
                   <span>@ ₹${Number(item.unit_price).toFixed(2)}</span>
-                  <span class="font-medium text-slate-900 dark:text-white">= ₹${lineTotal.toFixed(2)}</span>
+                  <span class="font-medium text-white">= ₹${lineTotal.toFixed(2)}</span>
                 </div>
               </div>
               <button onclick="deleteJobItem(${item.id})" class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 ml-2 flex-shrink-0" aria-label="Delete line item">
@@ -2039,38 +2029,16 @@
         }
 
         listEl.innerHTML = jobs.map(job => `
-          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
-            <div class="flex items-start justify-between mb-2">
-              <div class="flex items-center space-x-3">
-                <span class="material-icons-round text-slate-400 dark:text-slate-500 text-xl">history</span>
-                <div>
-                  <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
-                </div>
-              </div>
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${getStatusBadgeClass(job.status)}">
-                ${formatStatus(job.status)}
-              </span>
+          <div class="w-full bg-slate-900 border-b border-slate-800 p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-bold text-lg text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
+              <span class="text-xs px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">${formatStatus(job.status)}</span>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs ml-8">
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Customer</p>
-                <p class="font-medium text-slate-900 dark:text-white">${job.customer_name || 'Unknown'}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Date</p>
-                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Total</p>
-                <p class="font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Status</p>
-                <p class="font-medium text-slate-900 dark:text-white">${formatStatus(job.status)}</p>
-              </div>
+            <div class="text-sm text-slate-400 mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-300 italic">${job.notes || ''}</span>
+              <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
             </div>
-            ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic mt-2 ml-8 line-clamp-1">${job.notes}</p>` : ''}
           </div>
         `).join('');
 
@@ -2144,38 +2112,16 @@
         }
 
         listEl.innerHTML = jobs.map(job => `
-          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
-            <div class="flex items-start justify-between mb-2">
-              <div class="flex items-center space-x-3">
-                <span class="material-icons-round text-emerald-500 dark:text-emerald-400 text-xl">history</span>
-                <div>
-                  <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
-                </div>
-              </div>
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                Completed
-              </span>
+          <div class="w-full bg-slate-900 border-b border-slate-800 p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-bold text-lg text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
+              <span class="text-xs px-2 py-1 rounded bg-slate-800 border border-slate-700 text-emerald-400">Completed</span>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs ml-8">
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Customer</p>
-                <p class="font-medium text-slate-900 dark:text-white">${job.customer_name || 'Unknown'}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Date</p>
-                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Total</p>
-                <p class="font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Completed</p>
-                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-              </div>
+            <div class="text-sm text-slate-400 mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-300 italic">${job.notes || ''}</span>
+              <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
             </div>
-            ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic mt-2 ml-8 line-clamp-1">${job.notes}</p>` : ''}
           </div>
         `).join('');
 
@@ -2207,29 +2153,18 @@
           return;
         }
         listEl.innerHTML = jobs.map(job => `
-          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
-            <div class="flex items-start justify-between mb-2">
-              <div class="flex items-center space-x-3">
-                <span class="material-icons-round text-emerald-500 dark:text-emerald-400 text-xl">receipt</span>
-                <div>
-                  <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
-                </div>
-              </div>
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">Completed</span>
+          <div class="w-full bg-slate-900 border-b border-slate-800 p-4 transition-colors">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-bold text-lg text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
+              <span class="text-xs px-2 py-1 rounded bg-slate-800 border border-slate-700 text-emerald-400">Completed</span>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs ml-8">
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Date</p>
-                <p class="font-medium text-slate-900 dark:text-white">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-              </div>
-              <div>
-                <p class="text-slate-400 dark:text-slate-500">Total</p>
-                <p class="font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</p>
-              </div>
+            <div class="text-sm text-slate-400 mb-2">${job.plate_number}</div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-300">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
             </div>
             <div class="mt-3 flex justify-end">
-              <button onclick="downloadInvoice(${job.id})" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">
+              <button onclick="downloadInvoice(${job.id})" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 text-xs tracking-wide transition-all shadow ripple-btn">
                 <span class="material-icons-round text-base">download</span>
                 <span>Download Invoice</span>
               </button>
@@ -2383,7 +2318,7 @@
             <div class="flex items-center space-x-3">
               <span class="material-icons-round text-amber-600 dark:text-amber-400">event</span>
               <div>
-                <p class="text-sm font-medium text-slate-900 dark:text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                <p class="text-sm font-medium text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">${h.reason}</p>
               </div>
             </div>
@@ -2644,14 +2579,14 @@
         }
 
         listEl.innerHTML = customers.map(c => `
-          <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 space-y-3" data-customer-id="${c.id}">
+          <div class="bg-slate-900 p-4 space-y-3" data-customer-id="${c.id}">
             <div class="flex items-start justify-between">
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm">
                   ${c.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p class="font-semibold text-slate-900 dark:text-white">${c.name}</p>
+                  <p class="font-semibold text-white">${c.name}</p>
                   <p class="text-xs text-slate-500 dark:text-slate-400">${c.email || 'No email'} ${c.phone ? '• ' + c.phone : ''}</p>
                 </div>
               </div>
@@ -2675,7 +2610,7 @@
                   <div class="flex items-center space-x-2.5">
                     <span class="material-icons-round text-slate-400 dark:text-slate-500">directions_car</span>
                     <div>
-                      <p class="text-sm font-medium text-slate-900 dark:text-white">${v.make} ${v.model} ${v.year ? '(' + v.year + ')' : ''}</p>
+                      <p class="text-sm font-medium text-white">${v.make} ${v.model} ${v.year ? '(' + v.year + ')' : ''}</p>
                       <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${v.plate_number}</p>
                     </div>
                   </div>
@@ -2913,10 +2848,10 @@
 
         tbody.innerHTML = items.map(item => `
           <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-            <td class="py-3 pr-4 font-medium text-slate-900 dark:text-white">${item.item_name}</td>
+            <td class="py-3 pr-4 font-medium text-white">${item.item_name}</td>
             <td class="py-3 pr-4 text-center ${item.quantity <= 5 ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-slate-700 dark:text-slate-300'}">${item.quantity}</td>
             <td class="py-3 pr-4 text-right text-slate-700 dark:text-slate-300">₹${Number(item.cost_price).toFixed(2)}</td>
-            <td class="py-3 pr-4 text-right font-medium text-slate-900 dark:text-white">₹${Number(item.selling_price).toFixed(2)}</td>
+            <td class="py-3 pr-4 text-right font-medium text-white">₹${Number(item.selling_price).toFixed(2)}</td>
             <td class="py-3 text-right">
               <div class="flex items-center justify-end space-x-1.5">
                 <button onclick="editInventory(${item.id}, '${item.item_name.replace(/'/g, "\\'")}', ${item.quantity}, ${item.cost_price}, ${item.selling_price})" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20" aria-label="Edit item">
