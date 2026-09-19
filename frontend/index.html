@@ -260,7 +260,8 @@
         document.getElementById('dark-mode-icon').innerText = 'dark_mode';
       }
 
-      // Fetch ontology data for branding & display
+      // Fetch public info (branding + holidays) AND ontology data
+      fetchPublicInfo();
       fetchOntologyData();
 
       // Check current JWT session token
@@ -332,6 +333,18 @@
           </div>
         </div>
       `;
+    }
+
+    // Fetch public info (branding + holidays)
+    async function fetchPublicInfo() {
+      try {
+        const res = await fetch('/api/public-info');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.shop_name) { document.title = data.shop_name; }
+        updateHeaderBranding(data.shop_name, data.shop_icon);
+        if (data.holidays && data.holidays.length > 0) { showHolidayBanner(data.holidays); }
+      } catch (err) { console.warn('Failed to fetch public info:', err); }
     }
 
     // Update header with shop name and icon
