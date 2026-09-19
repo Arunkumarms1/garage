@@ -53,7 +53,12 @@
         } catch (e) {
           localStorage.removeItem('garage_token');
           localStorage.removeItem('garage_user');
+          const profileSection = document.getElementById('profile-section');
+          if (profileSection) profileSection.classList.add('hidden');
         }
+      } else {
+        const profileSection = document.getElementById('profile-section');
+        if (profileSection) profileSection.classList.add('hidden');
       }
     });
 
@@ -357,13 +362,19 @@
       }
 
       // Update profile dropdown with user info
+      const profileSection = document.getElementById('profile-section');
+      if (profileSection) profileSection.classList.remove('hidden');
       const dropdownName = document.getElementById('profile-dropdown-name');
       const dropdownEmail = document.getElementById('profile-dropdown-email');
+      const profileBtnLetter = document.getElementById('profile-btn-letter');
+      const roleBadge = document.getElementById('profile-role-badge');
       if (dropdownName) dropdownName.textContent = user.name || user.email || 'Active User';
       if (dropdownEmail) dropdownEmail.textContent = user.email || '';
-      // Update profile button initial letter
-      const profileBtn = document.querySelector('header button[aria-label="Profile menu"]');
-      if (profileBtn && user.name) profileBtn.textContent = user.name.charAt(0).toUpperCase();
+      if (profileBtnLetter && user.name) profileBtnLetter.textContent = user.name.charAt(0).toUpperCase();
+      if (roleBadge) {
+        roleBadge.textContent = user.role ? user.role.toUpperCase() : '';
+        roleBadge.classList.toggle('hidden', !user.role);
+      }
     }
 
     function renderAppShell(user) {
