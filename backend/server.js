@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const { OAuth2Client } = require('google-auth-library');
+const fs = require('fs');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 const { db, hashPassword, verifyPassword } = require('./database');
 
 const app = express();
@@ -2196,6 +2199,54 @@ app.post('/api/catalog', authenticateToken, requireRole('employee'), (req, res) 
     }
   });
 });
+
+// ===== ADMIN DB BACKUP / RESTORE ROUTES =====
+
+// GET /api/admin/db-backup (Download current SQLite DB file)
+app.get('/api/admin/db-backup', authenticateToken, requireRole('admin'), (req, res) => {
+  const dbPath = path.resolve(__dirname, 'garage.db');
+  res.download(dbPath, 'garage-backup.db', (err) => {
+    if (err) {
+      console.error('DB backup download error:', err);
+      if (!res.headersSent) {
+        return res.status(500).json({ error: 'Failed to download DB backup.' });
+      }
+    }
+  });
+});
+
+// POST /api/admin/db-restore (Upload and replace SQLite DB file)
+app.post('/api/admin/db-restore', authenticateToken, requireRole('admin'), upload.single('db_file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'DB file upload is required.' });
+  }
+
+  const dbPath = path.resolve(__dirname, 'garage.db');
+  const uploadedPath = req.file.path;
+
+  fs.rename(uploadedPath, dbPath, (renameErr) => {
+    if (renameErr) {
+      console.error('DB restore file move error:', renameErr);
+      return res.status(500).json({ error: 'Failed to restore DB file.' });
+    }
+
+    // Close existing DB connection and restart server process via PM2 if available
+    db.close((closeErr) => {
+      const { exec } = require('child_process');
+      let restarted = false;
+      exec('pm2 restart garage-api', (pm2Err, stdout, stderr) => {
+        if (pm2Err) {
+          console.log('DB restored but PM2 restart failed (expected if not using PM2).');
+        } else {
+          restarted = true;
+        }
+        res.json({ message: 'DB restored successfully. Server will restart shortly.', restarted });
+      });
+    });
+  });
+});
+
+// ===== END ADMIN DB BACKUP / RESTORE ROUTES =====
 
 // ===== END CATALOG ROUTES =====
 
