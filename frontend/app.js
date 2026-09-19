@@ -35,6 +35,15 @@
       }
     });
 
+    // Focus-scroll fallback for keyboard overlap on mobile
+    document.body.addEventListener('focusin', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        setTimeout(() => {
+          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    });
+
     // API Base URL
     const API_BASE = '';
 
