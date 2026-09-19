@@ -1543,14 +1543,11 @@
         // Show car photo if available
         const photoContainer = document.getElementById('job-detail-photo-container');
         const photoImg = document.getElementById('job-detail-photo');
-        const photoBtn = document.getElementById('job-detail-photo-btn');
         if (job.photo && photoContainer && photoImg) {
           photoImg.src = job.photo;
           photoContainer.classList.remove('hidden');
-          if (photoBtn) { photoBtn.href = job.photo; photoBtn.classList.remove('hidden'); }
         } else {
           if (photoContainer) photoContainer.classList.add('hidden');
-          if (photoBtn) { photoBtn.href = '#'; photoBtn.classList.add('hidden'); }
         }
         document.getElementById('job-detail-created').textContent = new Date(job.created_at).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -1684,12 +1681,6 @@
         const scrollTop = modalContent.scrollTop + (rect.top - contentRect.top) - (contentRect.height / 3) + (rect.height / 2);
         modalContent.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
       }, 150);
-    }
-
-    function openPhotoFull() {
-      const img = document.getElementById('job-detail-photo');
-      if (!img || !img.src) { showToast('No photo available', 'error', false); return; }
-      window.open(img.src, '_blank');
     }
 
     async function loadJobItems(jobId) {
@@ -3309,11 +3300,8 @@
           <span class="material-icons-round text-slate-400 dark:text-slate-500 text-sm">calendar_today</span>
           <p id="job-detail-created" class="text-xs text-slate-500 dark:text-slate-400"></p>
         </div>
-        <div id="job-detail-photo-container" class="hidden mt-2 ml-7 space-y-1">
+        <div id="job-detail-photo-container" class="hidden mt-2 ml-7">
           <img id="job-detail-photo" src="" alt="Car photo" class="w-32 h-20 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-          <a id="job-detail-photo-btn" href="#" onclick="openPhotoFull(); return false;" class="text-[11px] text-indigo-600 dark:text-indigo-300 font-bold hover:underline flex items-center gap-1 hidden">
-            <span class="material-icons-round text-sm">open_in_new</span> Open photo
-          </a>
         </div>
       </div>
 

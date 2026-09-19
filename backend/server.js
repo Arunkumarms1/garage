@@ -1906,7 +1906,7 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
               const adminX = showUpiQr ? 340 : 50;
               doc.image(adminBuffer, adminX, qrY, { width: 100, height: 100 });
               doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
-              doc.text('invoice data - admin scans it and finds the invoice', adminX + 110, qrY + 10, { width: 180, align: 'left' });
+              doc.text('invoice data', adminX + 110, qrY + 10, { width: 180, align: 'left' });
               doc.font('Helvetica').fontSize(8).fillColor('#666');
               doc.text(`Invoice #${id}`, adminX + 110, qrY + 30);
             }
@@ -1919,8 +1919,6 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
                   const imgBuffer = Buffer.from(base64Data, 'base64');
                   const photoY = (showUpiQr || showAdminLookupQr) ? qrY + 130 : qrY;
                   doc.image(imgBuffer, 50, photoY, { width: 100, height: 75, align: 'left' });
-                  doc.fontSize(8).font('Helvetica-Oblique').fillColor('#555');
-                  doc.text('Car reference (720p compressed)', 160, photoY + 10, { width: 200, align: 'left' });
                 }
               } catch (imgErr) {
                 console.warn('Failed to embed car photo in invoice:', imgErr);
