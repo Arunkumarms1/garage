@@ -109,13 +109,13 @@
         </div>
       `).join('');
       const relationsHtml = (relations.relations || relations).map(r => `
-        <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 border border-slate-700 p-3 shadow-sm mb-2">
+        <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black border border-slate-700 p-3 shadow-sm mb-2">
           <p class="text-xs font-bold text-slate-700 dark:text-slate-300">${r.source || r.sourceEntity || ''} → ${r.target || r.targetEntity || ''}</p>
           <p class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-white">${r.relation || r.name || ''} (${r.cardinality || 'N:N'})</p>
         </div>
       `).join('');
       displayEl.innerHTML = `
-        <div class="border-t border-slate-100 dark:border-slate-700 oled:border-white pt-4 space-y-3">
+        <div class="border-t border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg pt-4 space-y-3">
           <h3 class="text-sm font-bold text-indigo-600 dark:text-indigo-400">Ontology Data (API)</h3>
           <p class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-white">All data fetched from /api/ontology</p>
           <div class="text-left space-y-2 max-h-[40vh] overflow-y-auto pr-1">
@@ -179,7 +179,7 @@
       if (!loginScreen || loginScreen.querySelector('#holiday-banner')) return;
       
       const bannerHtml = upcomingHolidays.map(h => `
-        <div class="bg-amber-950/30 border border-amber-900/40 p-3 mb-4 flex items-start space-x-2.5">
+        <div class="dark:bg-slate-800/50 oled:bg-black oled:border oled:border-neutral-800 bg-amber-950/30 border border-amber-900/40 p-3 mb-4 flex items-start space-x-2.5">
           <span class="material-icons-round text-amber-600 dark:text-amber-400 text-lg mt-0.5">event</span>
           <div>
             <p class="text-xs font-bold text-slate-900 dark:text-white oled:text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
@@ -386,7 +386,7 @@
         <div class="space-y-4">
 
           <!-- Tab Navigation -->
-          <nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-900 oled:bg-black border-t border-slate-200 dark:border-slate-800 oled:border-white flex justify-around items-center h-16 px-2 z-50" id="app-tabs">
+          <nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-900 oled:bg-black border-t border-slate-200 dark:border-slate-800 oled:border-neutral-900 flex justify-around items-center h-16 px-2 z-50" id="app-tabs">
             ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-2xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-2xl">dashboard</span></button>`}
             ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">work</span></button>`}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">people</span></button>` : ''}
@@ -397,7 +397,7 @@
 
           <!-- Tab Content -->
           <div id="tab-dashboard" class="app-tab-content space-y-4">
-            <div class="bg-white dark:bg-slate-900 oled:bg-black p-4 space-y-4">
+            <div class="bg-white dark:bg-slate-800 oled:bg-black p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="font-bold text-slate-900 dark:text-white oled:text-white">Active Jobs</h3>
                 <div class="flex items-center space-x-2">
@@ -415,8 +415,8 @@
               <!-- Kanban Board -->
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboard-kanban">
                 <!-- Pending Column -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 min-h-[400px] flex flex-col">
-                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-white">
+                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black p-3 min-h-[400px] flex flex-col">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                       <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Pending</h4>
@@ -429,8 +429,8 @@
                 </div>
 
                 <!-- In Progress Column -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 min-h-[400px] flex flex-col">
-                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-white">
+                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black p-3 min-h-[400px] flex flex-col">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                       <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">In Progress</h4>
@@ -443,8 +443,8 @@
                 </div>
 
                 <!-- Completed Column (recent) -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 min-h-[400px] flex flex-col">
-                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-white">
+                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black p-3 min-h-[400px] flex flex-col">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                       <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Completed (Recent)</h4>
@@ -473,10 +473,10 @@
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div class="relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="job-history-search" placeholder="Search by customer, plate, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedJobHistorySearch()">
+                  <input type="text" id="job-history-search" placeholder="Search by customer, plate, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedJobHistorySearch()">
                 </div>
                 <div class="relative">
-                  <select id="job-history-status" class="w-full min-h-[48px] pl-3.5 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" onchange="loadJobHistory()">
+                  <select id="job-history-status" class="w-full min-h-[48px] pl-3.5 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" onchange="loadJobHistory()">
                     <option value="">All Statuses</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
@@ -484,10 +484,10 @@
                   <span class="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">keyboard_arrow_down</span>
                 </div>
                 <div class="relative">
-                  <input type="date" id="job-history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
+                  <input type="date" id="job-history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
                 </div>
                 <div class="relative">
-                  <input type="date" id="job-history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
+                  <input type="date" id="job-history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
                 </div>
               </div>
 
@@ -527,7 +527,7 @@
               <div class="flex gap-2">
                 <div class="flex-1 relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <button onclick="loadCustomers()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
               </div>
@@ -553,7 +553,7 @@
               <div class="flex gap-2">
                 <div class="flex-1 relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="inventory-search" placeholder="Search inventory by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="text" id="inventory-search" placeholder="Search inventory by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <button onclick="loadInventory()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
               </div>
@@ -562,7 +562,7 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 oled:border-white">
+                    <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                       <th class="pb-2 pr-4">Item Name</th>
                       <th class="pb-2 pr-4 text-center">Quantity</th>
                       <th class="pb-2 pr-4 text-right">Cost Price</th>
@@ -583,37 +583,37 @@
           </div>
 
           <div id="tab-settings" class="app-tab-content hidden space-y-4" data-admin-only>
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 oled:border-white p-4 space-y-6">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 space-y-6">
               <h3 class="font-bold text-slate-900 dark:text-white oled:text-white">Shop Settings</h3>
               
               <!-- Branding Section -->
-              <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 oled:border-white pb-4">
+              <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg pb-4">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Branding</h4>
                 <div class="space-y-3">
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Shop Name</label>
-                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Shop Icon (Base64 Data URL or Image URL)</label>
-                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Paste a base64 data URL or an HTTPS image URL. Leave empty to use default icon.</p>
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Contact Info</label>
-                    <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">UPI ID (for invoice payment QR)</label>
-                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">UPI Name (confirmation for admin scan)</label>
-                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">UPI QR Image (upload or base64)</label>
-                    <input type="file" id="settings-upi-image" accept="image/*" onchange="handleUpiImageUpload(this)" class="w-full text-xs bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <input type="file" id="settings-upi-image" accept="image/*" onchange="handleUpiImageUpload(this)" class="w-full text-xs bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Upload a QR image. It will be embedded directly in invoices (no decode needed).</p>
                   </div>
                   <button onclick="saveBrandingSettings()" class="w-full min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Branding</button>
@@ -627,15 +627,15 @@
                 </div>
                 
                 <!-- Add Holiday Form -->
-                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black p-3 space-y-2">
                   <div class="grid grid-cols-2 gap-2">
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Date</label>
-                      <input type="date" id="settings-holiday-date" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <input type="date" id="settings-holiday-date" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Reason</label>
-                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                   </div>
                   <button onclick="addHoliday()" class="w-full min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all">Add Holiday</button>
@@ -648,7 +648,7 @@
               </div>
 
               <!-- Admin QR Scanner (Admin Only) -->
-              <div id="admin-qr-scanner" class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-white">
+              <div id="admin-qr-scanner" class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Admin QR Operations (Admin Only)</h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">Admin scan-only QR operations. Scan UPI or lookup codes directly. If empty, nothing embedded.</p>
                 <div id="qr-reader-container" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600"></div>
@@ -661,7 +661,7 @@
                 </div>
                 <!-- Find Invoice by Number -->
                 <div class="flex gap-2 pt-2">
-                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 min-h-[48px] px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
+                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 min-h-[48px] px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
                   <button onclick="findInvoiceByNumber()" class="min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1">
                     <span class="material-icons-round text-base">search</span>
                     <span>Find</span>
@@ -670,7 +670,7 @@
               </div>
 
               <!-- DB Backup / Restore Section -->
-              <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-white">
+              <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Database Backup & Restore</h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">Download or upload the full SQLite database file.</p>
                 <div class="flex gap-2">
@@ -696,14 +696,14 @@
               </div>
 
               <!-- Date Range Picker -->
-              <div class="flex flex-wrap items-end gap-4 bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-4">
+              <div class="flex flex-wrap items-end gap-4 bg-slate-50 dark:bg-slate-900/50 oled:bg-black p-4">
                 <div class="flex-1 min-w-[140px]">
                   <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">From</label>
-                  <input type="date" id="analytics-from" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="date" id="analytics-from" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <div class="flex-1 min-w-[140px]">
                   <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">To</label>
-                  <input type="date" id="analytics-to" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="date" id="analytics-to" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <button onclick="fetchAnalytics()" class="min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5 h-fit">
                   <span class="material-icons-round text-base">refresh</span>
@@ -772,13 +772,13 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
               <div class="relative md:col-span-2">
                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
+                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
               </div>
               <div class="relative">
-                <input type="date" id="history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+                <input type="date" id="history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
               </div>
               <div class="relative">
-                <input type="date" id="history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+                <input type="date" id="history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
               </div>
               <button onclick="clearHistoryFilters()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 h-fit">
                 <span class="material-icons-round text-base">filter_alt_off</span>
@@ -971,15 +971,15 @@
               <span class="material-icons-round text-base">person_add</span>
               Add New Customer
             </button>
-            <div id="quick-add-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2">
-              <input type="text" id="quick-add-name" placeholder="Customer Name" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-              <input type="tel" id="quick-add-phone" placeholder="Phone (10 digits)" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" required>
+            <div id="quick-add-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg pt-2">
+              <input type="text" id="quick-add-name" placeholder="Customer Name" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+              <input type="tel" id="quick-add-phone" placeholder="Phone (10 digits)" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" required>
               <button onclick="submitQuickAddCustomer()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all shadow">Save Customer</button>
             </div>
           </div>
         `;
       } else {
-        dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-white last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
+        dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
       }
       // Dropdown stays hidden by default; shown only on input/focus
       dropdown.classList.add('hidden');
@@ -1347,7 +1347,7 @@
       }
 
       container.innerHTML = jobs.map(job => `
-        <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 active:bg-slate-800 transition-colors" onclick="showJobDetailModal(${job.id})">
+        <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 active:bg-slate-800 transition-colors" onclick="showJobDetailModal(${job.id})">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model}</span>
             <span class="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${formatStatus(job.status)}</span>
@@ -1586,7 +1586,7 @@
           total += lineTotal;
           const isPart = item.inventory_id !== null;
           return `
-            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 oled:border-white p-3 flex items-center justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-3 flex items-center justify-between">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center space-x-2 mb-1">
                   <span class="material-icons-round text-xs ${isPart ? 'text-indigo-500' : 'text-amber-500'}">${isPart ? 'build' : 'handyman'}</span>
@@ -1664,18 +1664,18 @@
     function renderPartDropdown(items) {
       const dropdown = document.getElementById('part-dropdown');
       if (!dropdown) return;
-      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-white last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
+      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
       dropdown.innerHTML = `
         <div class="max-h-48 overflow-y-auto">${listHtml}</div>
-        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1"></div>
+        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg pt-2 mt-1"></div>
         <button type="button" onclick="showQuickAddPart()" class="w-full text-left px-3 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-xl text-sm text-indigo-700 dark:text-indigo-300 font-bold transition-all flex items-center gap-2 shadow-sm">
           <span class="material-icons-round text-base">add_circle</span> Add New Part
         </button>
-        <div id="quick-add-part-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1">
-          <input type="text" id="quick-add-part-name" placeholder="Part name" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        <div id="quick-add-part-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg pt-2 mt-1">
+          <input type="text" id="quick-add-part-name" placeholder="Part name" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
           <div class="grid grid-cols-2 gap-2">
-            <input type="number" id="quick-add-part-qty" value="1" min="1" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-            <input type="number" id="quick-add-part-price" step="0.01" min="0" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            <input type="number" id="quick-add-part-qty" value="1" min="1" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            <input type="number" id="quick-add-part-price" step="0.01" min="0" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
           </div>
           <button onclick="submitQuickAddPart()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm tracking-wide transition-all shadow ripple-btn">Save & Add Part</button>
         </div>
@@ -1713,16 +1713,16 @@
     function renderLaborDropdown(items) {
       const dropdown = document.getElementById('labor-dropdown');
       if (!dropdown) return;
-      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-white last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
+      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
       dropdown.innerHTML = `
         <div class="max-h-48 overflow-y-auto">${listHtml}</div>
-        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1"></div>
+        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg pt-2 mt-1"></div>
         <button type="button" onclick="showQuickAddLabor()" class="w-full text-left px-3 py-2.5 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-xl text-sm text-amber-700 dark:text-amber-300 font-bold transition-all flex items-center gap-2 shadow-sm">
           <span class="material-icons-round text-base">add_circle</span> Add New Labor
         </button>
-        <div id="quick-add-labor-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1">
-          <input type="text" id="quick-add-labor-desc" placeholder="Labor description" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-          <input type="number" id="quick-add-labor-price" step="0.01" min="0.01" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        <div id="quick-add-labor-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg pt-2 mt-1">
+          <input type="text" id="quick-add-labor-desc" placeholder="Labor description" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <input type="number" id="quick-add-labor-price" step="0.01" min="0.01" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
           <button onclick="submitQuickAddLabor()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-sm tracking-wide transition-all shadow ripple-btn">Save & Add Labor</button>
         </div>
       `;
@@ -2053,7 +2053,7 @@
         }
 
         listEl.innerHTML = jobs.map(job => `
-          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
               <span class="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${formatStatus(job.status)}</span>
@@ -2136,7 +2136,7 @@
         }
 
         listEl.innerHTML = jobs.map(job => `
-          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
               <span class="text-xs px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">Completed</span>
@@ -2177,7 +2177,7 @@
           return;
         }
         listEl.innerHTML = jobs.map(job => `
-          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 transition-colors">
+          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 transition-colors">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
               <span class="text-xs px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">Completed</span>
@@ -2338,7 +2338,7 @@
         }
 
         listEl.innerHTML = data.holidays.map(h => `
-          <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 rounded-lg p-3">
+          <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 oled:bg-black rounded-lg p-3">
             <div class="flex items-center space-x-3">
               <span class="material-icons-round text-amber-600 dark:text-amber-400">event</span>
               <div>
@@ -2603,7 +2603,7 @@
         }
 
         listEl.innerHTML = customers.map(c => `
-          <div class="bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 space-y-3 rounded-xl" data-customer-id="${c.id}">
+          <div class="bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 space-y-3 rounded-xl" data-customer-id="${c.id}">
             <div class="flex items-start justify-between">
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm">
@@ -2628,9 +2628,9 @@
             </div>
 
             <!-- Vehicles for this customer -->
-              <div id="vehicles-${c.id}" class="ml-10 border-l-2 border-slate-200 dark:border-slate-700 oled:border-white pl-4 space-y-2">
+              <div id="vehicles-${c.id}" class="ml-10 border-l-2 border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg pl-4 space-y-2">
               ${c.vehicles && c.vehicles.length > 0 ? c.vehicles.map(v => `
-                <div class="flex items-center justify-between py-2 bg-slate-50 dark:bg-slate-800 oled:bg-black rounded-lg px-3 border border-slate-200 dark:border-slate-700 oled:border-white">
+                <div class="flex items-center justify-between py-2 bg-slate-50 dark:bg-slate-800 oled:bg-black rounded-lg px-3 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg">
                   <div class="flex items-center space-x-2.5">
                     <span class="material-icons-round text-slate-400 dark:text-slate-500">directions_car</span>
                     <div>
