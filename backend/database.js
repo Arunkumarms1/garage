@@ -75,11 +75,15 @@ db.serialize(() => {
       status TEXT CHECK(status IN ('pending', 'in-progress', 'completed', 'cancelled')) DEFAULT 'pending',
       notes TEXT,
       total_cost REAL NOT NULL DEFAULT 0,
+      photo TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
     )
   `);
+
+  // Add photo column to jobs if missing (schema migration)
+  db.run("ALTER TABLE jobs ADD COLUMN photo TEXT", () => {});
 
   // 6b. Create Job Items Table
   db.run(`

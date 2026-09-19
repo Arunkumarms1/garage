@@ -447,24 +447,31 @@ app.get('/api/settings', (req, res) => {
 app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => {
   const settingsUpdate = req.body; // Expecting { carwash_name, is_open, logo_base64, theme_color }
 
-  db.serialize(() => {
-    const stmt = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
-    
-    let errorOccurred = false;
-    for (const [key, value] of Object.entries(settingsUpdate)) {
-      if (['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name', 'upi_image'].includes(key)) {
-        stmt.run(key, String(value), (err) => {
-          if (err) errorOccurred = true;
-        });
+  const allowedKeys = ['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name', 'upi_image'];
+  const updates = Object.entries(settingsUpdate).filter(([k]) => allowedKeys.includes(k));
+  
+  if (updates.length === 0) {
+    return res.json({ message: 'No valid settings to update.', updated: {} });
+  }
+
+  let errorOccurred = false;
+  let completed = 0;
+
+  updates.forEach(([key, value]) => {
+    db.run(
+      "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      [key, String(value)],
+      function(err) {
+        if (err) errorOccurred = true;
+        completed++;
+        if (completed === updates.length) {
+          if (errorOccurred) {
+            return res.status(500).json({ error: 'Failed to save settings.' });
+          }
+          res.json({ message: 'Settings updated successfully.', updated: settingsUpdate });
+        }
       }
-    }
-    
-    stmt.finalize((err) => {
-      if (err || errorOccurred) {
-        return res.status(500).json({ error: 'Failed to save settings.' });
-      }
-      res.json({ message: 'Settings updated successfully.', updated: settingsUpdate });
-    });
+    );
   });
 });
 
@@ -1220,7 +1227,7 @@ app.get('/api/jobs/:id', authenticateToken, (req, res) => {
 
 // POST /api/jobs (Employee/Admin - create job)
 app.post('/api/jobs', authenticateToken, requireRole('employee'), (req, res) => {
-  const { vehicle_id, notes } = req.body;
+  const { vehicle_id, notes, photo } = req.body;
 
   if (!vehicle_id) {
     return res.status(400).json({ error: 'Vehicle ID is required.' });
@@ -1236,15 +1243,15 @@ app.post('/api/jobs', authenticateToken, requireRole('employee'), (req, res) => 
     }
 
     db.run(
-      "INSERT INTO jobs (vehicle_id, status, notes, total_cost) VALUES (?, ?, ?, ?)",
-      [vehicle_id, 'pending', notes || '', 0],
+      "INSERT INTO jobs (vehicle_id, status, notes, total_cost, photo) VALUES (?, ?, ?, ?, ?)",
+      [vehicle_id, 'pending', notes || '', 0, photo || null],
       function(insertErr) {
         if (insertErr) {
           return res.status(500).json({ error: 'Failed to create job.' });
         }
         res.status(201).json({
           message: 'Job created successfully.',
-          job: { id: this.lastID, vehicle_id, status: 'pending', notes: notes || '', total_cost: 0 }
+          job: { id: this.lastID, vehicle_id, status: 'pending', notes: notes || '', total_cost: 0, photo: photo || null }
         });
       }
     );
@@ -1254,7 +1261,7 @@ app.post('/api/jobs', authenticateToken, requireRole('employee'), (req, res) => 
 // PUT /api/jobs/:id (Employee/Admin - update job)
 app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) => {
   const { id } = req.params;
-  const { vehicle_id, status, notes, total_cost } = req.body;
+  const { vehicle_id, status, notes, total_cost, photo } = req.body;
 
   // Validate status if provided
   if (status && !['pending', 'in-progress', 'completed', 'cancelled'].includes(status)) {
@@ -1296,13 +1303,13 @@ app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) 
         validateStockAndComplete(id, currentJob, vehicle_id, status, notes, total_cost, res);
       } else {
         // Normal update (no completion)
-        doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, res);
+        doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, photo, res);
       }
     });
   }
 });
 
-function doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, res) {
+function doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, photo, res) {
   const updates = [];
   const params = [];
 
@@ -1321,6 +1328,10 @@ function doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, res)
   if (total_cost !== undefined) {
     updates.push("total_cost = ?");
     params.push(parseFloat(total_cost));
+  }
+  if (photo !== undefined) {
+    updates.push("photo = ?");
+    params.push(photo || null);
   }
 
   if (updates.length === 0) {
@@ -1768,6 +1779,21 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         doc.text('Model: ' + (job.model || 'N/A'), colRight, infoY + 38);
         doc.text('Year: ' + (job.year || 'N/A'), colRight, infoY + 54);
         doc.text('Plate: ' + (job.plate_number || 'N/A'), colRight, infoY + 70);
+
+        // Car photo (if available) - small thumbnail for quick reference
+        if (job.photo && job.photo.trim().length > 0) {
+          try {
+            if (job.photo.startsWith('data:image')) {
+              const base64Data = job.photo.split(',')[1];
+              const imgBuffer = Buffer.from(base64Data, 'base64');
+              doc.image(imgBuffer, colRight, infoY + 90, { width: 60, height: 45, align: 'left' });
+              doc.fontSize(7).font('Helvetica-Oblique').fillColor('#888');
+              doc.text('Car reference photo', colRight + 65, infoY + 108, { width: 150, align: 'left' });
+            }
+          } catch (imgErr) {
+            console.warn('Failed to embed car photo in invoice:', imgErr);
+          }
+        }
 
         doc.strokeColor('#eeeeee').moveTo(colLeft, infoY + 95).lineTo(550, infoY + 95).stroke('#eeeeee');
 
