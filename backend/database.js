@@ -133,7 +133,8 @@ db.serialize(() => {
       type TEXT CHECK(type IN ('sale', 'purchase')) NOT NULL,
       description TEXT NOT NULL,
       amount REAL NOT NULL,
-      date TEXT NOT NULL
+      date TEXT NOT NULL,
+      job_id INTEGER
     )
   `);
 

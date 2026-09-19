@@ -1298,6 +1298,17 @@ app.put('/api/jobs/:id', authenticateToken, requireRole('employee'), (req, res) 
         return res.status(400).json({ error: 'Job is already completed. Cannot complete again.' });
       }
 
+      // If leaving completed status, restore inventory and clear previous ledger
+      if (currentJob.status === 'completed' && status && status !== 'completed') {
+        restoreCompletedJob(id, (restoreErr) => {
+          if (restoreErr) {
+            return res.status(500).json({ error: 'Failed to restore completed job: ' + (restoreErr.message || restoreErr) });
+          }
+          doUpdateJob(id, currentJob, vehicle_id, status, notes, total_cost, photo, res);
+        });
+        return;
+      }
+
       // If status is changing to 'completed', validate stock availability FIRST
       if (status === 'completed' && currentJob.status !== 'completed') {
         validateStockAndComplete(id, currentJob, vehicle_id, status, notes, total_cost, res);
@@ -1460,8 +1471,8 @@ function completeJobTransaction(jobId, currentJob, vehicle_id, status, notes, to
 
           // 4. Insert sale into ledger
           db.run(
-            "INSERT INTO ledger (type, description, amount, date) VALUES (?, ?, ?, ?)",
-            ['sale', desc, totalCost, today],
+            "INSERT INTO ledger (type, description, amount, date, job_id) VALUES (?, ?, ?, ?, ?)",
+            ['sale', desc, totalCost, today, jobId],
             function(ledgerErr) {
               if (ledgerErr) {
                 console.error("Error logging sale transaction for completed job:", ledgerErr);
@@ -1480,6 +1491,46 @@ function completeJobTransaction(jobId, currentJob, vehicle_id, status, notes, to
     );
   });
 }
+
+// ===== RESTORE COMPLETED JOB =====
+function restoreCompletedJob(jobId, callback) {
+  db.all("SELECT * FROM job_items WHERE job_id = ? AND inventory_id IS NOT NULL", [jobId], (err, items) => {
+    if (err) {
+      return callback(err);
+    }
+    // Restore inventory quantities
+    if (!items || items.length === 0) {
+      db.run("DELETE FROM ledger WHERE job_id = ?", [jobId], function(ledgerErr) {
+        return callback(ledgerErr || null);
+      });
+      return;
+    }
+    db.serialize(() => {
+      let completed = 0;
+      let hasError = false;
+      items.forEach(item => {
+        db.run(
+          "UPDATE inventory SET quantity = quantity + ? WHERE id = ?",
+          [item.quantity, item.inventory_id],
+          function(updateErr) {
+            if (hasError) return;
+            if (updateErr || this.changes === 0) {
+              hasError = true;
+              return callback(updateErr || new Error('Failed to restore inventory for job item.'));
+            }
+            completed++;
+            if (completed === items.length) {
+              db.run("DELETE FROM ledger WHERE job_id = ?", [jobId], function(ledgerErr) {
+                return callback(ledgerErr || null);
+              });
+            }
+          }
+        );
+      });
+    });
+  });
+}
+// ===== END RESTORE COMPLETED JOB =====
 
 // DELETE /api/jobs/:id (Admin only - delete job)
 app.delete('/api/jobs/:id', authenticateToken, requireRole('admin'), (req, res) => {
