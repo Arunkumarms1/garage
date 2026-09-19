@@ -362,13 +362,13 @@
           </div>
 
           <!-- Tab Navigation -->
-          <div class="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl space-x-1" id="app-tabs">
-            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="flex-1 py-2 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="flex-1 py-2 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">dashboard</span></button>`}
-            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">work</span></button>`}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">people</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
-            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">history</span></button>` : ''}
+          <div class="w-full flex justify-around items-center py-3 bg-slate-100 dark:bg-slate-700/50" id="app-tabs">
+            ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">dashboard</span></button>`}
+            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">work</span></button>`}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">people</span></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
+            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">history</span></button>` : ''}
           </div>
 
           <!-- Tab Content -->
@@ -439,7 +439,7 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="font-bold text-slate-900 dark:text-white">Job History</h3>
-                <button onclick="loadJobHistory()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                <button onclick="loadJobHistory()" class="min-h-[48px] px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
                   <span class="material-icons-round text-base">refresh</span>
                   <span>Refresh</span>
                 </button>
@@ -449,10 +449,10 @@
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div class="relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="job-history-search" placeholder="Search by customer, plate, notes..." class="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedJobHistorySearch()">
+                  <input type="text" id="job-history-search" placeholder="Search by customer, plate, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedJobHistorySearch()">
                 </div>
                 <div class="relative">
-                  <select id="job-history-status" class="w-full pl-3.5 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" onchange="loadJobHistory()">
+                  <select id="job-history-status" class="w-full min-h-[48px] pl-3.5 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" onchange="loadJobHistory()">
                     <option value="">All Statuses</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
@@ -460,10 +460,10 @@
                   <span class="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">keyboard_arrow_down</span>
                 </div>
                 <div class="relative">
-                  <input type="date" id="job-history-from" class="w-full pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
+                  <input type="date" id="job-history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
                 </div>
                 <div class="relative">
-                  <input type="date" id="job-history-to" class="w-full pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
+                  <input type="date" id="job-history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
                 </div>
               </div>
 
@@ -478,7 +478,7 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="font-bold text-slate-900 dark:text-white">Your Invoices</h3>
-                <button onclick="loadInvoices()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                <button onclick="loadInvoices()" class="min-h-[48px] px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
                   <span class="material-icons-round text-base">refresh</span>
                   <span>Refresh</span>
                 </button>
@@ -503,9 +503,9 @@
               <div class="flex gap-2">
                 <div class="flex-1 relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
-                <button onclick="loadCustomers()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
+                <button onclick="loadCustomers()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
               </div>
 
               <!-- Customers List -->
@@ -529,9 +529,9 @@
               <div class="flex gap-2">
                 <div class="flex-1 relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="inventory-search" placeholder="Search inventory by name..." class="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="text" id="inventory-search" placeholder="Search inventory by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
-                <button onclick="loadInventory()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
+                <button onclick="loadInventory()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
               </div>
 
               <!-- Inventory Table -->
@@ -568,31 +568,31 @@
                 <div class="space-y-3">
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Shop Name</label>
-                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Shop Icon (Base64 Data URL or Image URL)</label>
-                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Paste a base64 data URL or an HTTPS image URL. Leave empty to use default icon.</p>
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Contact Info</label>
-                    <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">UPI ID (for invoice payment QR)</label>
-                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">UPI Name (confirmation for admin scan)</label>
-                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">UPI QR Image (upload or base64)</label>
                     <input type="file" id="settings-upi-image" accept="image/*" onchange="handleUpiImageUpload(this)" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Upload a QR image. It will be embedded directly in invoices (no decode needed).</p>
                   </div>
-                  <button onclick="saveBrandingSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Branding</button>
+                  <button onclick="saveBrandingSettings()" class="w-full min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Branding</button>
                 </div>
               </div>
 
@@ -607,14 +607,14 @@
                   <div class="grid grid-cols-2 gap-2">
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Date</label>
-                      <input type="date" id="settings-holiday-date" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <input type="date" id="settings-holiday-date" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Reason</label>
-                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                   </div>
-                  <button onclick="addHoliday()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all">Add Holiday</button>
+                  <button onclick="addHoliday()" class="w-full min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all">Add Holiday</button>
                 </div>
 
                 <!-- Holiday List -->
@@ -630,15 +630,15 @@
                 <div id="qr-reader-container" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600"></div>
                 <div class="flex flex-col space-y-3">
                   <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400">Ready to scan</p>
-                  <button onclick="startQrScan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
+                  <button onclick="startQrScan()" class="w-full min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
                     <span class="material-icons-round">camera_alt</span>
                     <span>Scan QR (Admin Only)</span>
                   </button>
                 </div>
                 <!-- Find Invoice by Number -->
                 <div class="flex gap-2 pt-2">
-                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
-                  <button onclick="findInvoiceByNumber()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1">
+                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 min-h-[48px] px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
+                  <button onclick="findInvoiceByNumber()" class="min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1">
                     <span class="material-icons-round text-base">search</span>
                     <span>Find</span>
                   </button>
@@ -650,11 +650,11 @@
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Database Backup & Restore</h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Download or upload the full SQLite database file.</p>
                 <div class="flex gap-2">
-                  <button onclick="downloadDBBackup()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-1.5">
+                  <button onclick="downloadDBBackup()" class="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-1.5">
                     <span class="material-icons-round text-base">download</span>
                     <span>Download DB</span>
                   </button>
-                  <label class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-1.5 cursor-pointer text-center">
+                  <label class="flex-1 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-1.5 cursor-pointer text-center">
                     <span class="material-icons-round text-base">upload_file</span>
                     <span>Restore DB</span>
                     <input type="file" id="db-restore-file" accept=".db,.sqlite,.sqlite3" class="hidden" onchange="uploadDBRestore(this)">
@@ -675,17 +675,17 @@
               <div class="flex flex-wrap items-end gap-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4">
                 <div class="flex-1 min-w-[140px]">
                   <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">From</label>
-                  <input type="date" id="analytics-from" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="date" id="analytics-from" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <div class="flex-1 min-w-[140px]">
                   <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">To</label>
-                  <input type="date" id="analytics-to" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="date" id="analytics-to" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
-                <button onclick="fetchAnalytics()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5 h-fit">
+                <button onclick="fetchAnalytics()" class="min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5 h-fit">
                   <span class="material-icons-round text-base">refresh</span>
                   <span>Refresh</span>
                 </button>
-                <button onclick="exportFinancialReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5 h-fit">
+                <button onclick="exportFinancialReport()" class="min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5 h-fit">
                   <span class="material-icons-round text-base">download</span>
                   <span>Export CSV</span>
                 </button>
@@ -738,7 +738,7 @@
           <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 space-y-4">
             <div class="flex items-center justify-between">
               <h3 class="font-bold text-slate-900 dark:text-white">Job History</h3>
-              <button onclick="loadJobHistoryTab()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                <button onclick="loadJobHistoryTab()" class="min-h-[48px] px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
                 <span class="material-icons-round text-base">refresh</span>
                 <span>Refresh</span>
               </button>
@@ -748,15 +748,15 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
               <div class="relative md:col-span-2">
                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
+                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
               </div>
               <div class="relative">
-                <input type="date" id="history-from" class="w-full pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+                <input type="date" id="history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
               </div>
               <div class="relative">
-                <input type="date" id="history-to" class="w-full pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+                <input type="date" id="history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
               </div>
-              <button onclick="clearHistoryFilters()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 h-fit">
+              <button onclick="clearHistoryFilters()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 h-fit">
                 <span class="material-icons-round text-base">filter_alt_off</span>
                 <span>Clear</span>
               </button>
@@ -799,8 +799,8 @@
       document.querySelectorAll('#app-tabs button').forEach(btn => {
         const isActive = btn.onclick && btn.onclick.toString().includes(tabName);
         btn.className = isActive
-          ? "flex-1 py-2 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"
-          : "flex-1 py-2 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center";
+          ? "min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"
+          : "min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center";
         const iconSpan = btn.querySelector('span.material-icons-round');
         if (iconSpan) {
           iconSpan.className = isActive ? "material-icons-round text-xl" : "material-icons-round text-xl opacity-70 hover:opacity-100";
@@ -1324,23 +1324,20 @@
 
       container.innerHTML = jobs.map(job => `
         <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="showJobDetailModal(${job.id})">
-          <div class="flex items-start justify-between mb-2">
-            <div class="flex items-center space-x-2">
-              <span class="material-icons-round text-slate-400 dark:text-slate-500 text-lg">directions_car</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model}</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
-              </div>
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <p class="font-medium text-slate-900 dark:text-white text-sm text-left">${job.make} ${job.model}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-mono text-left">${job.plate_number}</p>
             </div>
-            <span class="px-1.5 py-0.5 text-[10px] font-bold rounded-full ${getStatusBadgeClass(job.status)}">
+            <span class="px-1.5 py-0.5 text-[10px] font-bold rounded-full ${getStatusBadgeClass(job.status)} shrink-0 ml-2">
               ${formatStatus(job.status)}
             </span>
           </div>
-          <p class="text-xs text-slate-600 dark:text-slate-400 mb-2">${job.customer_name || 'Unknown Customer'}</p>
-          ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">${job.notes}</p>` : ''}
-          <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-2 text-left">${job.customer_name || 'Unknown Customer'}</p>
+          ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2 text-left">${job.notes}</p>` : ''}
+          <div class="flex items-center justify-end mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 gap-3">
             <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
-            <span class="material-icons-round text-slate-400 dark:text-slate-500 text-lg">chevron_right</span>
+            <span class="text-xs text-slate-400 dark:text-slate-500">${new Date(job.created_at || Date.now()).toLocaleDateString()}</span>
           </div>
         </div>
       `).join('');
