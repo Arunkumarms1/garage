@@ -764,8 +764,16 @@
 
     function setupTabNavigation(user) {
       const isCustomer = user.role === 'customer';
-      // Default to invoices for customers, dashboard for others
-      switchAppTab(isCustomer ? 'invoices' : 'dashboard');
+      const savedTab = sessionStorage.getItem('garage_last_tab');
+      const allowedTabs = isCustomer ? ['invoices'] : [
+        'dashboard', 'jobs', 'customers', 'inventory', 'analytics', 'history', 'settings'
+      ].filter(t => {
+        const btn = document.querySelector(`#app-tabs button[onclick*="switchAppTab('${t}')"]`);
+        return btn !== null;
+      });
+      const defaultTab = isCustomer ? 'invoices' : 'dashboard';
+      const tabToUse = (savedTab && allowedTabs.includes(savedTab)) ? savedTab : defaultTab;
+      switchAppTab(tabToUse);
     }
 
     function switchAppTab(tabName) {
@@ -789,6 +797,8 @@
           iconSpan.className = isActive ? "material-icons-round text-xl" : "material-icons-round text-xl opacity-70 hover:opacity-100";
         }
       });
+
+      sessionStorage.setItem('garage_last_tab', tabName);
 
       // Load tab-specific data
       if (tabName === 'settings') {
