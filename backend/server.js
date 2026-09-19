@@ -2212,6 +2212,7 @@ app.get('/api/ontology/relations', authenticateToken, requireRole('employee'), (
       });
     });
   }
+  console.log('[ONTOLOGY-ACCESS] Ontology layer active at /api/ontology (entities, relations)');
   res.json({ namespace: ontologySchema.namespace, relations });
 });
 
