@@ -1,0 +1,78 @@
+{
+  "name": "GarageWorkshopPWA",
+  "version": "1.0.0",
+  "namespace": "https://garage.local/ontology#",
+  "description": "Domain ontology for Garage PWA — post-phase-21",
+  "entities": {
+    "User": {
+      "subClasses": ["Admin", "Employee", "Customer"],
+      "attributes": ["id", "name", "email", "role", "phone", "picture"],
+      "relations": [{"target": "Vehicle", "name": "owns", "cardinality": "1:N"}]
+    },
+    "Vehicle": {
+      "attributes": ["id", "owner_id", "make", "model", "plate_number", "year"],
+      "relations": [{"target": "Job", "name": "has", "cardinality": "1:N"}]
+    },
+    "Job": {
+      "attributes": ["id", "vehicle_id", "status", "notes", "total_cost", "photo", "created_at", "updated_at"],
+      "stateMachine": ["pending", "in-progress", "completed", "cancelled"],
+      "relations": [
+        {"target": "JobItem", "name": "composed_of", "cardinality": "1:N"},
+        {"target": "Ledger", "name": "produces", "cardinality": "1:1", "condition": "status='completed'"},
+        {"target": "Vehicle", "name": "belongs_to", "cardinality": "N:1"}
+      ]
+    },
+    "JobItem": {
+      "attributes": ["id", "job_id", "inventory_id", "description", "quantity", "unit_price"],
+      "relations": [
+        {"target": "Inventory", "name": "references", "cardinality": "N:1", "optional": true},
+        {"target": "LineCatalog", "name": "described_by", "cardinality": "N:1", "optional": true}
+      ]
+    },
+    "Inventory": {
+      "attributes": ["id", "item_name", "quantity", "cost_price", "selling_price"],
+      "relations": [{"target": "Ledger", "name": "restocks", "cardinality": "N:1", "condition": "qty_increase>0"}]
+    },
+    "Service": {
+      "attributes": ["id", "name", "price"],
+      "relations": [{"target": "LineCatalog", "name": "is_reference_for", "cardinality": "1:1"}]
+    },
+    "LineCatalog": {
+      "attributes": ["id", "description", "price", "type"],
+      "values": {"type": ["part", "labor"]}
+    },
+    "Ledger": {
+      "attributes": ["id", "type", "description", "amount", "date", "job_id"],
+      "values": {"type": ["sale", "purchase"]},
+      "relations": [{"target": "Job", "name": "references", "cardinality": "N:1", "optional": true}]
+    },
+    "Settings": {
+      "attributes": ["key", "value"],
+      "unique": ["key"]
+    },
+    "Holiday": {
+      "attributes": ["id", "date", "reason"]
+    },
+    "QRItem": {
+      "attributes": ["id", "qr_data"]
+    }
+  },
+  "constraints": {
+    "referentialIntegrity": [
+      "vehicles.owner_id -> users.id (ON DELETE CASCADE)",
+      "jobs.vehicle_id -> vehicles.id (ON DELETE CASCADE)",
+      "job_items.job_id -> jobs.id (ON DELETE CASCADE)",
+      "job_items.inventory_id -> inventory.id (ON DELETE SET NULL)"
+    ],
+    "uniqueConstraints": [
+      "users.email", "vehicles.plate_number", "settings.key"
+    ],
+    "stockConstraint": "Job completion requires inventory.quantity >= SUM(job_items.quantity) for all referenced inventory items.",
+    "ledgerConsistency": "Sale entry (type='sale', amount=job.total_cost) created automatically on job status='completed'; Purchase entry created on inventory restock."
+  },
+  "accessControl": {
+    "Admin": {"rank": 3, "actions": ["READ_ALL", "CREATE", "UPDATE", "DELETE", "TRANSACTION_COMPLETE"]},
+    "Employee": {"rank": 2, "actions": ["READ_ALL", "CREATE", "UPDATE", "TRANSACTION_COMPLETE"]},
+    "Customer": {"rank": 1, "actions": ["READ_OWN", "CREATE_USER", "UPDATE_OWN_PROFILE"]}
+  }
+}

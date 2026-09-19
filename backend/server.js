@@ -2158,6 +2158,65 @@ app.get('/api/generate-pdf/:id', (req, res) => {
 
 // ===== END QR SCANNING & PDF ROUTES =====
 
+// ===== ONTOLOGY LAYER =====
+// Secure routes: authenticateToken + requireRole('employee')
+// Role tracking: logs user.id, user.role, endpoint on every access
+
+// Load ontology schema from file
+const ontologyPath = path.join(__dirname, '../ontology/ontology.json');
+let ontologySchema = {};
+try {
+  ontologySchema = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
+} catch (e) {
+  console.warn('Ontology file not loaded:', e.message);
+}
+
+// GET /api/ontology (serve full domain ontology schema) — auth required
+app.get('/api/ontology', authenticateToken, requireRole('employee'), (req, res) => {
+  console.log('[ONTOLOGY-ACCESS] user=' + req.user.id + ' role=' + req.user.role + ' endpoint=/api/ontology');
+  res.json(ontologySchema || { error: 'Ontology not loaded.', entities: {} });
+});
+
+// GET /api/ontology/entities (entity taxonomy) — auth required
+app.get('/api/ontology/entities', authenticateToken, requireRole('employee'), (req, res) => {
+  console.log('[ONTOLOGY-ACCESS] user=' + req.user.id + ' role=' + req.user.role + ' endpoint=/api/ontology/entities');
+  if (!ontologySchema || !ontologySchema.entities) {
+    return res.status(500).json({ error: 'Ontology entities not available.' });
+  }
+  res.json({
+    namespace: ontologySchema.namespace || '',
+    version: ontologySchema.version || '',
+    entities: Object.keys(ontologySchema.entities || {}).map(key => ({
+      name: key,
+      attributes: ontologySchema.entities[key].attributes || [],
+      relations: ontologySchema.entities[key].relations || []
+    }))
+  });
+});
+
+// GET /api/ontology/relations (relationship graph summary) — auth required
+app.get('/api/ontology/relations', authenticateToken, requireRole('employee'), (req, res) => {
+  console.log('[ONTOLOGY-ACCESS] user=' + req.user.id + ' role=' + req.user.role + ' endpoint=/api/ontology/relations');
+  const relations = [];
+  if (ontologySchema && ontologySchema.entities) {
+    Object.entries(ontologySchema.entities).forEach(([entityName, def]) => {
+      (def.relations || []).forEach(r => {
+        relations.push({
+          source: entityName,
+          target: r.target,
+          relation: r.name,
+          cardinality: r.cardinality,
+          optional: r.optional || false,
+          condition: r.condition || null
+        });
+      });
+    });
+  }
+  res.json({ namespace: ontologySchema.namespace, relations });
+});
+
+// ===== END ONTOLOGY LAYER =====
+
 // ===== CATALOG ROUTES (reference table for line items) =====
 
 app.get('/api/catalog', authenticateToken, requireRole('employee'), (req, res) => {

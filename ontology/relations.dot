@@ -1,0 +1,22 @@
+digraph GarageOntology {
+  rankdir=LR;
+  node [shape=box, style=rounded];
+
+  User [label="User\n(Admin/Employee/Customer)", fillcolor=lightblue];
+  Vehicle [label="Vehicle\n(make/model/plate/year)", fillcolor=lightgreen];
+  Job [label="Job\n(status/state machine)", fillcolor=lightyellow];
+  JobItem [label="JobItem\n(line item: part/labor)", fillcolor=lightgrey];
+  Inventory [label="Inventory\n(qty/cost/sell)", fillcolor=lightcoral];
+  Service [label="Service\n(name/price)", fillcolor=lightpink];
+  Catalog [label="LineCatalog\n(ref: part|labor)", fillcolor=lightpink];
+  Ledger [label="Ledger\n(sale/purchase)", fillcolor=lightsalmon];
+
+  User -> Vehicle [label="owns (1:N)"];
+  Vehicle -> Job [label="has (1:N)"];
+  Job -> JobItem [label="composed_of (1:N)"];
+  JobItem -> Inventory [label="references (N:1, opt)", style=dashed];
+  JobItem -> Catalog [label="described_by (N:1, opt)", style=dashed];
+  Job -> Ledger [label="produces sale (1:1)", color=red];
+  Inventory -> Ledger [label="restock purchase", color=red];
+  Service -> Catalog [label="reference"];
+}
