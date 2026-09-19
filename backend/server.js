@@ -26,6 +26,16 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Support Base64 logo uploads
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// Cache bust middleware for frontend assets (prevent stale index/app.js)
+app.use((req, res, next) => {
+  if (req.path === '/' || req.path === '/index.html' || req.path === '/app.js' || req.path === '/sw.js') {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  next();
+});
+
 // ==========================================
 // AUTHENTICATION & AUTHORIZATION ARCHITECTURE
 // ==========================================
