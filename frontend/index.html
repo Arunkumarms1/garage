@@ -59,6 +59,9 @@
     .animate-wrench {
       animation: wrench-wiggle 3s infinite ease-in-out;
     }
+    .app-tab-content {
+      min-height: 900px;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen select-none">
@@ -1618,6 +1621,19 @@
       }
     }
 
+    function scrollToCenter(el) {
+      if (!el) return;
+      const modalContent = document.querySelector('#job-detail-modal > div');
+      if (!modalContent) return;
+      // Use requestAnimationFrame to handle keyboard opening delay
+      setTimeout(() => {
+        const rect = el.getBoundingClientRect();
+        const contentRect = modalContent.getBoundingClientRect();
+        const scrollTop = modalContent.scrollTop + (rect.top - contentRect.top) - (contentRect.height / 3) + (rect.height / 2);
+        modalContent.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
+      }, 150);
+    }
+
     async function loadJobItems(jobId) {
       const token = localStorage.getItem('garage_token');
       if (!token) return;
@@ -1712,21 +1728,36 @@
       renderPartDropdown(filtered);
       const dropdown = document.getElementById('part-dropdown');
       const input = document.getElementById('part-desc-search');
-      if (dropdown && input && (q !== '' || document.activeElement === input)) {
-        dropdown.classList.remove('hidden');
-      } else if (dropdown && (!q || document.activeElement !== input)) {
-        dropdown.classList.add('hidden');
+      // Show dropdown when input is focused, when there's text, or when interacting inside dropdown; hide only when unfocused and empty
+      if (dropdown && input) {
+        const activeInsideDropdown = dropdown.contains(document.activeElement);
+        if (document.activeElement === input || activeInsideDropdown || q !== '') {
+          dropdown.classList.remove('hidden');
+        } else {
+          dropdown.classList.add('hidden');
+        }
       }
     }
 
     function renderPartDropdown(items) {
       const dropdown = document.getElementById('part-dropdown');
       if (!dropdown) return;
-      if (items.length === 0) {
-        dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
-      } else {
-        dropdown.innerHTML = items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('');
-      }
+      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
+      dropdown.innerHTML = `
+        <div class="max-h-48 overflow-y-auto">${listHtml}</div>
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-2 mt-1"></div>
+        <button type="button" onclick="showQuickAddPart()" class="w-full text-left px-3 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-xl text-sm text-indigo-700 dark:text-indigo-300 font-bold transition-all flex items-center gap-2 shadow-sm">
+          <span class="material-icons-round text-base">add_circle</span> Add New Part
+        </button>
+        <div id="quick-add-part-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 pt-2 mt-1">
+          <input type="text" id="quick-add-part-name" placeholder="Part name" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="quick-add-part-qty" value="1" min="1" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            <input type="number" id="quick-add-part-price" step="0.01" min="0" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          <button onclick="submitQuickAddPart()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm tracking-wide transition-all shadow ripple-btn">Save & Add Part</button>
+        </div>
+      `;
       dropdown.classList.add('hidden');
     }
 
@@ -1747,21 +1778,32 @@
       renderLaborDropdown(filtered);
       const dropdown = document.getElementById('labor-dropdown');
       const input = document.getElementById('labor-desc-search');
-      if (dropdown && input && (q !== '' || document.activeElement === input)) {
-        dropdown.classList.remove('hidden');
-      } else if (dropdown && (!q || document.activeElement !== input)) {
-        dropdown.classList.add('hidden');
+      if (dropdown && input) {
+        const activeInsideDropdown = dropdown.contains(document.activeElement);
+        if (document.activeElement === input || activeInsideDropdown || q !== '') {
+          dropdown.classList.remove('hidden');
+        } else {
+          dropdown.classList.add('hidden');
+        }
       }
     }
 
     function renderLaborDropdown(items) {
       const dropdown = document.getElementById('labor-dropdown');
       if (!dropdown) return;
-      if (items.length === 0) {
-        dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
-      } else {
-        dropdown.innerHTML = items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('');
-      }
+      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
+      dropdown.innerHTML = `
+        <div class="max-h-48 overflow-y-auto">${listHtml}</div>
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-2 mt-1"></div>
+        <button type="button" onclick="showQuickAddLabor()" class="w-full text-left px-3 py-2.5 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-xl text-sm text-amber-700 dark:text-amber-300 font-bold transition-all flex items-center gap-2 shadow-sm">
+          <span class="material-icons-round text-base">add_circle</span> Add New Labor
+        </button>
+        <div id="quick-add-labor-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 pt-2 mt-1">
+          <input type="text" id="quick-add-labor-desc" placeholder="Labor description" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <input type="number" id="quick-add-labor-price" step="0.01" min="0.01" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <button onclick="submitQuickAddLabor()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-sm tracking-wide transition-all shadow ripple-btn">Save & Add Labor</button>
+        </div>
+      `;
       dropdown.classList.add('hidden');
     }
 
@@ -1770,6 +1812,80 @@
       document.getElementById('labor-desc-id').value = id || '';
       document.getElementById('job-item-labor-price').value = price || '';
       document.getElementById('labor-dropdown').classList.add('hidden');
+    }
+
+    function showQuickAddPart() {
+      const form = document.getElementById('quick-add-part-form');
+      if (form) form.classList.remove('hidden');
+      scrollToCenter(form);
+    }
+
+    async function submitQuickAddPart() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+      const name = document.getElementById('quick-add-part-name').value.trim();
+      const qty = parseInt(document.getElementById('quick-add-part-qty').value) || 1;
+      const price = parseFloat(document.getElementById('quick-add-part-price').value) || 0;
+      if (!name) { showToast('Part name is required', 'error', false); return; }
+      if (price <= 0) { showToast('Unit price must be greater than 0', 'error', false); return; }
+      try {
+        const res = await fetch('/api/inventory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ item_name: name, quantity: qty, cost_price: price, selling_price: price })
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to create part'); }
+        const data = await res.json();
+        const item = data.item || data;
+        // Fill dropdown and select
+        allPartCatalog.push(item);
+        selectPart(item.id, item.item_name, item.selling_price, item.quantity);
+        document.getElementById('quick-add-part-form').classList.add('hidden');
+        document.getElementById('quick-add-part-name').value = '';
+        document.getElementById('quick-add-part-qty').value = '1';
+        document.getElementById('quick-add-part-price').value = '';
+        showToast('New part added: ' + name, 'check_circle', true);
+        // Auto-trigger add to job
+        await addJobItem('part');
+      } catch (err) {
+        console.error('Quick add part error:', err);
+        showToast(err.message, 'error', false);
+      }
+    }
+
+    function showQuickAddLabor() {
+      const form = document.getElementById('quick-add-labor-form');
+      if (form) form.classList.remove('hidden');
+      scrollToCenter(form);
+    }
+
+    async function submitQuickAddLabor() {
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+      const desc = document.getElementById('quick-add-labor-desc').value.trim();
+      const price = parseFloat(document.getElementById('quick-add-labor-price').value);
+      if (!desc) { showToast('Labor description is required', 'error', false); return; }
+      if (isNaN(price) || price <= 0) { showToast('Unit price must be a positive number', 'error', false); return; }
+      try {
+        const res = await fetch('/api/catalog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ description: desc, price: price, type: 'labor' })
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to create labor'); }
+        const data = await res.json();
+        const item = data.item || data;
+        allLaborCatalog.push(item);
+        selectLabor(item.id, item.description || desc, item.price || price);
+        document.getElementById('quick-add-labor-form').classList.add('hidden');
+        document.getElementById('quick-add-labor-desc').value = '';
+        document.getElementById('quick-add-labor-price').value = '';
+        showToast('New labor added: ' + desc, 'check_circle', true);
+        await addJobItem('labor');
+      } catch (err) {
+        console.error('Quick add labor error:', err);
+        showToast(err.message, 'error', false);
+      }
     }
 
     async function addJobItem(type) {
@@ -1866,6 +1982,9 @@
         // Reload items and job detail (for updated total)
         await loadJobItems(currentJobId);
         await refreshJobDetailTotal();
+        // Scroll to line items list after update
+        const itemsList = document.getElementById('job-items-list');
+        if (itemsList) scrollToCenter(itemsList);
 
       } catch (err) {
         console.error('Failed to add job item:', err);
@@ -1893,6 +2012,8 @@
         showToast('Line item removed', 'delete', true);
         await loadJobItems(currentJobId);
         await refreshJobDetailTotal();
+        const itemsListDel = document.getElementById('job-items-list');
+        if (itemsListDel) scrollToCenter(itemsListDel);
 
       } catch (err) {
         console.error('Failed to delete job item:', err);
@@ -3184,7 +3305,7 @@
             <div>
               <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Part <span class="text-rose-500">*</span></label>
               <div class="relative">
-                <input type="text" id="part-desc-search" placeholder="Search part..." class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" oninput="filterPartCatalog(this.value)" autocomplete="off">
+                <input type="text" id="part-desc-search" placeholder="Search part..." class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" oninput="filterPartCatalog(this.value)" onfocus="filterPartCatalog(this.value)" autocomplete="off">
                 <input type="hidden" id="part-desc-id">
                 <div id="part-dropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto hidden"></div>
               </div>
@@ -3207,7 +3328,7 @@
             <div>
               <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Description <span class="text-rose-500">*</span></label>
               <div class="relative">
-                <input type="text" id="labor-desc-search" placeholder="Search labor..." class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="filterLaborCatalog(this.value)" autocomplete="off">
+                <input type="text" id="labor-desc-search" placeholder="Search labor..." class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="filterLaborCatalog(this.value)" onfocus="filterLaborCatalog(this.value)" autocomplete="off">
                 <input type="hidden" id="labor-desc-id">
                 <div id="labor-dropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto hidden"></div>
               </div>

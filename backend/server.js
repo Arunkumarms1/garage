@@ -956,7 +956,15 @@ app.delete('/api/vehicles/:id', authenticateToken, requireRole('employee'), (req
 
 // GET /api/inventory (Admin/Employee - list all inventory items)
 app.get('/api/inventory', authenticateToken, requireRole('employee'), (req, res) => {
-  db.all("SELECT * FROM inventory ORDER BY item_name ASC", (err, rows) => {
+  const { search } = req.query;
+  let query = "SELECT * FROM inventory";
+  let params = [];
+  if (search) {
+    query += " WHERE item_name LIKE ?";
+    params.push(`%${search}%`);
+  }
+  query += " ORDER BY item_name ASC";
+  db.all(query, params, (err, rows) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to retrieve inventory.' });
     }
@@ -1840,19 +1848,15 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
           const isStaff = isAdmin || isEmployee;
 
           const showUpiQr = isStaff || isOwnInvoice;
-          const showAdminLookupQr = isAdmin || isEmployee || isOwnInvoice;
 
           const upiId = settings.upi_id || '';
           const upiName = settings.upi_name || 'Garage Workshop';
           const upiString = upiId ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${grandTotal}` : 'UPI Payment';
-          const adminLookupString = `invoice:${id}`;
 
           const upiImage = settings.upi_image || '';
           const hasUpiImage = upiImage && upiImage.trim().length > 0;
 
           try {
-            let adminBuffer = adminLookupString ? await QRCode.toBuffer(adminLookupString) : null;
-
             const qrY = footerY + 90;
 
             if (showUpiQr && hasUpiImage) {
@@ -1883,20 +1887,11 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
               doc.text('UPI payment info not configured.', 50, qrY + 10, { width: 200, align: 'left' });
             }
 
-            if (showAdminLookupQr && adminBuffer) {
-              const adminX = showUpiQr ? 340 : 50;
-              doc.image(adminBuffer, adminX, qrY, { width: 100, height: 100 });
-              doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
-              doc.text(isAdmin ? 'Admin Lookup QR' : 'Scan to Find Invoice', adminX + 110, qrY + 10, { width: 180, align: 'left' });
-              doc.font('Helvetica').fontSize(8).fillColor('#666');
-              doc.text(`Invoice #${id}`, adminX + 110, qrY + 30);
-            }
-
             // Embed saved scanned QR data if verified non-empty
             if (savedQrData) {
               try {
                 const savedBuffer = await QRCode.toBuffer(savedQrData);
-                const savedY = (showUpiQr || showAdminLookupQr) ? qrY + 130 : qrY;
+                const savedY = showUpiQr ? qrY + 130 : qrY;
                 doc.image(savedBuffer, 50, savedY, { width: 80, height: 80 });
                 doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
                 doc.text('Saved QR Data', 140, savedY + 10, { width: 300, align: 'left' });
