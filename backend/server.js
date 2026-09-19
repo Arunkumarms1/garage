@@ -2230,17 +2230,21 @@ app.post('/api/admin/db-restore', authenticateToken, requireRole('admin'), uploa
       return res.status(500).json({ error: 'Failed to restore DB file.' });
     }
 
-    // Close existing DB connection and restart server process via PM2 if available
+    // Respond immediately before closing/restarting
+    res.json({ message: 'DB restored successfully. Server will restart shortly.', restarted: false });
+
+    // Close DB and restart asynchronously (PM2 will restart the server)
     db.close((closeErr) => {
+      if (closeErr) {
+        console.error('DB close error during restore:', closeErr);
+      }
       const { exec } = require('child_process');
-      let restarted = false;
       exec('pm2 restart garage-api', (pm2Err, stdout, stderr) => {
         if (pm2Err) {
           console.log('DB restored but PM2 restart failed (expected if not using PM2).');
         } else {
-          restarted = true;
+          console.log('DB restored and server restarted via PM2.');
         }
-        res.json({ message: 'DB restored successfully. Server will restart shortly.', restarted });
       });
     });
   });
