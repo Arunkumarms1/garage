@@ -1556,15 +1556,24 @@
         const user = userStr ? JSON.parse(userStr) : null;
         const statusSelect = document.getElementById('job-detail-status');
         const saveBtn = document.getElementById('job-detail-save');
-        const addItemSection = document.querySelector('#job-detail-modal .border-t.border-slate-200');
+        const addItemSection = document.querySelector('#job-detail-modal .border-t.border-slate-200.pt-4');
         if (user && (user.role === 'employee' || user.role === 'admin')) {
           statusSelect.disabled = false;
           saveBtn.classList.remove('hidden');
-          if (addItemSection) addItemSection.classList.remove('hidden');
-          // Load job items and inventory for parts dropdown
-          await loadJobItems(currentJobId);
-          await loadPartCatalog();
-          await loadLaborCatalog();
+          if (addItemSection) {
+            // Hide line items section entirely for completed jobs
+            if (job.status === 'completed') {
+              addItemSection.classList.add('hidden');
+            } else {
+              addItemSection.classList.remove('hidden');
+            }
+          }
+          // Load job items and inventory for parts dropdown (skip for completed)
+          if (job.status !== 'completed') {
+            await loadJobItems(currentJobId);
+            await loadPartCatalog();
+            await loadLaborCatalog();
+          }
         } else {
           statusSelect.disabled = true;
           saveBtn.classList.add('hidden');
