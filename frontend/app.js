@@ -1,6 +1,6 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=4')
+        navigator.serviceWorker.register('/sw.js?v=5')
           .then(reg => console.log('Service Worker registered successfully!', reg.scope))
           .catch(err => console.error('Service Worker registration failed:', err));
       });
@@ -350,19 +350,19 @@
       return `
         <div class="space-y-4">
           <!-- User Info Bar -->
-          <div class="flex items-center justify-between bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-2xl p-3.5">
-            <div class="flex items-center space-x-2.5">
+          <div class="flex justify-between items-center w-full p-4 border-b border-slate-800 bg-slate-900">
+            <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${user.name.charAt(0).toUpperCase()}</div>
               <div>
                 <p class="text-xs font-bold text-slate-900 dark:text-white">${user.name}</p>
                 <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${user.email} • <span class="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded text-[9px] uppercase">${user.role}</span></p>
               </div>
             </div>
-            <button onclick="handleSignOut()" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold">Logout</button>
+            <button onclick="handleSignOut()" class="text-red-400 font-medium px-4 py-2 uppercase tracking-wide text-sm">Logout</button>
           </div>
 
           <!-- Tab Navigation -->
-          <div class="w-full flex justify-around items-center py-3 bg-slate-100 dark:bg-slate-700/50" id="app-tabs">
+          <div class="w-full flex justify-around items-center py-3 bg-slate-900 border-b border-slate-800" id="app-tabs">
             ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="min-h-[48px] py-2 px-3 text-center rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-xl">dashboard</span></button>`}
             ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">work</span></button>`}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-all flex items-center justify-center"><span class="material-icons-round text-xl opacity-70 hover:opacity-100">people</span></button>` : ''}
@@ -1323,21 +1323,25 @@
       }
 
       container.innerHTML = jobs.map(job => `
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="showJobDetailModal(${job.id})">
-          <div class="flex justify-between items-start mb-2">
-            <div>
-              <p class="font-medium text-slate-900 dark:text-white text-sm text-left">${job.make} ${job.model}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-mono text-left">${job.plate_number}</p>
+        <div class="flex flex-col gap-2 p-4 bg-slate-800 mb-2" onclick="showJobDetailModal(${job.id})">
+          <div class="flex justify-between items-start w-full">
+            <div class="text-left">
+              <p class="font-medium text-slate-900 dark:text-white text-sm">${job.make} ${job.model}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${job.plate_number}</p>
             </div>
             <span class="px-1.5 py-0.5 text-[10px] font-bold rounded-full ${getStatusBadgeClass(job.status)} shrink-0 ml-2">
               ${formatStatus(job.status)}
             </span>
           </div>
-          <p class="text-xs text-slate-600 dark:text-slate-400 mb-2 text-left">${job.customer_name || 'Unknown Customer'}</p>
-          ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2 text-left">${job.notes}</p>` : ''}
-          <div class="flex items-center justify-end mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 gap-3">
-            <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
-            <span class="text-xs text-slate-400 dark:text-slate-500">${new Date(job.created_at || Date.now()).toLocaleDateString()}</span>
+          <div class="flex justify-between items-center w-full">
+            <div class="text-left">
+              <p class="text-xs text-slate-600 dark:text-slate-400">${job.customer_name || 'Unknown Customer'}</p>
+              ${job.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">${job.notes}</p>` : ''}
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 block">₹${Number(job.total_cost || 0).toFixed(2)}</span>
+              <span class="text-xs text-slate-400 dark:text-slate-500 block">${new Date(job.created_at || Date.now()).toLocaleDateString()}</span>
+            </div>
           </div>
         </div>
       `).join('');
