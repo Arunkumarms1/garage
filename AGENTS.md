@@ -13,6 +13,12 @@ When user says "deploy":
 4. `bash deploy.sh`
 Never skip steps.
 
+## Cache Bust Strategy (PWA)
+- `sw.js`: version `CACHE_NAME` (`v3`) + delete old caches on activate (`skipWaiting` + `clients.claim`).
+- `app.js`: register `/sw.js?v=3` — bump `?v=` and `CACHE_NAME` with every deploy that updates assets.
+- Assets (`app.js`, `icons/*.png`): `Stale-While-Revalidate` (serve cached, update in background). Users see updates automatically.
+- `index.html`: reference `app.js?v=3` (bump version when deploying updated JS).
+
 ## Code Style / Safety
 - `backend/server.js`: wrap groups in `// ===== GROUP =====` ... `// ===== END GROUP =====`.
 - Schema changes: edit `database.js`, then `node scripts/reset-db.js`. No `ALTER TABLE`.

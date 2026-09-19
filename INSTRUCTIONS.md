@@ -14,6 +14,12 @@
 - `package-lock.json` (4072) — deps
 - `agentproxy/` — separate proxy module (ignore for garage edits)
 
+## Cache Bust Strategy (PWA)
+- `sw.js` uses versioned `CACHE_NAME` (`garageworkshop-v3`). Old caches deleted on activate.
+- `app.js` registers `/sw.js?v=3` (bump `?v=` and `CACHE_NAME` on every deploy that updates assets).
+- Static assets (`app.js`, `icons/*.png`) use `Stale-While-Revalidate`: serve cached instantly, update in background. No manual hard-refresh needed.
+- `index.html` references `app.js?v=3` (bump version in HTML when deploying updated JS).
+
 ## Deploy Rule
 When user says "deploy": agent MUST `git commit`, `git push`, then run `deploy.sh`. Sequence: commit → push → deploy. Never skip.
 
