@@ -1,4 +1,4 @@
-const CACHE_NAME = 'garageworkshop-v2';
+const CACHE_NAME = 'garageworkshop-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -91,32 +91,20 @@ self.addEventListener('fetch', (event) => {
           })
       );
     } else {
-      // For other static files, use Cache-First strategy falling back to Network
+      // Stale-While-Revalidate: serve cached instantly, update in background
       event.respondWith(
         caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-
-          return fetch(request)
-            .then((networkResponse) => {
-              if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                return networkResponse;
-              }
-
+          const networkFetch = fetch(request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
               const responseToCache = networkResponse.clone();
               caches.open(CACHE_NAME).then((cache) => {
                 cache.put(request, responseToCache);
               });
+            }
+            return networkResponse;
+          }).catch(() => cachedResponse);
 
-              return networkResponse;
-            })
-            .catch(() => {
-              // Fallback for HTML request when offline
-              if (request.headers.get('accept').includes('text/html')) {
-                return caches.match('/');
-              }
-            });
+          return cachedResponse || networkFetch;
         })
       );
     }
