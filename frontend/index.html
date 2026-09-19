@@ -826,6 +826,14 @@
                     <span>Scan QR (Admin Only)</span>
                   </button>
                 </div>
+                <!-- Find Invoice by Number -->
+                <div class="flex gap-2 pt-2">
+                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
+                  <button onclick="findInvoiceByNumber()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1">
+                    <span class="material-icons-round text-base">search</span>
+                    <span>Find</span>
+                  </button>
+                </div>
               </div>
 
               <!-- DB Backup / Restore Section -->
@@ -2434,6 +2442,41 @@
       } catch (err) {
         console.error('Failed to load settings:', err);
         showToast('Failed to load settings', 'error', false);
+      }
+    }
+
+    async function findInvoiceByNumber() {
+      const input = document.getElementById('invoice-lookup-input');
+      const value = input ? input.value.trim() : '';
+      if (!value) {
+        showToast('Please enter an invoice/job number', 'error', false);
+        return;
+      }
+      const jobId = parseInt(value, 10);
+      if (isNaN(jobId) || jobId <= 0) {
+        showToast('Invalid invoice/job number', 'error', false);
+        return;
+      }
+      const token = localStorage.getItem('garage_token');
+      if (!token) return;
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.status === 404) {
+          showToast('Invoice / Job #' + jobId + ' not found', 'error', false);
+          return;
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to retrieve invoice');
+        }
+        const job = await res.json();
+        showToast('Invoice #' + jobId + ' found', 'check_circle', true);
+        showJobDetailModal(jobId);
+      } catch (err) {
+        console.error('Find invoice error:', err);
+        showToast('Failed to find invoice: ' + err.message, 'error', false);
       }
     }
 
