@@ -3203,8 +3203,24 @@
       });
       html5Scanner.render(
         (decodedText) => {
+          const text = decodedText.trim();
+          // Check if scanned text is an admin invoice lookup code (e.g., invoice:3)
+          const invoiceMatch = text.match(/^invoice:(\d+)$/i);
+          if (invoiceMatch) {
+            const jobId = parseInt(invoiceMatch[1], 10);
+            document.getElementById('qr-status').textContent = 'Invoice #' + jobId + ' found! Opening...';
+            showToast('Opening invoice #' + jobId, 'check_circle', true);
+            // Open job detail modal directly
+            showJobDetailModal(jobId);
+            // Stop scanner after finding
+            if (html5Scanner) {
+              html5Scanner.clear();
+              html5Scanner = null;
+            }
+            return;
+          }
           document.getElementById('qr-status').textContent = 'QR scanned! Saving...';
-          saveQrData(decodedText);
+          saveQrData(text);
         },
         (error) => {
           document.getElementById('qr-status').textContent = 'Scan error: ' + (error || 'Unknown');
