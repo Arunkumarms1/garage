@@ -100,19 +100,19 @@
       const entitiesHtml = (entities.entities || entities).map(e => `
         <div class="bg-slate-800 border border-slate-700 p-3 shadow-sm mb-2">
           <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">${e.name}</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400">Attributes: ${(e.attributes || []).join(', ') || 'none'}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">Attributes: ${(e.attributes || []).join(', ') || 'none'}</p>
         </div>
       `).join('');
       const relationsHtml = (relations.relations || relations).map(r => `
         <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 border border-slate-700 p-3 shadow-sm mb-2">
           <p class="text-xs font-bold text-slate-700 dark:text-slate-300">${r.source || r.sourceEntity || ''} → ${r.target || r.targetEntity || ''}</p>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-gray-400">${r.relation || r.name || ''} (${r.cardinality || 'N:N'})</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-white">${r.relation || r.name || ''} (${r.cardinality || 'N:N'})</p>
         </div>
       `).join('');
       displayEl.innerHTML = `
-        <div class="border-t border-slate-100 dark:border-slate-700 oled:border-neutral-900 pt-4 space-y-3">
+        <div class="border-t border-slate-100 dark:border-slate-700 oled:border-white pt-4 space-y-3">
           <h3 class="text-sm font-bold text-indigo-600 dark:text-indigo-400">Ontology Data (API)</h3>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-gray-400">All data fetched from /api/ontology</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-white">All data fetched from /api/ontology</p>
           <div class="text-left space-y-2 max-h-[40vh] overflow-y-auto pr-1">
             <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Entities (${(entities.entities || entities).length})</h4>
             ${entitiesHtml}
@@ -260,11 +260,11 @@
       // Update buttons
       document.getElementById('tab-login').className = isLogin
         ? "flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm"
-        : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 transition-all";
+        : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 oled:text-white hover:text-slate-800 transition-all";
         
       document.getElementById('tab-register').className = !isLogin
         ? "flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm"
-        : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 transition-all";
+        : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 oled:text-white hover:text-slate-800 transition-all";
 
       // Show/Hide forms
       if (isLogin) {
@@ -355,6 +355,15 @@
       if (user.role === 'admin') {
         loadSettingsTab();
       }
+
+      // Update profile dropdown with user info
+      const dropdownName = document.getElementById('profile-dropdown-name');
+      const dropdownEmail = document.getElementById('profile-dropdown-email');
+      if (dropdownName) dropdownName.textContent = user.name || user.email || 'Active User';
+      if (dropdownEmail) dropdownEmail.textContent = user.email || '';
+      // Update profile button initial letter
+      const profileBtn = document.querySelector('header button[aria-label="Profile menu"]');
+      if (profileBtn && user.name) profileBtn.textContent = user.name.charAt(0).toUpperCase();
     }
 
     function renderAppShell(user) {
@@ -366,13 +375,13 @@
         <div class="space-y-4">
 
           <!-- Tab Navigation -->
-          <nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-900 oled:bg-black border-t border-slate-200 dark:border-slate-800 oled:border-neutral-800 flex justify-around items-center h-16 px-2 z-50" id="app-tabs">
+          <nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-900 oled:bg-black border-t border-slate-200 dark:border-slate-800 oled:border-white flex justify-around items-center h-16 px-2 z-50" id="app-tabs">
             ${isCustomer ? `<button onclick="switchAppTab('invoices')" class="min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-2xl">receipt_long</span></button>` : `<button onclick="switchAppTab('dashboard')" class="min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"><span class="material-icons-round text-2xl">dashboard</span></button>`}
-            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">work</span></button>`}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">people</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
-            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">history</span></button>` : ''}
+            ${isCustomer ? '' : `<button onclick="switchAppTab('jobs')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">work</span></button>`}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">people</span></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
+            ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
+            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">history</span></button>` : ''}
           </div>
 
           <!-- Tab Content -->
@@ -396,12 +405,12 @@
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboard-kanban">
                 <!-- Pending Column -->
                 <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 min-h-[400px] flex flex-col">
-                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-white">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                       <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Pending</h4>
                     </div>
-                    <span id="count-pending" class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                    <span id="count-pending" class="text-xs text-slate-500 dark:text-slate-400 oled:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
                   </div>
                   <div id="jobs-pending" class="flex-1 space-y-2 overflow-y-auto min-h-[300px]">
                     <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">No pending jobs</p>
@@ -410,12 +419,12 @@
 
                 <!-- In Progress Column -->
                 <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 min-h-[400px] flex flex-col">
-                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-white">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                       <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">In Progress</h4>
                     </div>
-                    <span id="count-in-progress" class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                    <span id="count-in-progress" class="text-xs text-slate-500 dark:text-slate-400 oled:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
                   </div>
                   <div id="jobs-in-progress" class="flex-1 space-y-2 overflow-y-auto min-h-[300px]">
                     <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">No in-progress jobs</p>
@@ -424,12 +433,12 @@
 
                 <!-- Completed Column (recent) -->
                 <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 min-h-[400px] flex flex-col">
-                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-700 oled:border-white">
                     <div class="flex items-center space-x-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                       <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Completed (Recent)</h4>
                     </div>
-                    <span id="count-completed" class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                    <span id="count-completed" class="text-xs text-slate-500 dark:text-slate-400 oled:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">0</span>
                   </div>
                   <div id="jobs-completed" class="flex-1 space-y-2 overflow-y-auto min-h-[300px]">
                     <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-8">No recent completed jobs</p>
@@ -453,10 +462,10 @@
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div class="relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="job-history-search" placeholder="Search by customer, plate, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedJobHistorySearch()">
+                  <input type="text" id="job-history-search" placeholder="Search by customer, plate, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedJobHistorySearch()">
                 </div>
                 <div class="relative">
-                  <select id="job-history-status" class="w-full min-h-[48px] pl-3.5 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" onchange="loadJobHistory()">
+                  <select id="job-history-status" class="w-full min-h-[48px] pl-3.5 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none" onchange="loadJobHistory()">
                     <option value="">All Statuses</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
@@ -464,16 +473,16 @@
                   <span class="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">keyboard_arrow_down</span>
                 </div>
                 <div class="relative">
-                  <input type="date" id="job-history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
+                  <input type="date" id="job-history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
                 </div>
                 <div class="relative">
-                  <input type="date" id="job-history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
+                  <input type="date" id="job-history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistory()">
                 </div>
               </div>
 
               <!-- Jobs List -->
               <div id="job-history-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
-                <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading job history...</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading job history...</p>
               </div>
             </div>
           </div>
@@ -488,7 +497,7 @@
                 </button>
               </div>
               <div id="invoices-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
-                <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading invoices...</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading invoices...</p>
               </div>
             </div>
           </div>
@@ -507,14 +516,14 @@
               <div class="flex gap-2">
                 <div class="flex-1 relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="text" id="customer-search" placeholder="Search customers by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <button onclick="loadCustomers()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
               </div>
 
               <!-- Customers List -->
               <div id="customers-list" class="space-y-3 max-h-[60vh] overflow-y-auto">
-                <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading customers...</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading customers...</p>
               </div>
             </div>
           </div>
@@ -533,7 +542,7 @@
               <div class="flex gap-2">
                 <div class="flex-1 relative">
                   <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                  <input type="text" id="inventory-search" placeholder="Search inventory by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <input type="text" id="inventory-search" placeholder="Search inventory by name..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <button onclick="loadInventory()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all">Refresh</button>
               </div>
@@ -542,7 +551,7 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 oled:border-neutral-900">
+                    <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 oled:border-white">
                       <th class="pb-2 pr-4">Item Name</th>
                       <th class="pb-2 pr-4 text-center">Quantity</th>
                       <th class="pb-2 pr-4 text-right">Cost Price</th>
@@ -552,48 +561,48 @@
                   </thead>
                   <tbody id="inventory-table-body" class="divide-y divide-slate-100 dark:divide-slate-700">
                     <tr>
-                      <td colspan="5" class="text-center text-slate-500 dark:text-slate-400 oled:text-gray-400 py-8">Loading inventory...</td>
+                      <td colspan="5" class="text-center text-slate-500 dark:text-slate-400 oled:text-white py-8">Loading inventory...</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <p id="inventory-empty" class="hidden text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">No inventory items found</p>
+              <p id="inventory-empty" class="hidden text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">No inventory items found</p>
             </div>
           </div>
 
           <div id="tab-settings" class="app-tab-content hidden space-y-4" data-admin-only>
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 oled:border-neutral-900 p-4 space-y-6">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 oled:border-white p-4 space-y-6">
               <h3 class="font-bold text-slate-900 dark:text-white oled:text-white">Shop Settings</h3>
               
               <!-- Branding Section -->
-              <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 pb-4">
+              <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 oled:border-white pb-4">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Branding</h4>
                 <div class="space-y-3">
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">Shop Name</label>
-                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Shop Name</label>
+                    <input type="text" id="settings-shop-name" placeholder="My Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">Shop Icon (Base64 Data URL or Image URL)</label>
-                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Shop Icon (Base64 Data URL or Image URL)</label>
+                    <input type="text" id="settings-shop-icon" placeholder="data:image/png;base64,... or https://example.com/logo.png" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Paste a base64 data URL or an HTTPS image URL. Leave empty to use default icon.</p>
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">Contact Info</label>
-                    <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Contact Info</label>
+                    <input type="text" id="settings-contact-info" placeholder="Phone, email, or address" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">UPI ID (for invoice payment QR)</label>
-                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">UPI ID (for invoice payment QR)</label>
+                    <input type="text" id="settings-upi-id" placeholder="garage@upi" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">UPI Name (confirmation for admin scan)</label>
-                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">UPI Name (confirmation for admin scan)</label>
+                    <input type="text" id="settings-upi-name" placeholder="Garage Workshop" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">UPI QR Image (upload or base64)</label>
-                    <input type="file" id="settings-upi-image" accept="image/*" onchange="handleUpiImageUpload(this)" class="w-full text-xs bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">UPI QR Image (upload or base64)</label>
+                    <input type="file" id="settings-upi-image" accept="image/*" onchange="handleUpiImageUpload(this)" class="w-full text-xs bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Upload a QR image. It will be embedded directly in invoices (no decode needed).</p>
                   </div>
                   <button onclick="saveBrandingSettings()" class="w-full min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Branding</button>
@@ -610,12 +619,12 @@
                 <div class="bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-3 space-y-2">
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">Date</label>
-                      <input type="date" id="settings-holiday-date" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Date</label>
+                      <input type="date" id="settings-holiday-date" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">Reason</label>
-                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Reason</label>
+                      <input type="text" id="settings-holiday-reason" placeholder="Staff Training Day" class="w-full min-h-[48px] px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                   </div>
                   <button onclick="addHoliday()" class="w-full min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all">Add Holiday</button>
@@ -623,17 +632,17 @@
 
                 <!-- Holiday List -->
                 <div id="settings-holiday-list" class="space-y-2">
-                  <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-4">Loading holidays...</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-4">Loading holidays...</p>
                 </div>
               </div>
 
               <!-- Admin QR Scanner (Admin Only) -->
-              <div id="admin-qr-scanner" class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-neutral-900">
+              <div id="admin-qr-scanner" class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-white">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Admin QR Operations (Admin Only)</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400">Admin scan-only QR operations. Scan UPI or lookup codes directly. If empty, nothing embedded.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">Admin scan-only QR operations. Scan UPI or lookup codes directly. If empty, nothing embedded.</p>
                 <div id="qr-reader-container" class="w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600"></div>
                 <div class="flex flex-col space-y-3">
-                  <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400">Ready to scan</p>
+                  <p id="qr-status" class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">Ready to scan</p>
                   <button onclick="startQrScan()" class="w-full min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-2">
                     <span class="material-icons-round">camera_alt</span>
                     <span>Scan QR (Admin Only)</span>
@@ -641,7 +650,7 @@
                 </div>
                 <!-- Find Invoice by Number -->
                 <div class="flex gap-2 pt-2">
-                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 min-h-[48px] px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
+                  <input type="number" id="invoice-lookup-input" placeholder="Invoice / Job #" class="flex-1 min-h-[48px] px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" min="1" onkeydown="if(event.key==='Enter') findInvoiceByNumber()">
                   <button onclick="findInvoiceByNumber()" class="min-h-[48px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1">
                     <span class="material-icons-round text-base">search</span>
                     <span>Find</span>
@@ -650,9 +659,9 @@
               </div>
 
               <!-- DB Backup / Restore Section -->
-              <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-neutral-900">
+              <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700 oled:border-white">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Database Backup & Restore</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400">Download or upload the full SQLite database file.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">Download or upload the full SQLite database file.</p>
                 <div class="flex gap-2">
                   <button onclick="downloadDBBackup()" class="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center justify-center space-x-1.5">
                     <span class="material-icons-round text-base">download</span>
@@ -664,7 +673,7 @@
                     <input type="file" id="db-restore-file" accept=".db,.sqlite,.sqlite3" class="hidden" onchange="uploadDBRestore(this)">
                   </label>
                 </div>
-                <p id="db-restore-status" class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center hidden"></p>
+                <p id="db-restore-status" class="text-[10px] text-slate-500 dark:text-slate-400 oled:text-white text-center hidden"></p>
               </div>
             </div>
           </div>
@@ -678,12 +687,12 @@
               <!-- Date Range Picker -->
               <div class="flex flex-wrap items-end gap-4 bg-slate-50 dark:bg-slate-900/50 oled:bg-black/50 p-4">
                 <div class="flex-1 min-w-[140px]">
-                  <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">From</label>
-                  <input type="date" id="analytics-from" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">From</label>
+                  <input type="date" id="analytics-from" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <div class="flex-1 min-w-[140px]">
-                  <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-1">To</label>
-                  <input type="date" id="analytics-to" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                  <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">To</label>
+                  <input type="date" id="analytics-to" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
                 <button onclick="fetchAnalytics()" class="min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn flex items-center space-x-1.5 h-fit">
                   <span class="material-icons-round text-base">refresh</span>
@@ -701,7 +710,7 @@
                 <div class="bg-rose-950/30 border border-rose-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 uppercase tracking-wider">Total Spend</p>
+                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Total Spend</p>
                       <p id="analytics-total-spend" class="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">₹0.00</p>
                     </div>
                     <span class="material-icons-round text-3xl text-rose-400 dark:text-rose-500">shopping_cart</span>
@@ -712,7 +721,7 @@
                 <div class="bg-emerald-950/30 border border-emerald-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 uppercase tracking-wider">Total Earnings</p>
+                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Total Earnings</p>
                       <p id="analytics-total-earnings" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">₹0.00</p>
                     </div>
                     <span class="material-icons-round text-3xl text-emerald-400 dark:text-emerald-500">attach_money</span>
@@ -723,7 +732,7 @@
                 <div class="bg-indigo-950/30 border border-indigo-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-gray-400 uppercase tracking-wider">Net Profit</p>
+                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Net Profit</p>
                       <p id="analytics-net-profit" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">₹0.00</p>
                     </div>
                     <span class="material-icons-round text-3xl text-indigo-400 dark:text-indigo-500">trending_up</span>
@@ -732,7 +741,7 @@
               </div>
 
               <!-- Date range indicator -->
-              <p id="analytics-date-range" class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center hidden">
+              <p id="analytics-date-range" class="text-xs text-slate-500 dark:text-slate-400 oled:text-white text-center hidden">
                 Showing data for all time
               </p>
             </div>
@@ -752,13 +761,13 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
               <div class="relative md:col-span-2">
                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
+                <input type="text" id="history-search" placeholder="Search by customer name, plate number, notes..." class="w-full min-h-[48px] pl-10 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" oninput="debouncedHistorySearch()">
               </div>
               <div class="relative">
-                <input type="date" id="history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+                <input type="date" id="history-from" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
               </div>
               <div class="relative">
-                <input type="date" id="history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
+                <input type="date" id="history-to" class="w-full min-h-[48px] pl-3.5 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" onchange="loadJobHistoryTab()">
               </div>
               <button onclick="clearHistoryFilters()" class="min-h-[48px] px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 h-fit">
                 <span class="material-icons-round text-base">filter_alt_off</span>
@@ -768,7 +777,7 @@
 
             <!-- Jobs List -->
             <div id="history-jobs-list" class="space-y-3 max-h-[70vh] overflow-y-auto">
-              <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading job history...</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading job history...</p>
             </div>
           </div>
         </div>
@@ -804,7 +813,7 @@
         const isActive = btn.onclick && btn.onclick.toString().includes(tabName);
         btn.className = isActive
           ? "min-h-[48px] py-2 px-3 text-center transition-all bg-slate-800 text-white shadow-sm flex items-center justify-center"
-          : "min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-gray-400 hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center";
+          : "min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center";
         const iconSpan = btn.querySelector('span.material-icons-round');
         if (iconSpan) {
           iconSpan.className = isActive ? "material-icons-round text-2xl" : "material-icons-round text-2xl opacity-70 hover:opacity-100";
@@ -951,15 +960,15 @@
               <span class="material-icons-round text-base">person_add</span>
               Add New Customer
             </button>
-            <div id="quick-add-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 pt-2">
-              <input type="text" id="quick-add-name" placeholder="Customer Name" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-              <input type="tel" id="quick-add-phone" placeholder="Phone (10 digits)" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" required>
+            <div id="quick-add-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2">
+              <input type="text" id="quick-add-name" placeholder="Customer Name" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+              <input type="tel" id="quick-add-phone" placeholder="Phone (10 digits)" class="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" required>
               <button onclick="submitQuickAddCustomer()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs tracking-wide transition-all shadow">Save Customer</button>
             </div>
           </div>
         `;
       } else {
-        dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
+        dropdown.innerHTML = customers.map(c => `<button type="button" onclick="selectCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-white last:border-0 transition-colors">${c.name} ${c.email ? '<span class="text-slate-400 text-xs">(' + c.email + ')</span>' : ''} ${c.phone ? '<span class="text-slate-400 text-xs">• ' + c.phone + '</span>' : ''}</button>`).join('');
       }
       // Dropdown stays hidden by default; shown only on input/focus
       dropdown.classList.add('hidden');
@@ -1327,14 +1336,14 @@
       }
 
       container.innerHTML = jobs.map(job => `
-        <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 p-4 active:bg-slate-800 transition-colors" onclick="showJobDetailModal(${job.id})">
+        <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 active:bg-slate-800 transition-colors" onclick="showJobDetailModal(${job.id})">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model}</span>
             <span class="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${formatStatus(job.status)}</span>
           </div>
-          <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
+          <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-white mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-500 dark:text-slate-400 oled:text-gray-400 italic">${job.notes || ''}</span>
+            <span class="text-slate-500 dark:text-slate-400 oled:text-white italic">${job.notes || ''}</span>
             <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
           </div>
         </div>
@@ -1541,7 +1550,7 @@
       if (!token) return;
 
       const listEl = document.getElementById('job-items-list');
-      listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-4">Loading line items...</p>';
+      listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white text-center py-4">Loading line items...</p>';
 
       try {
         const res = await fetch(`/api/jobs/${jobId}/items`, {
@@ -1556,7 +1565,7 @@
         const items = await res.json();
 
         if (!items || items.length === 0) {
-          listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-4">No line items yet. Add parts or labor below.</p>';
+          listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white text-center py-4">No line items yet. Add parts or labor below.</p>';
           return;
         }
 
@@ -1566,14 +1575,14 @@
           total += lineTotal;
           const isPart = item.inventory_id !== null;
           return `
-            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 oled:border-neutral-900 p-3 flex items-center justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 oled:border-white p-3 flex items-center justify-between">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center space-x-2 mb-1">
                   <span class="material-icons-round text-xs ${isPart ? 'text-indigo-500' : 'text-amber-500'}">${isPart ? 'build' : 'handyman'}</span>
                   <span class="font-medium text-white text-sm truncate">${item.description}</span>
                   ${isPart ? '<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">Part</span>' : '<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">Labor</span>'}
                 </div>
-                <div class="flex items-center space-x-4 text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 ml-5">
+                <div class="flex items-center space-x-4 text-xs text-slate-500 dark:text-slate-400 oled:text-white ml-5">
                   <span>Qty: ${item.quantity}</span>
                   <span>@ ₹${Number(item.unit_price).toFixed(2)}</span>
                   <span class="font-medium text-white">= ₹${lineTotal.toFixed(2)}</span>
@@ -1644,18 +1653,18 @@
     function renderPartDropdown(items) {
       const dropdown = document.getElementById('part-dropdown');
       if (!dropdown) return;
-      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
+      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectPart(${c.id}, '${c.item_name.replace(/'/g, "\\'")}', ${c.selling_price}, ${c.quantity || 0})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-white last:border-0 transition-colors">${c.item_name} <span class="text-slate-400 text-xs">(₹${Number(c.selling_price).toFixed(2)}) - Stock: ${c.quantity || 0}</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No parts found</div>`;
       dropdown.innerHTML = `
         <div class="max-h-48 overflow-y-auto">${listHtml}</div>
-        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 pt-2 mt-1"></div>
+        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1"></div>
         <button type="button" onclick="showQuickAddPart()" class="w-full text-left px-3 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-xl text-sm text-indigo-700 dark:text-indigo-300 font-bold transition-all flex items-center gap-2 shadow-sm">
           <span class="material-icons-round text-base">add_circle</span> Add New Part
         </button>
-        <div id="quick-add-part-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 pt-2 mt-1">
-          <input type="text" id="quick-add-part-name" placeholder="Part name" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        <div id="quick-add-part-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1">
+          <input type="text" id="quick-add-part-name" placeholder="Part name" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
           <div class="grid grid-cols-2 gap-2">
-            <input type="number" id="quick-add-part-qty" value="1" min="1" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-            <input type="number" id="quick-add-part-price" step="0.01" min="0" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            <input type="number" id="quick-add-part-qty" value="1" min="1" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            <input type="number" id="quick-add-part-price" step="0.01" min="0" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
           </div>
           <button onclick="submitQuickAddPart()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm tracking-wide transition-all shadow ripple-btn">Save & Add Part</button>
         </div>
@@ -1693,16 +1702,16 @@
     function renderLaborDropdown(items) {
       const dropdown = document.getElementById('labor-dropdown');
       if (!dropdown) return;
-      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
+      const listHtml = items.length > 0 ? items.map(c => `<button type="button" onclick="selectLabor(${c.id}, '${c.description.replace(/'/g, "\\'")}', ${c.price})" class="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 oled:border-white last:border-0 transition-colors">${c.description} <span class="text-slate-400 text-xs">(₹${Number(c.price).toFixed(2)})</span></button>`).join('') : `<div class="px-3 py-2 text-xs text-slate-500">No labor items found</div>`;
       dropdown.innerHTML = `
         <div class="max-h-48 overflow-y-auto">${listHtml}</div>
-        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 pt-2 mt-1"></div>
+        <div class="border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1"></div>
         <button type="button" onclick="showQuickAddLabor()" class="w-full text-left px-3 py-2.5 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-xl text-sm text-amber-700 dark:text-amber-300 font-bold transition-all flex items-center gap-2 shadow-sm">
           <span class="material-icons-round text-base">add_circle</span> Add New Labor
         </button>
-        <div id="quick-add-labor-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-neutral-900 pt-2 mt-1">
-          <input type="text" id="quick-add-labor-desc" placeholder="Labor description" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-          <input type="number" id="quick-add-labor-price" step="0.01" min="0.01" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        <div id="quick-add-labor-form" class="hidden space-y-2 border-t border-slate-200 dark:border-slate-700 oled:border-white pt-2 mt-1">
+          <input type="text" id="quick-add-labor-desc" placeholder="Labor description" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <input type="number" id="quick-add-labor-price" step="0.01" min="0.01" placeholder="Unit price" onfocus="scrollToCenter(this)" class="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 oled:border-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
           <button onclick="submitQuickAddLabor()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-sm tracking-wide transition-all shadow ripple-btn">Save & Add Labor</button>
         </div>
       `;
@@ -1992,7 +2001,7 @@
       if (!token) return;
 
       const listEl = document.getElementById('job-history-list');
-      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading job history...</p>';
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading job history...</p>';
 
       try {
         const search = document.getElementById('job-history-search').value.trim();
@@ -2028,19 +2037,19 @@
         }
 
         if (!jobs || jobs.length === 0) {
-          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">No jobs found matching your criteria</p>';
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">No jobs found matching your criteria</p>';
           return;
         }
 
         listEl.innerHTML = jobs.map(job => `
-          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
               <span class="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${formatStatus(job.status)}</span>
             </div>
-            <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-white mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
             <div class="flex justify-between items-center">
-              <span class="text-slate-500 dark:text-slate-400 oled:text-gray-400 italic">${job.notes || ''}</span>
+              <span class="text-slate-500 dark:text-slate-400 oled:text-white italic">${job.notes || ''}</span>
               <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
             </div>
           </div>
@@ -2076,7 +2085,7 @@
       if (!token) return;
 
       const listEl = document.getElementById('history-jobs-list');
-      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading job history...</p>';
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading job history...</p>';
 
       try {
         const search = document.getElementById('history-search').value.trim();
@@ -2111,17 +2120,17 @@
         }
 
         if (!jobs || jobs.length === 0) {
-          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">No completed jobs found matching your criteria</p>';
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">No completed jobs found matching your criteria</p>';
           return;
         }
 
         listEl.innerHTML = jobs.map(job => `
-          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
+          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
               <span class="text-xs px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">Completed</span>
             </div>
-            <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-white mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
             <div class="flex justify-between items-center">
               <span class="text-slate-300 italic">${job.notes || ''}</span>
               <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
@@ -2141,7 +2150,7 @@
       const token = localStorage.getItem('garage_token');
       if (!token) return;
       const listEl = document.getElementById('invoices-list');
-      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading invoices...</p>';
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading invoices...</p>';
 
       try {
         const res = await fetch('/api/jobs?status=completed', {
@@ -2153,18 +2162,18 @@
         }
         let jobs = await res.json();
         if (!jobs || jobs.length === 0) {
-          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">No completed jobs found</p>';
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">No completed jobs found</p>';
           return;
         }
         listEl.innerHTML = jobs.map(job => `
-          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 p-4 transition-colors">
+          <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 transition-colors">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
               <span class="text-xs px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">Completed</span>
             </div>
-            <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 mb-2">${job.plate_number}</div>
+            <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-white mb-2">${job.plate_number}</div>
             <div class="flex justify-between items-center">
-              <span class="text-slate-500 dark:text-slate-400 oled:text-gray-400">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <span class="text-slate-500 dark:text-slate-400 oled:text-white">${new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               <span class="font-bold text-blue-400">₹${Number(job.total_cost || 0).toFixed(2)}</span>
             </div>
             <div class="mt-3 flex justify-end">
@@ -2305,7 +2314,7 @@
 
     async function loadHolidaysList(token) {
       const listEl = document.getElementById('settings-holiday-list');
-      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-4">Loading holidays...</p>';
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-4">Loading holidays...</p>';
 
       try {
         const res = await fetch('/api/public-info');
@@ -2313,7 +2322,7 @@
         const data = await res.json();
         
         if (!data.holidays || data.holidays.length === 0) {
-          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-4">No holidays scheduled</p>';
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-4">No holidays scheduled</p>';
           return;
         }
 
@@ -2323,7 +2332,7 @@
               <span class="material-icons-round text-amber-600 dark:text-amber-400">event</span>
               <div>
                 <p class="text-sm font-medium text-white">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400">${h.reason}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">${h.reason}</p>
               </div>
             </div>
             <button onclick="deleteHoliday(${h.id})" class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1" aria-label="Delete holiday">
@@ -2562,7 +2571,7 @@
       if (!token) return;
 
       const listEl = document.getElementById('customers-list');
-      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">Loading customers...</p>';
+      listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">Loading customers...</p>';
 
       try {
         const url = search ? `/api/customers?search=${encodeURIComponent(search)}` : '/api/customers';
@@ -2578,12 +2587,12 @@
         const customers = await res.json();
 
         if (!customers || customers.length === 0) {
-          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-gray-400 text-center py-8">No customers found</p>';
+          listEl.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 oled:text-white text-center py-8">No customers found</p>';
           return;
         }
 
         listEl.innerHTML = customers.map(c => `
-          <div class="bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-800 p-4 space-y-3 rounded-xl" data-customer-id="${c.id}">
+          <div class="bg-white dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-white p-4 space-y-3 rounded-xl" data-customer-id="${c.id}">
             <div class="flex items-start justify-between">
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm">
@@ -2591,7 +2600,7 @@
                 </div>
                 <div>
                   <p class="font-semibold text-slate-900 dark:text-white oled:text-white">${c.name}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400">${c.email || 'No email'} ${c.phone ? '• ' + c.phone : ''}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white">${c.email || 'No email'} ${c.phone ? '• ' + c.phone : ''}</p>
                 </div>
               </div>
               <div class="flex items-center space-x-1.5">
@@ -2608,14 +2617,14 @@
             </div>
 
             <!-- Vehicles for this customer -->
-              <div id="vehicles-${c.id}" class="ml-10 border-l-2 border-slate-200 dark:border-slate-700 oled:border-neutral-900 pl-4 space-y-2">
+              <div id="vehicles-${c.id}" class="ml-10 border-l-2 border-slate-200 dark:border-slate-700 oled:border-white pl-4 space-y-2">
               ${c.vehicles && c.vehicles.length > 0 ? c.vehicles.map(v => `
-                <div class="flex items-center justify-between py-2 bg-slate-50 dark:bg-slate-800 oled:bg-black rounded-lg px-3 border border-slate-200 dark:border-slate-700 oled:border-neutral-900">
+                <div class="flex items-center justify-between py-2 bg-slate-50 dark:bg-slate-800 oled:bg-black rounded-lg px-3 border border-slate-200 dark:border-slate-700 oled:border-white">
                   <div class="flex items-center space-x-2.5">
                     <span class="material-icons-round text-slate-400 dark:text-slate-500">directions_car</span>
                     <div>
                       <p class="text-sm font-medium text-slate-900 dark:text-white oled:text-white">${v.make} ${v.model} ${v.year ? '(' + v.year + ')' : ''}</p>
-                      <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 font-mono">${v.plate_number}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white font-mono">${v.plate_number}</p>
                     </div>
                   </div>
                   <div class="flex items-center space-x-1.5">
@@ -2627,7 +2636,7 @@
                     </button>
                   </div>
                 </div>
-              `).join('') : '<p class="text-xs text-slate-500 dark:text-slate-400 oled:text-gray-400 italic py-2">No vehicles yet</p>'}
+              `).join('') : '<p class="text-xs text-slate-500 dark:text-slate-400 oled:text-white italic py-2">No vehicles yet</p>'}
             </div>
           </div>
         `).join('');
@@ -2828,7 +2837,7 @@
 
       const tbody = document.getElementById('inventory-table-body');
       const emptyEl = document.getElementById('inventory-empty');
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 dark:text-slate-400 oled:text-gray-400 py-8">Loading inventory...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 dark:text-slate-400 oled:text-white py-8">Loading inventory...</td></tr>';
       emptyEl.classList.add('hidden');
 
       try {
