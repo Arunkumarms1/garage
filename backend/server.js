@@ -1780,21 +1780,6 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
         doc.text('Year: ' + (job.year || 'N/A'), colRight, infoY + 54);
         doc.text('Plate: ' + (job.plate_number || 'N/A'), colRight, infoY + 70);
 
-        // Car photo (if available) - small thumbnail for quick reference
-        if (job.photo && job.photo.trim().length > 0) {
-          try {
-            if (job.photo.startsWith('data:image')) {
-              const base64Data = job.photo.split(',')[1];
-              const imgBuffer = Buffer.from(base64Data, 'base64');
-              doc.image(imgBuffer, colRight, infoY + 90, { width: 60, height: 45, align: 'left' });
-              doc.fontSize(7).font('Helvetica-Oblique').fillColor('#888');
-              doc.text('Car reference photo', colRight + 65, infoY + 108, { width: 150, align: 'left' });
-            }
-          } catch (imgErr) {
-            console.warn('Failed to embed car photo in invoice:', imgErr);
-          }
-        }
-
         doc.strokeColor('#eeeeee').moveTo(colLeft, infoY + 95).lineTo(550, infoY + 95).stroke('#eeeeee');
 
         // ===== LINE ITEMS TABLE =====
@@ -1874,15 +1859,19 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
           const isStaff = isAdmin || isEmployee;
 
           const showUpiQr = isStaff || isOwnInvoice;
+          const showAdminLookupQr = isAdmin || isEmployee || isOwnInvoice;
 
           const upiId = settings.upi_id || '';
           const upiName = settings.upi_name || 'Garage Workshop';
           const upiString = upiId ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${grandTotal}` : 'UPI Payment';
+          const adminLookupString = `invoice:${id}`;
 
           const upiImage = settings.upi_image || '';
           const hasUpiImage = upiImage && upiImage.trim().length > 0;
 
           try {
+            let adminBuffer = adminLookupString ? await QRCode.toBuffer(adminLookupString) : null;
+
             const qrY = footerY + 90;
 
             if (showUpiQr && hasUpiImage) {
@@ -1911,6 +1900,31 @@ app.get('/api/jobs/:id/invoice', authenticateToken, (req, res) => {
               // If no saved image but staff/customer can see, show instructions
               doc.fontSize(9).font('Helvetica-Bold').fillColor('#666');
               doc.text('UPI payment info not configured.', 50, qrY + 10, { width: 200, align: 'left' });
+            }
+
+            if (showAdminLookupQr && adminBuffer) {
+              const adminX = showUpiQr ? 340 : 50;
+              doc.image(adminBuffer, adminX, qrY, { width: 100, height: 100 });
+              doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+              doc.text('invoice data - admin scans it and finds the invoice', adminX + 110, qrY + 10, { width: 180, align: 'left' });
+              doc.font('Helvetica').fontSize(8).fillColor('#666');
+              doc.text(`Invoice #${id}`, adminX + 110, qrY + 30);
+            }
+
+            // Car photo (if available) - placed after QR codes for clarity
+            if (job.photo && job.photo.trim().length > 0) {
+              try {
+                if (job.photo.startsWith('data:image')) {
+                  const base64Data = job.photo.split(',')[1];
+                  const imgBuffer = Buffer.from(base64Data, 'base64');
+                  const photoY = (showUpiQr || showAdminLookupQr) ? qrY + 130 : qrY;
+                  doc.image(imgBuffer, 50, photoY, { width: 100, height: 75, align: 'left' });
+                  doc.fontSize(8).font('Helvetica-Oblique').fillColor('#555');
+                  doc.text('Car reference (720p compressed)', 160, photoY + 10, { width: 200, align: 'left' });
+                }
+              } catch (imgErr) {
+                console.warn('Failed to embed car photo in invoice:', imgErr);
+              }
             }
 
             // Embed saved scanned QR data if verified non-empty

@@ -1547,10 +1547,10 @@
         if (job.photo && photoContainer && photoImg) {
           photoImg.src = job.photo;
           photoContainer.classList.remove('hidden');
-          if (photoBtn) photoBtn.classList.remove('hidden');
+          if (photoBtn) { photoBtn.href = job.photo; photoBtn.classList.remove('hidden'); }
         } else {
           if (photoContainer) photoContainer.classList.add('hidden');
-          if (photoBtn) photoBtn.classList.add('hidden');
+          if (photoBtn) { photoBtn.href = '#'; photoBtn.classList.add('hidden'); }
         }
         document.getElementById('job-detail-created').textContent = new Date(job.created_at).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -1688,7 +1688,7 @@
 
     function openPhotoFull() {
       const img = document.getElementById('job-detail-photo');
-      if (!img || !img.src) return;
+      if (!img || !img.src) { showToast('No photo available', 'error', false); return; }
       window.open(img.src, '_blank');
     }
 
@@ -3311,9 +3311,9 @@
         </div>
         <div id="job-detail-photo-container" class="hidden mt-2 ml-7 space-y-1">
           <img id="job-detail-photo" src="" alt="Car photo" class="w-32 h-20 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-          <button id="job-detail-photo-btn" onclick="openPhotoFull()" class="text-[11px] text-indigo-600 dark:text-indigo-300 font-bold hover:underline flex items-center gap-1 hidden">
+          <a id="job-detail-photo-btn" href="#" onclick="openPhotoFull(); return false;" class="text-[11px] text-indigo-600 dark:text-indigo-300 font-bold hover:underline flex items-center gap-1 hidden">
             <span class="material-icons-round text-sm">open_in_new</span> Open photo
-          </button>
+          </a>
         </div>
       </div>
 
