@@ -555,15 +555,15 @@
     
     <!-- Quick Theme Toggle -->
     <div class="flex items-center space-x-1">
-      <button onclick="openSettings()" id="settings-cog" class="hidden w-10 h-10 bg-transparent border border-slate-300 dark:bg-indigo-600 dark:border-transparent text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-indigo-700 rounded-full focus:outline-none transition-colors flex items-center justify-center" title="Settings" aria-label="Settings">
+      <button onclick="openSettings()" id="settings-cog" class="hidden w-10 h-10 bg-transparent border border-indigo-600 dark:bg-indigo-600 dark:border-transparent text-indigo-700 dark:text-white hover:bg-indigo-50 dark:hover:bg-indigo-700 rounded-full focus:outline-none transition-colors flex items-center justify-center" title="Settings" aria-label="Settings">
         <span class="material-icons-round">settings</span>
       </button>
-      <button onclick="cycleTheme()" class="w-10 h-10 bg-transparent border border-slate-300 dark:bg-indigo-600 dark:border-transparent text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-indigo-700 rounded-full focus:outline-none transition-colors flex items-center justify-center">
+      <button onclick="cycleTheme()" class="w-10 h-10 bg-transparent border border-indigo-600 dark:bg-indigo-600 dark:border-transparent text-indigo-700 dark:text-white hover:bg-indigo-50 dark:hover:bg-indigo-700 rounded-full focus:outline-none transition-colors flex items-center justify-center">
         <span id="theme-icon" class="material-icons-round">dark_mode</span>
       </button>
       <!-- Profile Dropdown -->
       <div id="profile-section" class="relative ml-2 hidden">
-        <button onclick="document.getElementById('profile-dropdown').classList.toggle('hidden')" class="w-10 h-10 rounded-full bg-transparent border border-slate-300 dark:bg-indigo-600 dark:border-transparent text-indigo-700 dark:text-white flex items-center justify-center font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 hover:bg-slate-100 dark:hover:bg-indigo-700 transition-colors" aria-label="Profile menu">
+        <button onclick="document.getElementById('profile-dropdown').classList.toggle('hidden')" class="w-10 h-10 rounded-full bg-transparent border border-indigo-600 dark:bg-indigo-600 dark:border-transparent text-indigo-700 dark:text-white flex items-center justify-center font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-colors" aria-label="Profile menu">
           <span id="profile-btn-letter">G</span>
         </button>
         <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-56 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 oled:bg-black oled:border-white rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
@@ -814,7 +814,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">
