@@ -244,12 +244,32 @@
         </a>
       </div>
       <script>
-        // Dynamically inject props — uses admin settings from localStorage or defaults
-        (function() {
+        // Dynamically inject props — fetches admin settings from public /api/settings,
+        // falls back to localStorage / window props / defaults
+        (async function() {
+          let address = 'Garage Workshop';
+          let shareLink = 'https://maps.google.com/?q=Garage+Workshop';
+
+          try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+              const settings = await res.json();
+              if (settings.locationAddress) address = settings.locationAddress;
+              if (settings.googleMapsShareLink) shareLink = settings.googleMapsShareLink;
+            }
+          } catch (e) {
+            // Network/offline: fall back below
+          }
+
+          // Fallback chain: localStorage > window.MAP_LOCATION > defaults
           const saved = JSON.parse(localStorage.getItem('map_location') || '{}');
           const loc = window.MAP_LOCATION || {};
-          const address = saved.address || loc.locationAddress || loc.address || 'Garage Workshop';
-          const shareLink = saved.shareLink || loc.googleMapsShareLink || 'https://maps.google.com/?q=Garage+Workshop';
+          if (!address || address === 'Garage Workshop') {
+            address = saved.address || loc.locationAddress || loc.address || 'Garage Workshop';
+          }
+          if (!shareLink || shareLink === 'https://maps.google.com/?q=Garage+Workshop') {
+            shareLink = saved.shareLink || loc.googleMapsShareLink || 'https://maps.google.com/?q=Garage+Workshop';
+          }
 
           // Update subtitle address
           const addrEl = document.getElementById('map-location-address');
