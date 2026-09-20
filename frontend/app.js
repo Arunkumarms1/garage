@@ -2114,7 +2114,7 @@
           <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 active:bg-slate-800 transition-colors cursor-pointer" onclick="showJobDetailModal(${job.id})">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model} ${job.year ? '(' + job.year + ')' : ''}</span>
-              <span class="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${formatStatus(job.status)}</span>
+            <span class="text-xs px-2 py-1 rounded ${getStatusBadgeClass(job.status)}">${formatStatus(job.status)}</span>
             </div>
             <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-white mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
             <div class="flex justify-between items-center">
