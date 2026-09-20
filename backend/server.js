@@ -143,7 +143,7 @@ app.get('/api/public-info', (req, res) => {
 
 // GET /api/version (Public - app version for live check and cache bust)
 app.get('/api/version', (req, res) => {
-  res.json({ version: '1.0.3', name: 'Garage Workshop PWA', status: 'live' });
+  res.json({ version: '1.0.4', name: 'Garage Workshop PWA', status: 'live' });
 });
 
 // ===== END PUBLIC ROUTES =====
@@ -465,7 +465,7 @@ app.get('/api/settings', (req, res) => {
 app.put('/api/settings', authenticateToken, requireRole('admin'), (req, res) => {
   const settingsUpdate = req.body; // Expecting { carwash_name, is_open, logo_base64, theme_color }
 
-  const allowedKeys = ['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name', 'upi_image'];
+  const allowedKeys = ['carwash_name', 'is_open', 'logo_base64', 'theme_color', 'contact_info', 'upi_id', 'upi_name', 'upi_image', 'map_location_lat', 'map_location_lng', 'map_location_address'];
   const updates = Object.entries(settingsUpdate).filter(([k]) => allowedKeys.includes(k));
   
   if (updates.length === 0) {
