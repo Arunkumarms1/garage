@@ -37,46 +37,53 @@
       color: #9ca3af !important;
     }
     /* ==========================================
-       2. LIGHT MODE BRUTE-FORCE
-       (Applies when HTML lacks .dark and .oled)
+       2. LIGHT MODE BRUTE-FORCE (Fixed Contrast & Depth)
        ========================================== */
+    /* Give the main app body a light gray background for depth */
     html:not(.dark):not(.oled) body,
-    html:not(.dark):not(.oled) main,
-    html:not(.dark):not(.oled) header,
-    html:not(.dark):not(.oled) nav,
-    html:not(.dark):not(.oled) footer {
-      background-color: #f8fafc !important; /* slate-50 */
+    html:not(.dark):not(.oled) main {
+      background-color: #f1f5f9 !important; /* slate-100 */
       color: #0f172a !important; /* slate-900 */
     }
-    /* Target cards, wrappers, map headers, and tabs */
+    /* Make header, bottom nav, and job cards crisp white to stand out */
+    html:not(.dark):not(.oled) header,
+    html:not(.dark):not(.oled) nav,
+    html:not(.dark):not(.oled) footer,
     html:not(.dark):not(.oled) [class*="bg-slate-9"],
     html:not(.dark):not(.oled) [class*="bg-slate-8"],
     html:not(.dark):not(.oled) [class*="bg-slate-7"],
     html:not(.dark):not(.oled) [class*="bg-slate-6"] {
       background-color: #ffffff !important;
-      border-color: #e2e8f0 !important;
+      border-color: #cbd5e1 !important; /* slate-300 */
       color: #0f172a !important;
-      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
     }
-    /* Force ALL white/light text to become dark in Light Mode
-         (Fixes invisible Map Header text and gray labels) */
+    /* Aggressively fix invisible text (App Title, Vehicle Names, Tab text) */
     html:not(.dark):not(.oled) .text-white,
     html:not(.dark):not(.oled) [class*="text-slate-1"],
     html:not(.dark):not(.oled) [class*="text-slate-2"],
     html:not(.dark):not(.oled) [class*="text-slate-3"],
-    html:not(.dark):not(.oled) [class*="text-slate-4"] {
-      color: #1e293b !important; /* slate-800 */
+    html:not(.dark):not(.oled) h1,
+    html:not(.dark):not(.oled) h2,
+    html:not(.dark):not(.oled) h3,
+    html:not(.dark):not(.oled) .font-bold {
+      color: #0f172a !important; /* Force all headings and bold text to dark slate */
+    }
+    /* Darken muted subtext for readability */
+    html:not(.dark):not(.oled) .text-slate-400,
+    html:not(.dark):not(.oled) .text-slate-500 {
+      color: #475569 !important; /* slate-600 */
     }
     /* Target inputs, search bars, and dropdowns */
     html:not(.dark):not(.oled) input,
     html:not(.dark):not(.oled) select {
       background-color: #ffffff !important;
-      border-color: #cbd5e1 !important;
+      border-color: #94a3b8 !important; /* darker border for inputs */
       color: #0f172a !important;
+      box-shadow: none !important;
     }
-    /* Ensure placeholder text is visible but muted */
     html:not(.dark):not(.oled) input::placeholder {
-      color: #94a3b8 !important;
+      color: #64748b !important;
     }
   </style>
 
