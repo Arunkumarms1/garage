@@ -1,6 +1,6 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=22')
+        navigator.serviceWorker.register('/sw.js?v=23')
           .then(reg => console.log('Service Worker registered successfully!', reg.scope))
           .catch(err => console.error('Service Worker registration failed:', err));
       });
@@ -78,7 +78,7 @@
     const API_BASE = '';
 
     // UI / App version for live status and cache-bust reload
-    const UI_VERSION = '2.0.1';
+    const UI_VERSION = '2.0.2';
     let liveStatusInterval;
     let pulseTimeout;
 
