@@ -45,38 +45,26 @@
     html:not(.dark):not(.oled) header,
     html:not(.dark):not(.oled) nav,
     html:not(.dark):not(.oled) footer {
-      background-color: #f8fafc !important; /* slate-50 */
-      color: #0f172a !important; /* slate-900 */
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
     }
-    /* Target cards, wrappers, map headers, and tabs */
-    html:not(.dark):not(.oled) [class*="bg-slate-9"],
     html:not(.dark):not(.oled) [class*="bg-slate-8"],
-    html:not(.dark):not(.oled) [class*="bg-slate-7"],
-    html:not(.dark):not(.oled) [class*="bg-slate-6"] {
+    html:not(.dark):not(.oled) [class*="bg-slate-9"] {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
       color: #0f172a !important;
       box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
     }
-    /* Force ALL white/light text to become dark in Light Mode
-         (Fixes invisible Map Header text and gray labels) */
-    html:not(.dark):not(.oled) .text-white,
-    html:not(.dark):not(.oled) [class*="text-slate-1"],
-    html:not(.dark):not(.oled) [class*="text-slate-2"],
-    html:not(.dark):not(.oled) [class*="text-slate-3"],
-    html:not(.dark):not(.oled) [class*="text-slate-4"] {
-      color: #1e293b !important; /* slate-800 */
-    }
-    /* Target inputs, search bars, and dropdowns */
     html:not(.dark):not(.oled) input,
     html:not(.dark):not(.oled) select {
       background-color: #ffffff !important;
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
     }
-    /* Ensure placeholder text is visible but muted */
-    html:not(.dark):not(.oled) input::placeholder {
-      color: #94a3b8 !important;
+    html:not(.dark):not(.oled) .text-white,
+    html:not(.dark):not(.oled) .text-slate-300,
+    html:not(.dark):not(.oled) .text-slate-400 {
+      color: #475569 !important;
     }
   </style>
 
@@ -279,20 +267,17 @@
           const saved = JSON.parse(localStorage.getItem('map_location') || '{}');
           const loc = window.MAP_LOCATION || {};
 
-          // Fallback order: DB new > DB legacy > localStorage > HTML props > default
-          const newAddr = dbSettings.locationAddress || '';
-          const legacyAddr = dbSettings.map_location_address || '';
-          const savedAddr = saved.address || '';
-          const propAddr = loc.locationAddress || loc.address || '';
-          const finalAddr = newAddr || legacyAddr || savedAddr || propAddr || 'Garage Workshop';
+          if (!address || address === 'Garage Workshop') {
+            address = saved.address || loc.locationAddress || dbSettings.map_location_address || loc.address || 'Garage Workshop';
+          }
           // If only legacy lat/lng saved (no text address), build label from DB
-          const legacyLabel = (dbSettings.map_location_lat && dbSettings.map_location_lng && !newAddr && !legacyAddr && !savedAddr && !propAddr) ? 'Location (' + dbSettings.map_location_lat + ',' + dbSettings.map_location_lng + ')' : null;
-          address = legacyLabel || finalAddr;
+          if ((address === 'Garage Workshop') && dbSettings.map_location_lat && dbSettings.map_location_lng) {
+            address = 'Location (' + dbSettings.map_location_lat + ',' + dbSettings.map_location_lng + ')';
+          }
 
-          const newLink = dbSettings.googleMapsShareLink || '';
-          const savedLink = saved.shareLink || '';
-          const propLink = loc.googleMapsShareLink || '';
-          shareLink = newLink || savedLink || propLink || 'https://maps.google.com/?q=Garage+Workshop';
+          if (!shareLink || shareLink === 'https://maps.google.com/?q=Garage+Workshop') {
+            shareLink = saved.shareLink || loc.googleMapsShareLink || dbSettings.googleMapsShareLink || 'https://maps.google.com/?q=Garage+Workshop';
+          }
 
           // Update subtitle address
           const addrEl = document.getElementById('map-location-address');
