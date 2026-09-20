@@ -34,6 +34,9 @@ When bumping version (`UI_VERSION` in `frontend/app.js` and `/api/version` in `b
 - Bump `frontend/sw.js` `CACHE_NAME` (`garageworkshop-vX`) to `v=X+1`.
 - This is how we deploy from now on.
 
+## Bump Rule (MANDATORY)
+Always bump all versions (`UI_VERSION`, `/api/version`, `app.js?v=X`, `sw.js?v=X`, `CACHE_NAME`) together before deploy. Keep everything the same number unless the user explicitly says otherwise.
+
 ## OS Difference (CRITICAL)
 - **Dev/localhost**: Linux (this container/environment). Port 3000. `node backend/server.js`.
 - **Remote deploy**: Ubuntu (`ubuntu@68.233.102.48` via SSH in `deploy.sh`). Different OS. Do not assume same paths/users. `deploy.sh` handles it.

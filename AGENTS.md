@@ -24,6 +24,9 @@ When bumping version (`UI_VERSION` in `frontend/app.js` and `/api/version` in `b
 - Bump `frontend/sw.js` `CACHE_NAME` (`garageworkshop-vX`) to `v=X+1`.
 - This is how we deploy from now on.
 
+## Bump Rule (MANDATORY)
+Always bump all versions (`UI_VERSION`, `/api/version`, `app.js?v=X`, `sw.js?v=X`, `CACHE_NAME`) together before deploy. Keep everything the same number unless the user explicitly says otherwise.
+
 ## Cache Bust Strategy (PWA)
 - `sw.js`: version `CACHE_NAME` (`v3`) + delete old caches on activate (`skipWaiting` + `clients.claim`).
 - `app.js`: register `/sw.js?v=3` — bump `?v=` and `CACHE_NAME` with every deploy that updates assets.
