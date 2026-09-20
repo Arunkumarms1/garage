@@ -296,6 +296,51 @@
     html:not(.dark):not(.oled) #app-tabs button:not([class*="bg-slate-8"]) {
       color: #475569 !important; /* slate-600 - clearly readable */
     }
+
+    /* ==========================================
+       11. KANBAN LABELS & COUNT BADGES (Light Mode)
+       ========================================== */
+    /* Column headers: complementary bold colors */
+    html:not(.dark):not(.oled) #dashboard-kanban h4 {
+      font-weight: 700 !important;
+      color: #1e3a8a !important; /* very dark blue for Pending */
+    }
+    /* Specific complementary colors for each column header using context */
+    html:not(.dark):not(.oled) #jobs-pending ~ div h4,
+    html:not(.dark):not(.oled) #jobs-pending + div h4,
+    html:not(.dark):not(.oled) #dashboard-kanban > div:first-child h4 {
+      color: #1d4ed8 !important; /* blue-700 for Pending */
+    }
+    html:not(.dark):not(.oled) #jobs-in-progress ~ div h4,
+    html:not(.dark):not(.oled) #jobs-in-progress + div h4,
+    html:not(.dark):not(.oled) #dashboard-kanban > div:nth-child(2) h4 {
+      color: #b45309 !important; /* amber-700 for In Progress */
+    }
+    html:not(.dark):not(.oled) #jobs-completed ~ div h4,
+    html:not(.dark):not(.oled) #jobs-completed + div h4,
+    html:not(.dark):not(.oled) #dashboard-kanban > div:nth-child(3) h4 {
+      color: #047857 !important; /* emerald-700 for Completed */
+    }
+    /* Count badges: bright complementary backgrounds + dark text */
+    html:not(.dark):not(.oled) #count-pending,
+    html:not(.dark):not(.oled) #count-in-progress,
+    html:not(.dark):not(.oled) #count-completed {
+      font-weight: 700 !important;
+      border: 1px solid #e2e8f0 !important;
+      color: #0f172a !important; /* slate-900 for contrast */
+    }
+    html:not(.dark):not(.oled) #count-pending {
+      background-color: #dbeafe !important; /* blue-100 */
+      color: #1d4ed8 !important;
+    }
+    html:not(.dark):not(.oled) #count-in-progress {
+      background-color: #fef3c7 !important; /* amber-100 */
+      color: #b45309 !important;
+    }
+    html:not(.dark):not(.oled) #count-completed {
+      background-color: #d1fae5 !important; /* emerald-100 */
+      color: #047857 !important;
+    }
   </style>
 
   <!-- Google Material Icons -->
