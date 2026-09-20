@@ -1408,7 +1408,7 @@
         <div class="w-full bg-white dark:bg-slate-800 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-lg p-4 active:bg-slate-800 transition-colors" onclick="showJobDetailModal(${job.id})">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-lg text-slate-900 dark:text-white oled:text-white">${job.make} ${job.model}</span>
-            <span class="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${formatStatus(job.status)}</span>
+            <span class="text-xs px-2 py-1 rounded ${getStatusBadgeClass(job.status)}">${formatStatus(job.status)}</span>
           </div>
           <div class="text-sm text-slate-500 dark:text-slate-400 oled:text-white mb-2">${job.customer_name || 'Unknown Customer'} • ${job.plate_number}</div>
           <div class="flex justify-between items-center">
@@ -1421,11 +1421,11 @@
 
     function getStatusBadgeClass(status) {
       switch (status) {
-        case 'pending': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
-        case 'in-progress': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
-        case 'completed': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-        case 'cancelled': return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
-        default: return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+        case 'pending': return 'bg-white text-blue-700 border border-blue-700 dark:bg-transparent dark:text-blue-300 dark:border-blue-400';
+        case 'in-progress': return 'bg-white text-amber-700 border border-amber-700 dark:bg-transparent dark:text-amber-300 dark:border-amber-400';
+        case 'completed': return 'bg-white text-emerald-700 border border-emerald-700 dark:bg-transparent dark:text-emerald-300 dark:border-emerald-400';
+        case 'cancelled': return 'bg-white text-rose-700 border border-rose-700 dark:bg-transparent dark:text-rose-300 dark:border-rose-400';
+        default: return 'bg-white text-slate-700 border border-slate-700 dark:bg-transparent dark:text-slate-300 dark:border-slate-400';
       }
     }
 
