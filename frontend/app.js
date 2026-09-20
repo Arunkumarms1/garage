@@ -1,6 +1,6 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=23')
+        navigator.serviceWorker.register('/sw.js?v=2.0.3')
           .then(reg => console.log('Service Worker registered successfully!', reg.scope))
           .catch(err => console.error('Service Worker registration failed:', err));
       });
@@ -78,7 +78,7 @@
     const API_BASE = '';
 
     // UI / App version for live status and cache-bust reload
-    const UI_VERSION = '2.0.2';
+    const UI_VERSION = '2.0.3';
     let liveStatusInterval;
     let pulseTimeout;
 
@@ -822,10 +822,10 @@
                 <div class="bg-rose-950/30 border border-rose-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Total Spend</p>
-                      <p id="analytics-total-spend" class="text-2xl font-black text-gray-900 dark:text-rose-400 mt-1">₹0.00</p>
+                      <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Total Spend</p>
+                      <p id="analytics-total-spend" class="text-2xl font-black text-red-600 mt-1">₹0.00</p>
                     </div>
-                    <span class="material-icons-round text-3xl text-gray-900 dark:text-rose-500" style="color: #111827 !important;">shopping_cart</span>
+                    <span class="material-icons-round text-3xl text-red-600">shopping_cart</span>
                   </div>
                 </div>
 
@@ -833,10 +833,10 @@
                 <div class="bg-emerald-950/30 border border-emerald-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Total Earnings</p>
-                      <p id="analytics-total-earnings" class="text-2xl font-black text-gray-900 dark:text-emerald-400 mt-1">₹0.00</p>
+                      <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Total Earnings</p>
+                      <p id="analytics-total-earnings" class="text-2xl font-black text-emerald-600 mt-1">₹0.00</p>
                     </div>
-                    <span class="material-icons-round text-3xl text-gray-900 dark:text-emerald-500" style="color: #111827 !important;">attach_money</span>
+                    <span class="material-icons-round text-3xl text-emerald-600">attach_money</span>
                   </div>
                 </div>
 
@@ -844,10 +844,10 @@
                 <div class="bg-indigo-950/30 border border-indigo-900/40 p-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Net Profit</p>
-                      <p id="analytics-net-profit" class="text-2xl font-black text-gray-900 dark:text-indigo-400 mt-1">₹0.00</p>
+                      <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Net Profit</p>
+                      <p id="analytics-net-profit" class="text-2xl font-black text-indigo-600 mt-1">₹0.00</p>
                     </div>
-                    <span class="material-icons-round text-3xl text-gray-900 dark:text-indigo-500" style="color: #111827 !important;">trending_up</span>
+                    <span class="material-icons-round text-3xl text-indigo-600">trending_up</span>
                   </div>
                 </div>
               </div>

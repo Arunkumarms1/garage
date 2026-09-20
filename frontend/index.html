@@ -639,23 +639,32 @@
       color: #b45309 !important;
     }
     /* High-specificity overrides for analytics metric cards in light mode */
-    html:not(.dark):not(.oled) #analytics-total-spend,
-    html:not(.dark):not(.oled) #analytics-total-earnings,
+    html:not(.dark):not(.oled) #analytics-total-spend {
+      color: #dc2626 !important;
+    }
+    html:not(.dark):not(.oled) #analytics-total-earnings {
+      color: #059669 !important;
+    }
     html:not(.dark):not(.oled) #analytics-net-profit {
-      color: #111827 !important;
+      color: #4f46e5 !important;
     }
     html:not(.dark):not(.oled) .bg-rose-950/30 .material-icons-round,
-    html:not(.dark):not(.oled) .bg-emerald-950/30 .material-icons-round,
-    html:not(.dark):not(.oled) .bg-indigo-950/30 .material-icons-round {
-      color: #111827 !important;
+    html:not(.dark):not(.oled) #tab-analytics .bg-rose-950/30 .material-icons-round {
+      color: #dc2626 !important;
+      fill: #dc2626 !important;
+      stroke: #dc2626 !important;
     }
-    /* Ultra-specific analytics icon overrides for light mode */
-    html:not(.dark):not(.oled) #tab-analytics .bg-rose-950/30 .material-icons-round,
-    html:not(.dark):not(.oled) #tab-analytics .bg-emerald-950/30 .material-icons-round,
+    html:not(.dark):not(.oled) .bg-emerald-950/30 .material-icons-round,
+    html:not(.dark):not(.oled) #tab-analytics .bg-emerald-950/30 .material-icons-round {
+      color: #059669 !important;
+      fill: #059669 !important;
+      stroke: #059669 !important;
+    }
+    html:not(.dark):not(.oled) .bg-indigo-950/30 .material-icons-round,
     html:not(.dark):not(.oled) #tab-analytics .bg-indigo-950/30 .material-icons-round {
-      color: #111827 !important;
-      fill: #111827 !important;
-      stroke: #111827 !important;
+      color: #4f46e5 !important;
+      fill: #4f46e5 !important;
+      stroke: #4f46e5 !important;
     }
 
     @keyframes pulse-green {
@@ -998,7 +1007,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=23"></script>
+  <script src="app.js?v=2.0.3"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">
