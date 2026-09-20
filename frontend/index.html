@@ -239,6 +239,32 @@
     html:not(.dark):not(.oled) span[class*="text-slate-"] {
       color: #0f172a !important;
     }
+
+    /* ==========================================
+       9. PROTECT DARK-CONTAINER CONTENT (Map Header, etc.)
+       ========================================== */
+    /* Prevent text inversion inside dark cards/maps */
+    html:not(.dark):not(.oled) div[class*="bg-slate-9"] [class*="text-white"],
+    html:not(.dark):not(.oled) div[class*="bg-slate-8"] [class*="text-white"],
+    html:not(.dark):not(.oled) div[class*="bg-black"] [class*="text-white"],
+    html:not(.dark):not(.oled) div[class*="bg-slate-9"] [class*="text-slate-"],
+    html:not(.dark):not(.oled) div[class*="bg-slate-8"] [class*="text-slate-"],
+    html:not(.dark):not(.oled) div[class*="bg-black"] [class*="text-slate-"] {
+      color: inherit !important;
+    }
+    /* Keep map text white and icons bright on dark background */
+    html:not(.dark):not(.oled) div[class*="bg-slate-9"] h2,
+    html:not(.dark):not(.oled) div[class*="bg-black"] h2 {
+      color: #ffffff !important;
+    }
+    html:not(.dark):not(.oled) div[class*="bg-slate-9"] p,
+    html:not(.dark):not(.oled) div[class*="bg-black"] p {
+      color: #e2e8f0 !important; /* slate-200 for subtitle readability */
+    }
+    html:not(.dark):not(.oled) div[class*="bg-slate-9"] span[class*="material-icons-round"],
+    html:not(.dark):not(.oled) div[class*="bg-black"] span[class*="material-icons-round"] {
+      color: #818cf8 !important; /* bright indigo for dark bg visibility */
+    }
   </style>
 
   <!-- Google Material Icons -->
