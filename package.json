@@ -1,6 +1,6 @@
 {
   "name": "garage-workshop-pwa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mobile-First Car Workshop Booking and Management PWA",
   "main": "backend/server.js",
   "scripts": {

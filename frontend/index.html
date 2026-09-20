@@ -134,8 +134,8 @@
       <div>
         <h1 class="font-bold text-lg tracking-tight leading-tight text-slate-900 dark:text-white oled:text-white">Garage Workshop ✓</h1>
         <div class="flex items-center space-x-1.5 mt-0.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 pulse-indicator"></span>
-          <span class="text-xs font-semibold text-indigo-200 uppercase tracking-wider">Coming Soon</span>
+          <span id="live-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span id="live-label" class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Live</span>
         </div>
       </div>
     </div>
@@ -183,42 +183,12 @@
   <main class="w-full bg-transparent dark:bg-slate-800 oled:bg-black text-slate-900 dark:text-slate-100 oled:text-white h-[100dvh] m-0 p-0 overflow-x-hidden overflow-y-auto pb-20">
     <div class="w-full bg-transparent dark:bg-slate-800 oled:bg-black">
       
-      <!-- Animated Icon Header -->
-      <div class="relative w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-        <span class="material-icons-round text-indigo-600 dark:text-indigo-400 text-5xl animate-wrench">construction</span>
-        <span class="absolute top-2 right-2 flex h-4.5 w-4.5">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-4.5 w-4.5 bg-indigo-500"></span>
-        </span>
-      </div>
-
-      <div class="space-y-2">
-        <h2 class="text-2xl font-black text-slate-900 dark:text-white oled:text-white tracking-tight">Under Construction</h2>
-        <p class="text-slate-500 dark:text-slate-400 oled:text-white text-sm leading-relaxed">
-          Our elite team of mechanics and developers are fine-tuning the ultimate mobile-first Garage Workshop experience. Coming very soon!
-        </p>
-      </div>
-
-      <!-- Construction Progress Bar -->
-      <div class="space-y-1.5 text-left">
-        <div class="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white">
-          <span>Tuning Engines & Systems</span>
-          <span class="text-indigo-600 dark:text-indigo-400">85%</span>
-        </div>
-        <div class="w-full bg-slate-100 dark:bg-slate-700 oled:bg-black h-2.5 rounded-full overflow-hidden">
-          <div class="bg-indigo-600 h-full rounded-full transition-all duration-1000" style="width: 85%"></div>
-        </div>
-      </div>
-
       <!-- ==========================================
-           TABBED AUTHENTICATION / DB CONNECTION TESTER
+           TABBED AUTHENTICATION
            ========================================== -->
       <div class="border-t border-slate-100 dark:border-slate-700 oled:border-white pt-5 space-y-4 text-left bg-transparent dark:bg-slate-900 oled:bg-black">
         <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Test Auth & Database</h3>
-          <span id="db-status-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
-            Database Connected
-          </span>
+          <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 oled:text-white uppercase tracking-wider">Sign In</h3>
         </div>
 
         <!-- Google Sign-In -->
@@ -314,7 +284,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">

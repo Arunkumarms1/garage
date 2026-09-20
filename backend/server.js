@@ -141,6 +141,11 @@ app.get('/api/public-info', (req, res) => {
   });
 });
 
+// GET /api/version (Public - app version for live check and cache bust)
+app.get('/api/version', (req, res) => {
+  res.json({ version: '1.0.1', name: 'Garage Workshop PWA', status: 'live' });
+});
+
 // ===== END PUBLIC ROUTES =====
 
 // --- Auth Endpoints ---

@@ -1,6 +1,6 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=8')
+        navigator.serviceWorker.register('/sw.js?v=9')
           .then(reg => console.log('Service Worker registered successfully!', reg.scope))
           .catch(err => console.error('Service Worker registration failed:', err));
       });
@@ -42,6 +42,9 @@
       // Fetch public info (branding + holidays) AND ontology data
       fetchPublicInfo();
       fetchOntologyData();
+      checkLiveStatus();
+      // Poll live status every 30s
+      setInterval(checkLiveStatus, 30000);
 
       // Check current JWT session token
       const token = localStorage.getItem('garage_token');
@@ -73,6 +76,44 @@
 
     // API Base URL
     const API_BASE = '';
+
+    // UI / App version for live status and cache-bust reload
+    const UI_VERSION = '1.0.1';
+
+    // Live status check: hits API, shows green, compares version, reloads if stale
+    async function checkLiveStatus() {
+      const liveDot = document.getElementById('live-dot');
+      const liveLabel = document.getElementById('live-label');
+      try {
+        const res = await fetch('/api/version');
+        if (res.ok) {
+          const data = await res.json();
+          if (liveDot) liveDot.classList.remove('bg-red-400', 'bg-amber-400');
+          if (liveDot) liveDot.classList.add('bg-emerald-400');
+          if (liveLabel) liveLabel.textContent = 'Live';
+          if (liveLabel) liveLabel.classList.remove('text-red-400', 'text-amber-400');
+          if (liveLabel) liveLabel.classList.add('text-emerald-400');
+
+          // Version check and reload if UI is old
+          if (data.version && data.version !== UI_VERSION) {
+            console.log('UI version', UI_VERSION, '!= server version', data.version, '- reloading');
+            setTimeout(() => location.reload(), 500);
+          }
+        } else {
+          if (liveDot) liveDot.classList.remove('bg-emerald-400');
+          if (liveDot) liveDot.classList.add('bg-red-400');
+          if (liveLabel) liveLabel.textContent = 'Offline';
+          if (liveLabel) liveLabel.classList.remove('text-emerald-400');
+          if (liveLabel) liveLabel.classList.add('text-red-400');
+        }
+      } catch (err) {
+        if (liveDot) liveDot.classList.remove('bg-emerald-400');
+        if (liveDot) liveDot.classList.add('bg-red-400');
+        if (liveLabel) liveLabel.textContent = 'Offline';
+        if (liveLabel) liveLabel.classList.remove('text-emerald-400');
+        if (liveLabel) liveLabel.classList.add('text-red-400');
+      }
+    }
 
     // Fetch ontology data (entities + relations) - uses ontology API for all data fetching
     async function fetchOntologyData() {
