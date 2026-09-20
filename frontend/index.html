@@ -195,6 +195,50 @@
       color: #ffffff !important;
       border: 1px solid #475569 !important; /* slate-600 */
     }
+
+    /* ==========================================
+       8. LIGHT MODE: HIGH-CONTRAST TABS, ICONS & BLUE BUTTONS
+       ========================================== */
+    /* Tabs: force both visible with dark bg + white text, active gets indigo underline */
+    html:not(.dark):not(.oled) #tab-login,
+    html:not(.dark):not(.oled) #tab-register {
+      background-color: #1e293b !important; /* slate-800 */
+      color: #ffffff !important;
+      border: 2px solid #334155 !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important;
+    }
+    html:not(.dark):not(.oled) #tab-login {
+      border-bottom-color: #6366f1 !important; /* indigo-500 active underline */
+    }
+
+    /* Icons: make icons very dark and visible on light backgrounds */
+    html:not(.dark):not(.oled) span[class*="material-icons-round"] {
+      color: #1e1b4b !important; /* indigo-950 / very dark blue */
+      text-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+    }
+
+    /* Blue buttons: deeper background + thick dark border + shadow for humans */
+    html:not(.dark):not(.oled) button[class*="bg-indigo-"] {
+      background-color: #312e81 !important; /* indigo-900 - much deeper */
+      border: 2px solid #1e1b4b !important;
+      box-shadow: 0 4px 14px 0 rgba(49,46,129,0.35) !important;
+      color: #ffffff !important;
+    }
+    html:not(.dark):not(.oled) button[class*="bg-indigo-"]:hover {
+      background-color: #1e1b4b !important; /* indigo-950 - almost black-blue */
+    }
+
+    /* Form labels / "from / to" text pairs: bold dark slate for maximum readability */
+    html:not(.dark):not(.oled) label,
+    html:not(.dark):not(.oled) .text-xs,
+    html:not(.dark):not(.oled) .text-sm {
+      color: #020617 !important; /* slate-950 - near black */
+      font-weight: 700 !important;
+    }
+    html:not(.dark):not(.oled) p[class*="text-slate-"],
+    html:not(.dark):not(.oled) span[class*="text-slate-"] {
+      color: #0f172a !important;
+    }
   </style>
 
   <!-- Google Material Icons -->
