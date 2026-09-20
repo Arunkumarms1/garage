@@ -26,6 +26,14 @@ Before any deploy, verify the remote branch matches the local working branch (`v
 ## Deploy Rule
 When user says "deploy": agent MUST `git commit`, `git push`, then run `deploy.sh`. Sequence: commit → push → deploy. Never skip.
 
+## Version Alignment & Cache Bust (MANDATORY)
+When bumping version (`UI_VERSION` in `frontend/app.js` and `/api/version` in `backend/server.js`):
+- Update BOTH files together.
+- Bump `frontend/index.html` `app.js?v=X` to `v=X+1`.
+- Bump `frontend/app.js` `/sw.js?v=X` to `v=X+1`.
+- Bump `frontend/sw.js` `CACHE_NAME` (`garageworkshop-vX`) to `v=X+1`.
+- This is how we deploy from now on.
+
 ## OS Difference (CRITICAL)
 - **Dev/localhost**: Linux (this container/environment). Port 3000. `node backend/server.js`.
 - **Remote deploy**: Ubuntu (`ubuntu@68.233.102.48` via SSH in `deploy.sh`). Different OS. Do not assume same paths/users. `deploy.sh` handles it.

@@ -16,6 +16,14 @@ When user says "deploy":
 4. `bash deploy.sh`
 Never skip steps.
 
+## Version Alignment & Cache Bust (MANDATORY)
+When bumping version (`UI_VERSION` in `frontend/app.js` and `/api/version` in `backend/server.js`):
+- Update BOTH files together.
+- Bump `frontend/index.html` `app.js?v=X` to `v=X+1`.
+- Bump `frontend/app.js` `/sw.js?v=X` to `v=X+1`.
+- Bump `frontend/sw.js` `CACHE_NAME` (`garageworkshop-vX`) to `v=X+1`.
+- This is how we deploy from now on.
+
 ## Cache Bust Strategy (PWA)
 - `sw.js`: version `CACHE_NAME` (`v3`) + delete old caches on activate (`skipWaiting` + `clients.claim`).
 - `app.js`: register `/sw.js?v=3` — bump `?v=` and `CACHE_NAME` with every deploy that updates assets.
