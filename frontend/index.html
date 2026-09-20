@@ -275,6 +275,27 @@
     html:not(.dark):not(.oled) div[class*="bg-black"] span[class*="material-icons-round"] {
       color: #818cf8 !important; /* bright indigo for dark bg visibility */
     }
+
+    /* ==========================================
+       10. BOTTOM NAV TABS: SELECTED / UNSELECTED VISIBILITY
+       ========================================== */
+    /* Selected tab: bright icon + bold white text */
+    html:not(.dark):not(.oled) #app-tabs button[class*="bg-slate-8"] span[class*="material-icons-round"] {
+      color: #f59e0b !important; /* amber - very visible on dark */
+      filter: drop-shadow(0 0 4px rgba(245,158,11,0.5)) !important;
+    }
+    html:not(.dark):not(.oled) #app-tabs button[class*="bg-slate-8"] {
+      border: 2px solid #f59e0b !important;
+    }
+    /* Unselected tabs: full opacity complementary color, not faint gray */
+    html:not(.dark):not(.oled) #app-tabs button:not([class*="bg-slate-8"]) span[class*="material-icons-round"] {
+      color: #6366f1 !important; /* indigo-500 - bright complementary */
+      opacity: 1 !important;
+      filter: drop-shadow(0 1px 2px rgba(99,102,241,0.3)) !important;
+    }
+    html:not(.dark):not(.oled) #app-tabs button:not([class*="bg-slate-8"]) {
+      color: #475569 !important; /* slate-600 - clearly readable */
+    }
   </style>
 
   <!-- Google Material Icons -->
