@@ -44,7 +44,7 @@
       fetchOntologyData();
       checkLiveStatus();
       // Poll live status every 30s
-      setInterval(checkLiveStatus, 30000);
+      liveStatusInterval = setInterval(checkLiveStatus, 15000);
 
       // Check current JWT session token
       const token = localStorage.getItem('garage_token');
@@ -79,6 +79,7 @@
 
     // UI / App version for live status and cache-bust reload
     const UI_VERSION = '1.0.6';
+    let liveStatusInterval;
 
     // Live status check: hits API, shows green, compares version, reloads if stale
     async function checkLiveStatus() {
@@ -94,10 +95,30 @@
           if (liveLabel) liveLabel.classList.remove('text-red-400', 'text-amber-400');
           if (liveLabel) liveLabel.classList.add('text-emerald-400');
 
-          // Version check and reload if UI is old
+          // Version check and graceful update UI
           if (data.version && data.version !== UI_VERSION) {
-            console.log('UI version', UI_VERSION, '!= server version', data.version, '- reloading');
-            setTimeout(() => location.reload(), 500);
+            console.log('UI version', UI_VERSION, '!= server version', data.version, '- update available');
+            if (liveDot) {
+              liveDot.classList.remove('bg-emerald-400', 'bg-red-400');
+              liveDot.classList.add('bg-amber-400');
+            }
+            if (liveLabel) {
+              liveLabel.textContent = 'Update Available';
+              liveLabel.classList.remove('text-emerald-400', 'text-red-400');
+              liveLabel.classList.add('text-amber-500');
+            }
+            const container = liveLabel ? liveLabel.parentElement : null;
+            if (container) {
+              container.style.cursor = 'pointer';
+              if (!container.dataset.updateListenerAdded) {
+                container.dataset.updateListenerAdded = 'true';
+                container.addEventListener('click', handleUpdateReload);
+              }
+            }
+            if (liveStatusInterval) {
+              clearInterval(liveStatusInterval);
+              liveStatusInterval = null;
+            }
           }
         } else {
           if (liveDot) liveDot.classList.remove('bg-emerald-400');
@@ -113,6 +134,21 @@
         if (liveLabel) liveLabel.classList.remove('text-emerald-400');
         if (liveLabel) liveLabel.classList.add('text-red-400');
       }
+    }
+
+    // Helper: unregister SWs, clear caches, and hard reload
+    async function handleUpdateReload() {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(key => caches.delete(key)));
+      }
+      window.location.reload();
     }
 
     // Fetch ontology data (entities + relations) - uses ontology API for all data fetching
