@@ -78,7 +78,7 @@
     const API_BASE = '';
 
     // UI / App version for live status and cache-bust reload
-    const UI_VERSION = '1.0.1';
+    const UI_VERSION = '1.0.2';
 
     // Live status check: hits API, shows green, compares version, reloads if stale
     async function checkLiveStatus() {
