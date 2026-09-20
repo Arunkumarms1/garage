@@ -91,7 +91,7 @@
           const data = await res.json();
           if (liveDot) liveDot.classList.remove('bg-red-400', 'bg-amber-400', 'pulse-green');
           if (liveDot) liveDot.classList.add('bg-emerald-400', 'pulse-green');
-          if (liveLabel) liveLabel.textContent = 'Live';
+          if (liveLabel) liveLabel.textContent = 'online';
           if (liveLabel) liveLabel.classList.remove('text-red-400', 'text-amber-400');
           if (liveLabel) liveLabel.classList.add('text-emerald-400');
 
