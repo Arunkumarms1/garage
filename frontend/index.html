@@ -407,10 +407,18 @@
 
     /* Form labels / text pairs: readable slate, normal weight */
     html:not(.dark):not(.oled) label,
-    html:not(.dark):not(.oled) .text-xs,
+    html:not(.dark):not(.oled) .text-xs:not(button[class*="bg-indigo-"]):not(button[class*="bg-amber-"]):not(button[class*="bg-emerald-"]):not(button[class*="bg-red-"]):not(button[class*="bg-rose-"]):not(button[class*="bg-blue-"]):not(button[class*="bg-purple-"]):not(button[class*="bg-green-"]):not(button[class*="bg-teal-"]):not(button[class*="bg-yellow-"]):not(button[class*="bg-orange-"]),
     html:not(.dark):not(.oled) .text-sm {
-      color: #334155 !important; /* slate-700 - readable, not harsh */
+      color: #0f172a !important; /* slate-900 - dark for WCAG contrast */
       font-weight: 500 !important;
+    }
+    /* Ensure secondary modal footer button stays dark against white bg */
+    html:not(.dark):not(.oled) #create-job-modal button[class*="bg-slate-100"] {
+      color: #0f172a !important;
+    }
+    /* Force primary Create Job button text white in light mode */
+    html:not(.dark):not(.oled) #create-job-modal button[class*="bg-indigo-600"] {
+      color: #ffffff !important;
     }
     html:not(.dark):not(.oled) p[class*="text-slate-"],
     html:not(.dark):not(.oled) span[class*="text-slate-"] {
@@ -1007,7 +1015,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=2.0.3"></script>
+  <script src="app.js?v=2.0.4"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">

@@ -143,7 +143,7 @@ app.get('/api/public-info', (req, res) => {
 
 // GET /api/version (Public - app version for live check and cache bust)
 app.get('/api/version', (req, res) => {
-  res.json({ version: '2.0.3', name: 'Garage Workshop PWA', status: 'live' });
+  res.json({ version: '2.0.4', name: 'Garage Workshop PWA', status: 'live' });
 });
 
 // ===== END PUBLIC ROUTES =====
