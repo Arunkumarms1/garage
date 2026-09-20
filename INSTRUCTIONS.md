@@ -50,6 +50,9 @@ pkill -9 -f "node backend/server.js"
 - `JOB_CREATION_FIX.md` — create job modal + `findOrCreateVehicle()` logic
 - `deploy.sh` — remote deploy: `ssh ubuntu@68.233.102.48 "cd garage && git pull && npm install && pm2 restart garage-api"`
 
+## Live / Version Reload Loop Warning
+When bumping app version (`UI_VERSION` in `frontend/app.js` and `/api/version` in `backend/server.js`), update BOTH files together. If server version > UI version, `checkLiveStatus()` reloads continuously.
+
 ## Rules for Agents
 - Only touch files listed for current phase. Read before write.
 - Wrap route groups in `// ===== GROUP =====` ... `// ===== END GROUP =====` in `server.js`.

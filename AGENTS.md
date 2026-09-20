@@ -33,6 +33,9 @@ Never skip steps.
 - DB reset: `node scripts/reset-db.js` (no SQL errors, no orphaned FKs)
 - Kill server: `pkill -9 -f "node backend/server.js"`
 
+## Live / Version Reload Loop Warning
+When bumping app version (`UI_VERSION` in `frontend/app.js` and `/api/version` in `backend/server.js`), update BOTH files together. If server version > UI version, `checkLiveStatus()` reloads continuously.
+
 ## OS / Path Notes
 - Dev: Linux container, port 3000.
 - Remote deploy: Ubuntu (`ubuntu@68.233.102.48`), handled by `deploy.sh`.
