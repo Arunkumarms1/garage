@@ -200,12 +200,12 @@
        8. LIGHT MODE: COMPLEMENTARY TABS, ICONS & BLUE BUTTONS
        ========================================== */
     /* Tabs: active = light indigo bg + indigo text; inactive = white bg + slate text */
-    /* Tabs: identical style for both — same border, same color */
+    /* Tabs: identical style — just border box, transparent inside */
     html:not(.dark):not(.oled) #tab-login,
     html:not(.dark):not(.oled) #tab-register {
-      background-color: #ffffff !important;
-      color: #475569 !important; /* slate-600 */
-      border: 2px solid #475569 !important; /* slate-600 box border */
+      background-color: transparent !important;
+      color: #475569 !important;
+      border: 2px solid #475569 !important;
       border-radius: 0.5rem !important;
       transition: all 0.2s ease !important;
     }
