@@ -433,7 +433,7 @@
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('customers')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">people</span></button>` : ''}
             ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('inventory')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">inventory</span></button>` : ''}
             ${isAdmin ? `<button onclick="switchAppTab('analytics')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">analytics</span></button>` : ''}
-            ${isEmployeeOrAdmin ? `<button onclick="switchAppTab('history')" class="min-h-[48px] py-2 px-3 text-center transition-all text-slate-400 dark:text-slate-400 oled:text-white hover:text-slate-800 dark:hover:text-slate-300 oled:hover:text-white flex items-center justify-center"><span class="material-icons-round text-2xl opacity-70 hover:opacity-100">history</span></button>` : ''}
+
           </div>
 
           <!-- Tab Content -->
