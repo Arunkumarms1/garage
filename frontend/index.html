@@ -95,6 +95,62 @@
     button[onclick*="cycleTheme"] * {
       color: #ffffff !important;
     }
+
+    /* ==========================================
+       5. LIGHT MODE: ACCENT COLOR CONTRAST FIXES
+       (Forces pale dark-mode colors to become bold and readable on white)
+       ========================================== */
+    /* Darken Reds (Total Spend, Trash Icons, Errors) */
+    html:not(.dark):not(.oled) [class*="text-red-"],
+    html:not(.dark):not(.oled) [class*="text-rose-"],
+    html:not(.dark):not(.oled) [class*="text-pink-"] {
+      color: #b91c1c !important; /* red-700 */
+    }
+
+    /* Darken Greens (Total Earnings, Success statuses) */
+    html:not(.dark):not(.oled) [class*="text-green-"],
+    html:not(.dark):not(.oled) [class*="text-emerald-"],
+    html:not(.dark):not(.oled) [class*="text-teal-"] {
+      color: #15803d !important; /* green-700 */
+    }
+
+    /* Darken Blues/Purples (Net Profit, Info text) */
+    html:not(.dark):not(.oled) [class*="text-blue-"],
+    html:not(.dark):not(.oled) [class*="text-indigo-"],
+    html:not(.dark):not(.oled) [class*="text-purple-"] {
+      color: #1d4ed8 !important; /* blue-700 */
+    }
+
+    /* Darken Yellows/Oranges (Pending quantities, Warnings) */
+    html:not(.dark):not(.oled) [class*="text-yellow-"],
+    html:not(.dark):not(.oled) [class*="text-orange-"],
+    html:not(.dark):not(.oled) [class*="text-amber-"] {
+      color: #b45309 !important; /* amber-700 */
+    }
+
+    /* Fix pale gray text in tables (like Inventory prices) */
+    html:not(.dark):not(.oled) [class*="text-gray-3"],
+    html:not(.dark):not(.oled) [class*="text-gray-4"],
+    html:not(.dark):not(.oled) [class*="text-slate-3"],
+    html:not(.dark):not(.oled) [class*="text-slate-4"] {
+      color: #475569 !important; /* slate-600 */
+    }
+
+    /* Enhance Analytics Card Backgrounds (Ensure they aren't muddy) */
+    html:not(.dark):not(.oled) div[class*="bg-red-"]:not(button) {
+      background-color: #fee2e2 !important; /* red-100 */
+      border: 1px solid #fca5a5 !important;
+    }
+    html:not(.dark):not(.oled) div[class*="bg-green-"]:not(button),
+    html:not(.dark):not(.oled) div[class*="bg-emerald-"]:not(button) {
+      background-color: #dcfce7 !important; /* green-100 */
+      border: 1px solid #86efac !important;
+    }
+    html:not(.dark):not(.oled) div[class*="bg-blue-"]:not(button),
+    html:not(.dark):not(.oled) div[class*="bg-indigo-"]:not(button) {
+      background-color: #e0e7ff !important; /* indigo-100 */
+      border: 1px solid #a5b4fc !important;
+    }
   </style>
 
   <!-- Google Material Icons -->
