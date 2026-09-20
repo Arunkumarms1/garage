@@ -183,6 +183,18 @@
     html:not(.dark):not(.oled) span[class*="bg-gray-"] * {
       color: #ffffff !important;
     }
+
+    /* ==========================================
+       7. LIGHT MODE: SELECTIVE BUTTON INVERT (Secondary only)
+       ========================================== */
+    /* Only invert low-contrast secondary buttons, not primary colored actions */
+    html:not(.dark):not(.oled) button[class*="bg-slate-1"]:not([class*="bg-indigo-"]):not([class*="bg-amber-"]):not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="bg-rose-"]),
+    html:not(.dark):not(.oled) button[class*="bg-slate-5"]:not([class*="bg-indigo-"]):not([class*="bg-amber-"]):not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="bg-rose-"]),
+    html:not(.dark):not(.oled) button[class*="bg-slate-2"]:not([class*="bg-indigo-"]):not([class*="bg-amber-"]):not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="bg-rose-"]) {
+      background-color: #1e293b !important; /* slate-800 */
+      color: #ffffff !important;
+      border: 1px solid #475569 !important; /* slate-600 */
+    }
   </style>
 
   <!-- Google Material Icons -->
