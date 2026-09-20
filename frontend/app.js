@@ -1,6 +1,6 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=11')
+        navigator.serviceWorker.register('/sw.js?v=12')
           .then(reg => console.log('Service Worker registered successfully!', reg.scope))
           .catch(err => console.error('Service Worker registration failed:', err));
       });
@@ -78,7 +78,7 @@
     const API_BASE = '';
 
     // UI / App version for live status and cache-bust reload
-    const UI_VERSION = '1.0.4';
+    const UI_VERSION = '1.0.5';
 
     // Live status check: hits API, shows green, compares version, reloads if stale
     async function checkLiveStatus() {
@@ -664,21 +664,15 @@
               <!-- Garage Location Section -->
               <div class="space-y-3 border-b border-slate-100 dark:border-slate-700 oled:border-neutral-900 rounded-lg pb-4">
                 <h4 class="font-semibold text-slate-700 dark:text-slate-300">Garage Location</h4>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Copy-paste from Google Maps: open the place in Maps, click Share > Copy link (e.g. https://maps.google.com/?q=40.7128,-74.0060)</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Paste your Google Maps Share link (e.g. https://maps.app.goo.gl/...) and type the display address.</p>
                 <div class="space-y-3">
                   <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Address</label>
-                    <input type="text" id="settings-map-address" placeholder="123 Garage Lane, New York, NY" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Location Address (display)</label>
+                    <input type="text" id="settings-map-address" placeholder="Garage Workshop, New York" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Latitude</label>
-                      <input type="text" id="settings-map-lat" placeholder="40.712776" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Longitude</label>
-                      <input type="text" id="settings-map-lng" placeholder="-74.005974" class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                    </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 oled:text-white mb-1">Google Maps Share Link</label>
+                    <input type="text" id="settings-map-sharelink" placeholder="https://maps.app.goo.gl/..." class="w-full min-h-[48px] px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 oled:bg-black border border-slate-200 dark:border-slate-700 oled:border-neutral-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                   </div>
                   <button onclick="saveMapLocation()" class="w-full min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide transition-all shadow ripple-btn">Save Location</button>
                 </div>
@@ -2284,9 +2278,8 @@
           document.getElementById('settings-contact-info').value = settings.contact_info || '';
           document.getElementById('settings-upi-id').value = settings.upi_id || '';
           document.getElementById('settings-upi-name').value = settings.upi_name || '';
-          document.getElementById('settings-map-address').value = settings.map_location_address || '';
-          document.getElementById('settings-map-lat').value = settings.map_location_lat || '';
-          document.getElementById('settings-map-lng').value = settings.map_location_lng || '';
+          document.getElementById('settings-map-address').value = settings.locationAddress || '';
+          document.getElementById('settings-map-sharelink').value = settings.googleMapsShareLink || '';
         }
 
         // Fetch holidays
@@ -2482,8 +2475,7 @@
       if (!token) return;
 
       const address = document.getElementById('settings-map-address').value.trim();
-      const lat = document.getElementById('settings-map-lat').value.trim();
-      const lng = document.getElementById('settings-map-lng').value.trim();
+      const shareLink = document.getElementById('settings-map-sharelink').value.trim();
 
       try {
         const res = await fetch('/api/settings', {
@@ -2493,9 +2485,8 @@
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            map_location_address: address,
-            map_location_lat: lat,
-            map_location_lng: lng
+            locationAddress: address,
+            googleMapsShareLink: shareLink
           })
         });
 
@@ -2506,16 +2497,15 @@
 
         showToast('Location saved successfully!', 'check_circle', true);
         // Persist for component reload
-        localStorage.setItem('map_location', JSON.stringify({ lat: lat || '40.712776', lng: lng || '-74.005974', address: address || '123 Garage Lane, New York, NY 10001' }));
+        localStorage.setItem('map_location', JSON.stringify({ address: address || 'Garage Workshop', shareLink: shareLink || '' }));
         // Update component in real-time
-        window.MAP_LOCATION = { lat: lat || 40.712776, lng: lng || -74.005974, address: address || '123 Garage Lane, New York, NY 10001' };
-        // Re-run component injection
+        window.MAP_LOCATION = { address: address || 'Garage Workshop', shareLink: shareLink || '' };
         const addrEl = document.getElementById('map-location-address');
-        if (addrEl) addrEl.textContent = address || '123 Garage Lane, New York, NY 10001';
+        if (addrEl) addrEl.textContent = address || 'Garage Workshop';
         const anchor = document.querySelector('#map-location-component > a');
-        if (anchor && lat && lng) anchor.href = 'https://maps.google.com/?q=' + lat + ',' + lng;
+        if (anchor) anchor.href = shareLink || 'https://maps.google.com/?q=Garage+Workshop';
         const frame = document.getElementById('map-embed-frame');
-        if (frame && lat && lng) frame.src = 'https://maps.google.com/maps?q=' + lat + ',' + lng + '&t=m&z=15&maptype=roadmap&ie=UTF8&iwloc=B&output=embed';
+        if (frame) frame.src = 'https://maps.google.com/maps?q=' + encodeURIComponent(address || 'Garage Workshop') + '&t=m&z=15&maptype=roadmap&ie=UTF8&iwloc=B&output=embed';
       } catch (err) {
         showToast(err.message, 'error', false);
       }
