@@ -460,6 +460,17 @@
       border: 1.5px solid #b45309 !important;
       color: #b45309 !important;
     }
+    /* High-specificity overrides for analytics metric cards in light mode */
+    html:not(.dark):not(.oled) #analytics-total-spend,
+    html:not(.dark):not(.oled) #analytics-total-earnings,
+    html:not(.dark):not(.oled) #analytics-net-profit {
+      color: #111827 !important;
+    }
+    html:not(.dark):not(.oled) .bg-rose-950/30 .material-icons-round,
+    html:not(.dark):not(.oled) .bg-emerald-950/30 .material-icons-round,
+    html:not(.dark):not(.oled) .bg-indigo-950/30 .material-icons-round {
+      color: #111827 !important;
+    }
   </style>
 
   <!-- Google Material Icons -->
@@ -795,7 +806,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">
