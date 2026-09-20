@@ -249,26 +249,34 @@
         (async function() {
           let address = 'Garage Workshop';
           let shareLink = 'https://maps.google.com/?q=Garage+Workshop';
+          let dbSettings = {};
 
           try {
             const res = await fetch('/api/settings');
             if (res.ok) {
-              const settings = await res.json();
-              if (settings.locationAddress) address = settings.locationAddress;
-              if (settings.googleMapsShareLink) shareLink = settings.googleMapsShareLink;
+              dbSettings = await res.json();
+              // Admin settings (new format)
+              if (dbSettings.locationAddress) address = dbSettings.locationAddress;
+              if (dbSettings.googleMapsShareLink) shareLink = dbSettings.googleMapsShareLink;
             }
           } catch (e) {
-            // Network/offline: fall back below
+            // Offline / network error: continue to fallbacks
           }
 
-          // Fallback chain: localStorage > window.MAP_LOCATION > defaults
+          // Fallback chain: localStorage > window props > legacy DB keys > defaults
           const saved = JSON.parse(localStorage.getItem('map_location') || '{}');
           const loc = window.MAP_LOCATION || {};
+
           if (!address || address === 'Garage Workshop') {
-            address = saved.address || loc.locationAddress || loc.address || 'Garage Workshop';
+            address = saved.address || loc.locationAddress || dbSettings.map_location_address || loc.address || 'Garage Workshop';
           }
+          // If only legacy lat/lng saved (no text address), build label from DB
+          if ((address === 'Garage Workshop') && dbSettings.map_location_lat && dbSettings.map_location_lng) {
+            address = 'Location (' + dbSettings.map_location_lat + ',' + dbSettings.map_location_lng + ')';
+          }
+
           if (!shareLink || shareLink === 'https://maps.google.com/?q=Garage+Workshop') {
-            shareLink = saved.shareLink || loc.googleMapsShareLink || 'https://maps.google.com/?q=Garage+Workshop';
+            shareLink = saved.shareLink || loc.googleMapsShareLink || dbSettings.googleMapsShareLink || 'https://maps.google.com/?q=Garage+Workshop';
           }
 
           // Update subtitle address
