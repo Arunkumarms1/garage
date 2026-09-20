@@ -1,4 +1,4 @@
-const CACHE_NAME = 'garageworkshop-v17';
+const CACHE_NAME = 'garageworkshop-v18';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
