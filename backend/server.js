@@ -453,7 +453,7 @@ app.get('/api/settings', (req, res) => {
     
     // Only expose safe/public keys (hide UPI/payment details, internal settings)
     const settingsObj = {};
-    const allowedPublicKeys = ['carwash_name', 'logo_base64', 'is_open', 'theme_color', 'contact_info', 'locationAddress', 'googleMapsShareLink'];
+    const allowedPublicKeys = ['carwash_name', 'logo_base64', 'is_open', 'theme_color', 'contact_info', 'locationAddress', 'googleMapsShareLink', 'map_location_address', 'map_location_lat', 'map_location_lng'];
     rows.forEach(row => {
       if (allowedPublicKeys.includes(row.key)) {
         settingsObj[row.key] = row.value;
