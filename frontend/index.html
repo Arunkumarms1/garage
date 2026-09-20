@@ -184,6 +184,92 @@
     <div class="w-full bg-transparent dark:bg-slate-800 oled:bg-black">
       
       <!-- ==========================================
+           MAP & LOCATION COMPONENT
+           ========================================== -->
+      <!--
+        Configurable variables for location:
+        Edit MAP_LOCATION.lat, .lng, and .address below.
+      -->
+      <div id="map-location-component" class="mx-4 mb-2">
+        <script>
+          // Configurable location props — update these for your garage
+          window.MAP_LOCATION = {
+            lat: 40.712776,
+            lng: -74.005974,
+            address: "123 Garage Lane, New York, NY 10001"
+          };
+        </script>
+        <style>
+          /* Component-local styles for overlay click behavior */
+          .map-overlay-wrapper { position: relative; display: block; text-decoration: none; }
+          .map-overlay-wrapper:hover { opacity: 0.98; }
+          .map-overlay-wrapper iframe { width: 100%; height: 100%; border: 0; border-radius: 0.75rem; filter: grayscale(0.1) contrast(1.05); }
+          .map-click-overlay { position: absolute; inset: 0; z-index: 20; border-radius: 0.75rem; }
+        </style>
+        <a
+          href="https://maps.google.com/?q=40.712776,-74.005974"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="map-overlay-wrapper bg-slate-900 dark:bg-slate-900 oled:bg-black rounded-2xl overflow-hidden shadow-xl shadow-indigo-950/20 border border-slate-700 dark:border-slate-800 oled:border-neutral-900 transition-colors"
+          aria-label="Open Our Garage Location in Google Maps"
+        >
+          <!-- Styled Header -->
+          <div class="px-4 pt-4 pb-2 flex items-start justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="material-icons-round text-indigo-500 text-xl">location_on</span>
+              <div>
+                <h2 class="text-base font-extrabold text-white leading-tight tracking-tight">Our Garage Location</h2>
+                <p id="map-location-address" class="text-[11px] text-slate-400 dark:text-slate-400 oled:text-neutral-400 font-medium mt-0.5 leading-snug">
+                  123 Garage Lane, New York, NY 10001
+                </p>
+              </div>
+            </div>
+            <span class="material-icons-round text-indigo-500 text-sm rotate-[-45deg]">open_in_new</span>
+          </div>
+
+          <!-- Map Area -->
+          <div class="relative mx-4 mb-4 rounded-xl overflow-hidden" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+            <iframe
+              id="map-embed-frame"
+              src="https://maps.google.com/maps?q=40.712776,-74.005974&t=m&z=15&maptype=roadmap&ie=UTF8&iwloc=B&output=embed"
+              loading="lazy"
+              allowfullscreen
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Garage Workshop Map"
+              class="w-full h-full rounded-xl"
+            ></iframe>
+            <!-- Absolutely positioned overlay to capture all clicks and redirect to anchor link -->
+            <div class="map-click-overlay" aria-hidden="true"></div>
+          </div>
+        </a>
+      </div>
+      <script>
+        // Dynamically inject props into component markup
+        (function() {
+          const loc = window.MAP_LOCATION || {};
+          const lat = loc.lat || 40.712776;
+          const lng = loc.lng || -74.005974;
+          const address = loc.address || '123 Garage Lane, New York, NY 10001';
+
+          // Update address text
+          const addrEl = document.getElementById('map-location-address');
+          if (addrEl) addrEl.textContent = address;
+
+          // Update anchor href with current lat/lng
+          const anchor = document.querySelector('#map-location-component > a');
+          if (anchor) {
+            anchor.href = 'https://maps.google.com/?q=' + lat + ',' + lng;
+          }
+
+          // Update iframe src with current lat/lng
+          const frame = document.getElementById('map-embed-frame');
+          if (frame) {
+            frame.src = 'https://maps.google.com/maps?q=' + lat + ',' + lng + '&t=m&z=15&maptype=roadmap&ie=UTF8&iwloc=B&output=embed';
+          }
+        })();
+      </script>
+
+      <!-- ==========================================
            TABBED AUTHENTICATION
            ========================================== -->
       <div class="border-t border-slate-100 dark:border-slate-700 oled:border-white pt-5 space-y-4 text-left bg-transparent dark:bg-slate-900 oled:bg-black">
@@ -284,7 +370,7 @@
   </footer>
 
   <!-- PWA Service Worker Registration -->
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 
   <div id="job-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
     <div class="bg-white dark:bg-slate-900 oled:bg-black w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 oled:border-white">
