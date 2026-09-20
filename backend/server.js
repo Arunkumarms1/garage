@@ -451,10 +451,13 @@ app.get('/api/settings', (req, res) => {
       return res.status(500).json({ error: 'Failed to retrieve settings.' });
     }
     
-    // Transform key-value rows to clean JSON object
+    // Only expose safe/public keys (hide UPI/payment details, internal settings)
     const settingsObj = {};
+    const allowedPublicKeys = ['carwash_name', 'logo_base64', 'is_open', 'theme_color', 'contact_info', 'locationAddress', 'googleMapsShareLink'];
     rows.forEach(row => {
-      settingsObj[row.key] = row.value;
+      if (allowedPublicKeys.includes(row.key)) {
+        settingsObj[row.key] = row.value;
+      }
     });
     
     res.json(settingsObj);
