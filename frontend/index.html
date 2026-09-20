@@ -185,59 +185,69 @@
     }
 
     /* ==========================================
-       7. LIGHT MODE: SELECTIVE BUTTON INVERT (Secondary only)
+       7. LIGHT MODE: ELEGANT SECONDARY BUTTONS (Complementary)
        ========================================== */
-    /* Only invert low-contrast secondary buttons, not primary colored actions */
     html:not(.dark):not(.oled) button[class*="bg-slate-1"]:not([class*="bg-indigo-"]):not([class*="bg-amber-"]):not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="bg-rose-"]),
     html:not(.dark):not(.oled) button[class*="bg-slate-5"]:not([class*="bg-indigo-"]):not([class*="bg-amber-"]):not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="bg-rose-"]),
     html:not(.dark):not(.oled) button[class*="bg-slate-2"]:not([class*="bg-indigo-"]):not([class*="bg-amber-"]):not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="bg-rose-"]) {
-      background-color: #1e293b !important; /* slate-800 */
-      color: #ffffff !important;
-      border: 1px solid #475569 !important; /* slate-600 */
+      background-color: #f0f9ff !important; /* sky-50 - soft complementary blue */
+      color: #0369a1 !important; /* sky-700 - readable blue text */
+      border: 1px solid #7dd3fc !important; /* sky-200 - gentle border */
+      border-radius: 0.75rem !important;
     }
 
     /* ==========================================
-       8. LIGHT MODE: HIGH-CONTRAST TABS, ICONS & BLUE BUTTONS
+       8. LIGHT MODE: COMPLEMENTARY TABS, ICONS & BLUE BUTTONS
        ========================================== */
-    /* Tabs: force both visible with dark bg + white text, active gets indigo underline */
+    /* Tabs: active = light indigo bg + indigo text; inactive = white bg + slate text */
     html:not(.dark):not(.oled) #tab-login,
     html:not(.dark):not(.oled) #tab-register {
-      background-color: #1e293b !important; /* slate-800 */
-      color: #ffffff !important;
-      border: 2px solid #334155 !important;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important;
+      background-color: #ffffff !important;
+      color: #475569 !important; /* slate-600 */
+      border: 1px solid #e2e8f0 !important; /* slate-200 */
+      border-radius: 0.5rem !important;
+      transition: all 0.2s ease !important;
     }
     html:not(.dark):not(.oled) #tab-login {
-      border-bottom-color: #6366f1 !important; /* indigo-500 active underline */
+      background-color: #eef2ff !important; /* indigo-50 */
+      color: #4338ca !important; /* indigo-700 */
+      border-color: #c7d2fe !important; /* indigo-200 */
+      border-bottom-width: 2px !important;
+      border-bottom-color: #6366f1 !important; /* indigo-500 */
+    }
+    html:not(.dark):not(.oled) #tab-register:hover {
+      background-color: #eef2ff !important;
+      color: #4338ca !important;
+      border-color: #c7d2fe !important;
     }
 
-    /* Icons: make icons very dark and visible on light backgrounds */
+    /* Icons: bright amber for visibility and harmony */
     html:not(.dark):not(.oled) span[class*="material-icons-round"] {
-      color: #1e1b4b !important; /* indigo-950 / very dark blue */
-      text-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+      color: #f59e0b !important; /* amber-500 - warm complementary */
+      filter: drop-shadow(0 1px 1px rgba(245,158,11,0.2)) !important;
     }
 
-    /* Blue buttons: deeper background + thick dark border + shadow for humans */
+    /* Blue buttons: original indigo-600 with a subtle amber outline for pop */
     html:not(.dark):not(.oled) button[class*="bg-indigo-"] {
-      background-color: #312e81 !important; /* indigo-900 - much deeper */
-      border: 2px solid #1e1b4b !important;
-      box-shadow: 0 4px 14px 0 rgba(49,46,129,0.35) !important;
+      background-color: #4f46e5 !important; /* indigo-600 - original, visible */
+      border: 1.5px solid #f59e0b !important; /* amber-500 complementary outline */
+      box-shadow: 0 2px 8px 0 rgba(79,70,229,0.25) !important;
       color: #ffffff !important;
     }
     html:not(.dark):not(.oled) button[class*="bg-indigo-"]:hover {
-      background-color: #1e1b4b !important; /* indigo-950 - almost black-blue */
+      background-color: #4338ca !important; /* indigo-700 - slightly deeper on hover */
     }
 
-    /* Form labels / "from / to" text pairs: bold dark slate for maximum readability */
+    /* Form labels / text pairs: readable slate, normal weight */
     html:not(.dark):not(.oled) label,
     html:not(.dark):not(.oled) .text-xs,
     html:not(.dark):not(.oled) .text-sm {
-      color: #020617 !important; /* slate-950 - near black */
-      font-weight: 700 !important;
+      color: #334155 !important; /* slate-700 - readable, not harsh */
+      font-weight: 500 !important;
     }
     html:not(.dark):not(.oled) p[class*="text-slate-"],
     html:not(.dark):not(.oled) span[class*="text-slate-"] {
-      color: #0f172a !important;
+      color: #475569 !important; /* slate-600 */
     }
 
     /* ==========================================
