@@ -151,6 +151,38 @@
       background-color: #e0e7ff !important; /* indigo-100 */
       border: 1px solid #a5b4fc !important;
     }
+
+    /* ==========================================
+       6. ULTIMATE LIGHT MODE TEXT VISIBILITY FIX
+       ========================================== */
+    /* Catch ALL stray white text regardless of HTML tag (Fixes missing Inventory names) */
+    html:not(.dark):not(.oled) [class*="text-white"],
+    html:not(.dark):not(.oled) [class*="text-slate-1"],
+    html:not(.dark):not(.oled) [class*="text-slate-2"],
+    html:not(.dark):not(.oled) [class*="text-gray-1"],
+    html:not(.dark):not(.oled) [class*="text-gray-2"] {
+      color: #0f172a !important; /* slate-900 */
+    }
+
+    /* Protect Badges and Counters (Fixes invisible numbers in dark status pills) */
+    /* If a span has a dark background, lock it to dark slate and force the text back to white */
+    html:not(.dark):not(.oled) span[class*="bg-slate-7"],
+    html:not(.dark):not(.oled) span[class*="bg-slate-8"],
+    html:not(.dark):not(.oled) span[class*="bg-slate-9"],
+    html:not(.dark):not(.oled) span[class*="bg-gray-7"],
+    html:not(.dark):not(.oled) span[class*="bg-gray-8"],
+    html:not(.dark):not(.oled) span[class*="bg-gray-9"],
+    html:not(.dark):not(.oled) span[class*="bg-black"] {
+      background-color: #334155 !important; /* slate-700 */
+      color: #ffffff !important;
+      border: none !important;
+    }
+
+    /* Ensure icons inside these protected badges also remain white */
+    html:not(.dark):not(.oled) span[class*="bg-slate-"] *,
+    html:not(.dark):not(.oled) span[class*="bg-gray-"] * {
+      color: #ffffff !important;
+    }
   </style>
 
   <!-- Google Material Icons -->
